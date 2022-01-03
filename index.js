@@ -1,7 +1,10 @@
 
 const express = require('express')
+const { format } = require('util')
 const cors = require('cors')
-const multer = require('multer')
+const Multer = require('multer')
+const path = require('path')
+var formidable = require("formidable")
 const bodyParser = require('body-parser')
 const app = express()
 app.use(express.json())
@@ -10,6 +13,20 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
+
+const { Storage } = require('@google-cloud/storage')
+const multer = Multer({
+    storage: Multer.memoryStorage(),
+    limits: {
+        fileSize: 5 * 1024 * 1024, // no larger than 5mb, you can change as needed.
+    },
+})
+
+const gc = new Storage({
+    keyFilename: path.join(__dirname, './keys.json'),
+    projectId: 'nodejsapiengine'
+})
+const bucket = gc.bucket('images-pest')
 
 app.use('/uploads', express.static('uploads'))
 
@@ -170,18 +187,54 @@ app.get('/pointdetails', async (req, res) => {
 
 })
 
-app.post('/pointdetails', async (req, res) => {
+app.post('/pointdetails', multer.single('file'), async (req, res, next) => {
 
-    pool.query(`insert into Point_Details Values (?,?,?,?,?,?,?,?,?,?,?)`, ["", req.body.SiteZoneID, req.body.SiteID, req.body.PointNumber, req.body.PointNotes, req.body['UID'], req.body.IsScanned, req.body.PointImage, req.body.MapImage, req.body.AddedUserID, req.body.ScanDateTime], function (error, result, fields) {
-        if (error) throw error;
-        if (result.affectedRows > 0) {
-            return res.status(200).json({ code: 200, message: "success" })
-        } else {
-            return res.status(401).json({ code: 401, "message": "unauthorized user" })
-        }
+    console.log(req.body)
+    if (!req.file) {
+        res.status(400).send('No file uploaded.');
+        return;
+    }
 
-    })
-})
+    // Create a new blob in the bucket and upload the file data.
+    const blob = bucket.file(req.file.originalname);
+    const blobStream = blob.createWriteStream();
+
+    blobStream.on('error', err => {
+        next(err);
+    });
+
+    blobStream.on('finish', () => {
+        // The public URL can be used to directly access the file via HTTP.
+        const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+        let query = 'insert into Point_Details Values (?,?,?,?,?,?,?,?,?,?,?)';
+        let parameters = ["", req.body.SiteZoneID, req.body.SiteID, req.body.PointNumber, req.body.PointNotes, req.body['UID'], req.body.IsScanned, publicUrl, req.body.MapImageURL, req.body.AddedUserID, req.body.ScanDateTime]
+        pool.query(query, parameters, function (err, result) {
+            if (err) throw err
+            if (result.affectedRows > 0) {
+                return res.status(200).send({ message: "Image Uploaded SuccessFUlly" })
+            } else {
+                return res.status(200).send({ message: "Image deleted SuccessFUlly" })
+            }
+
+        });
+
+    });
+    blobStream.end(req.file.buffer);
+
+});
+
+// app.post('/pointdetails', async (req, res) => {
+
+//     pool.query(`insert into Point_Details Values (?,?,?,?,?,?,?,?,?,?,?)`, ["", req.body.SiteZoneID, req.body.SiteID, req.body.PointNumber, req.body.PointNotes, req.body['UID'], req.body.IsScanned, req.body.PointImage, req.body.MapImage, req.body.AddedUserID, req.body.ScanDateTime], function (error, result, fields) {
+//         if (error) throw error;
+//         if (result.affectedRows > 0) {
+//             return res.status(200).json({ code: 200, message: "success" })
+//         } else {
+//             return res.status(401).json({ code: 401, "message": "unauthorized user" })
+//         }
+
+//     })
+// })
 
 
 app.get('/pointdetailsreport', async (req, res) => {
@@ -245,6 +298,7 @@ app.post('/contact', async (req, res) => {
     pool.query(`insert into Contact Values (?,?,?,?,?,?,?,?,?,?,?,?)`, ["", req.body.ContactName, req.body.ContactType, req.body.ContactRole, req.body.Email1, req.body.Email2, req.body.CompanyName, req.body.BillingAddress1, req.body.BillingAddress2, req.body.Mobile, req.body.Telephone, req.body.BillingPOSTCode], function (error, result, fields) {
         if (error) throw error;
         if (result.affectedRows > 0) {
+            console.log(result)
             return res.status(200).json({ code: 200, message: "success" })
         } else {
             return res.status(401).json({ code: 401, "message": "unauthorized user" })
@@ -417,21 +471,21 @@ app.delete('/contactsite', async (req, res) => {
 
 /*staff certficate Api to create and delete */
 
-app.post('/staffCertificate', async (req, res) => {
+// app.post('/staffCertificate', async (req, res) => {
 
-    let query = "INSERT INTO `Staff_Certificate`(`StaffCertID`, `StaffID`, `Certification`, `CertificationBody`, `ValidityStartDate`, `ValidityEndDate`, `CertificateImage`,`AddedByUserID`,`AddedDateTime`) VALUES (?,?,?,?,?,?,?,?,?)"
-    let parameters = ["", req.body.StaffID, req.body.Certification, req.body.CertificationBody, req.body.ValidityStartDate, req.body.ValidityEndDate, req.body.CertificateImage, req.body.AddedByUserID, req.body.AddedDateTime]
-    pool.query(query, parameters, function (error, results, fields) {
-        if (error) throw error
-        if (results.affectedRows > 0) {
-            return res.status(200).json({ code: 200, message: "success" })
-        } else {
-            return res.status(401).json({ "code": 401, "message": "unauthorized user" })
-        }
+//     let query = "INSERT INTO `Staff_Certificate`(`StaffCertID`, `StaffID`, `Certification`, `CertificationBody`, `ValidityStartDate`, `ValidityEndDate`, `CertificateImage`,`AddedByUserID`,`AddedDateTime`) VALUES (?,?,?,?,?,?,?,?,?)"
+//     let parameters = ["", req.body.StaffID, req.body.Certification, req.body.CertificationBody, req.body.ValidityStartDate, req.body.ValidityEndDate, req.body.CertificateImage, req.body.AddedByUserID, req.body.AddedDateTime]
+//     pool.query(query, parameters, function (error, results, fields) {
+//         if (error) throw error
+//         if (results.affectedRows > 0) {
+//             return res.status(200).json({ code: 200, message: "success" })
+//         } else {
+//             return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+//         }
 
-    })
+//     })
 
-})
+// })
 
 app.delete('/staffcertificate', async (req, res) => {
 
@@ -478,54 +532,54 @@ app.delete('/sitetype', async (req, res) => {
 
 /* imageUrl to store images and get */
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, './uploads/')
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.originalname)
-    }
-})
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, './uploads/')
+//     },
+//     filename: function (req, file, cb) {
+//         cb(null, file.originalname)
+//     }
+// })
 
-const fileFilter = (req, file, cb) => {
-    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
-        cb(null, true)
-    } else {
-        cb(null, false)
-    }
-}
+// const fileFilter = (req, file, cb) => {
+//     if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+//         cb(null, true)
+//     } else {
+//         cb(null, false)
+//     }
+// }
 
-const upload = multer({ storage: storage, limits: { fileSize: 1024 * 1024 * 5 }, fileFilter: fileFilter })
+// const upload = multer({ storage: storage, limits: { fileSize: 1024 * 1024 * 5 }, fileFilter: fileFilter })
 
-app.post('/imagesupload', upload.single('image'), (req, res) => {
+// app.post('/imagesupload', upload.single('image'), (req, res) => {
 
-    let query = "INSERT INTO `imagesurl`(`imageurl`) VALUES (?)"
-    pool.query(query, req.file.path, function (err, results) {
+//     let query = "INSERT INTO `imagesurl`(`imageurl`) VALUES (?)"
+//     pool.query(query, req.file.path, function (err, results) {
 
-        if (err) throw err
-        if (results.affectedRows > 0) {
-            return res.status(200).json({ code: 200, message: "success" })
-        } else {
-            return res.status(401).json({ code: 401, "message": "unauthorized user" })
-        }
+//         if (err) throw err
+//         if (results.affectedRows > 0) {
+//             return res.status(200).json({ code: 200, message: "success" })
+//         } else {
+//             return res.status(401).json({ code: 401, "message": "unauthorized user" })
+//         }
 
-    })
-})
+//     })
+// })
 
-app.get('/imagesupload', async (req, res) => {
+// app.get('/imagesupload', async (req, res) => {
 
-    pool.query(`select * from imagesurl`, function (err, results, fields) {
-        if (err) throw err
+//     pool.query(`select * from imagesurl`, function (err, results, fields) {
+//         if (err) throw err
 
-        if (results.length > 0) {
-            let demo = results.map(e => `https://konnect68.herokuapp.com/${e.imageurl}`)
+//         if (results.length > 0) {
+//             let demo = results.map(e => `https://konnect68.herokuapp.com/${e.imageurl}`)
 
-            return res.status(200).json(demo)
-        } else {
-            return res.status(401).json({ "code": 401, "message": results.imageurl })
-        }
-    })
-})
+//             return res.status(200).json(demo)
+//         } else {
+//             return res.status(401).json({ "code": 401, "message": results.imageurl })
+//         }
+//     })
+// })
 
 app.get('/contactType', async (req, res) => {
 
@@ -646,6 +700,43 @@ app.get('/staffTitle', async (req, res) => {
     })
 
 })
+
+app.post('/staffCertificate', multer.single('file'), async (req, res, next) => {
+
+
+
+    if (!req.file) {
+        res.status(400).send('No file uploaded.');
+        return;
+    }
+
+    // Create a new blob in the bucket and upload the file data.
+    const blob = bucket.file(req.file.originalname);
+    const blobStream = blob.createWriteStream();
+
+    blobStream.on('error', err => {
+        next(err);
+    });
+
+    blobStream.on('finish', () => {
+        // The public URL can be used to directly access the file via HTTP.
+        const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+        let query = 'INSERT INTO Staff_Certificate values (?,?,?,?,?,?,?,?,?)';
+        let parameters = ["", req.body['StaffID'], req.body['Certification'], req.body['CertificationBody'], req.body['ValidityStartDate'], req.body['ValidityEndDate'], publicUrl, req.body['AddedByUserID'], req.body['AddedDateTime']]
+        pool.query(query, parameters, function (err, result) {
+            if (err) throw err
+            if (result.affectedRows > 0) {
+                return res.status(200).send({ message: "Image Uploaded SuccessFUlly" })
+            } else {
+                return res.status(200).send({ message: "Image deleted SuccessFUlly" })
+            }
+
+        });
+
+    });
+    blobStream.end(req.file.buffer);
+
+});
 
 app.listen(port, function () {
     console.log(`${port} is running`)
