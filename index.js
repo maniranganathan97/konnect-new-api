@@ -276,11 +276,7 @@ app.get('/pointdetailsreport', async (req, res) => {
     JOIN login ON login.UserID = Scan_Details.UserID`
     pool.query(query, function (error, results, fields) {
         if (error) throw error
-        if (results.length > 0) {
-            return res.status(200).json(results)
-        } else {
-            return res.status(401).json({ "code": 401, "message": "unauthorized user" })
-        }
+        return res.status(200).json(results)
     })
 })
 
