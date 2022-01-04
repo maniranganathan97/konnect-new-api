@@ -37,7 +37,7 @@ app.post('/upload', multer.single('file'), (req, res, next) => {
     console.log(req.file)
     console.log(req.body.demo)
     if (!req.file) {
-        res.status(400).send('No file uploaded.');
+        res.status(400).send('No file found in the request.');
         return;
     }
 
