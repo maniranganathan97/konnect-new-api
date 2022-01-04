@@ -324,15 +324,19 @@ app.post('/contact', async (req, res) => {
     pool.query(`insert into Contact(ContactID, SalutationID,ContactName, ContactTypeID, AccessControlID, Email1, Email2, CompanyName, BillingAddress1, BillingAddress2, Mobile, Telephone, BillingPOSTCode,AddedByUserID, AddedDateTime) Values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, ["", req.body.SalutationID, req.body.ContactName, req.body.ContactTypeID, req.body.AccessControlID, req.body.Email1, req.body.Email2, req.body.CompanyName, req.body.BillingAddress1, req.body.BillingAddress2, req.body.Mobile, req.body.Telephone, req.body.BillingPOSTCode, req.body.AddedByUserID, req.body.AddedDateTime], function (error, result, fields) {
         if (error) throw error;
         if (result.affectedRows > 0) {
-            var linkedSites = [
-                ["", result.insertId, 1, 1, '04/01/2022 00:01:20 AM'],
-                ["", result.insertId, 1, 1, '04/01/2022 00:01:20 AM'],
-                ["", result.insertId, 1, 1, '04/01/2022 00:01:20 AM']
-            ];
+            let values = [];
+            for (let data of req.body['LinkedSites']) {
+                let value = []
+                values.push(result.insertId)
+                values.push(data.SiteID)
+                values.push(data.AddedByUserID)
+                values.push(data.AddedDateTime)
+                array.push(value)
+            }
 
-            var sql = "INSERT INTO Contact_Site (ConSiteID,ContactID, SiteID, AddedByUserID, AddedDateTime) VALUES ?";
+            var sql = "INSERT INTO Contact_Site (ContactID, SiteID, AddedByUserID, AddedDateTime) VALUES ?";
 
-            pool.query(sql, [linkedSites], function (err, result) {
+            pool.query(sql, [values], function (err, result) {
                 if (err) throw err;
                 if (result.affectedRows > 0) {
                     return res.status(200).json({ code: 200, message: "success" })
