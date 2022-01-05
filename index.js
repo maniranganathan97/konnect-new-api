@@ -223,7 +223,7 @@ app.get('/pointdetails', async (req, res) => {
 
 app.post('/pointdetails', async (req, res, next) => {
 
-    const buffer = Buffer.from(req.body["PointImageBase64"], 'base64')
+    const buffer = Buffer.from(req.body["PointImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
     const blob = bucket.file("konnect" + id);
@@ -241,9 +241,9 @@ app.post('/pointdetails', async (req, res, next) => {
         pool.query(query, parameters, function (err, result) {
             if (err) throw err
             if (result.affectedRows > 0) {
-                return res.status(200).send({ message: "Image Uploaded SuccessFUlly" })
+                return res.status(200).send({ code: 200, message: "Image Uploaded SuccessFUlly" })
             } else {
-                return res.status(200).send({ message: "Image deleted SuccessFUlly" })
+                return res.status(400).send({ code: 400, message: "data is not valid" })
             }
 
         });
