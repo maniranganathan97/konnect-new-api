@@ -226,7 +226,7 @@ app.post('/pointdetails', async (req, res, next) => {
     const buffer = Buffer.from(req.body["PointImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
-    const blob = bucket.file("konnect" + id);
+    const blob = bucket.file("konnect" + id + ".jpg");
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
