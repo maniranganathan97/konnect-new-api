@@ -352,20 +352,25 @@ app.post('/contact', async (req, res) => {
 })
 
 app.put('/contact', async (req, res) => {
+    let contactSiteValues = req.body.LinkedSites
+    let contactObjects = req.body
+    delete contactObjects['LinkedSites']
     let query = `Update Contact SET  ` + Object.keys(req.body).map(key => `${key}=?`).join(",") + "where ContactID = ?"
-    const parameters = [...Object.values(req.body), req.body.ContactID]
+    const parameters = [...Object.values(contactObjects), req.body.ContactID]
     pool.query(query, parameters, function (err, results, fields) {
         if (err) throw err
         if (results.affectedRows > 0) {
             let query = `DELETE FROM Contact_Site WHERE ContactID =${req.body.ContactID}`
             pool.query(query, function (error, results, fields) {
                 if (error) throw error
+                console.log(results)
                 if (results.affectedRows > 0) {
+                    
                     let values = [];
-                    for (let data of req.body['LinkedSites']) {
+                    for (let data of contactSiteValues) {
                         let value = []
                         let date = new Date(data.AddedDateTime)
-                        value.push(result.insertId)
+                        value.push(contactObjects.ContactID)
                         value.push(data.SiteID)
                         value.push(data.AddedByUserID)
                         value.push(date)
@@ -387,7 +392,6 @@ app.put('/contact', async (req, res) => {
                     return res.status(401).json({ "code": 401, "message": "unauthorized user" })
                 }
             })
-            return res.status(200).json({ code: 200, message: "success" })
         } else {
             return res.status(401).json({ code: 401, "message": "data not update" })
         }
