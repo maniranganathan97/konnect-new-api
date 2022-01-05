@@ -1,15 +1,19 @@
 
 const express = require('express')
+const uuid = require('uuid')
+const base = require('./base64.json')
 const { format } = require('util')
 const cors = require('cors')
 const Multer = require('multer')
 const path = require('path')
 const bodyParser = require('body-parser')
 const app = express()
-app.use(express.json())
+
+app.use(express.json({ limit: '50mb' }))
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
+    limit: '50mb',
     extended: true
 }));
 
@@ -217,16 +221,12 @@ app.get('/pointdetails', async (req, res) => {
 
 })
 
-app.post('/pointdetails', multer.single('file'), async (req, res, next) => {
+app.post('/pointdetails', async (req, res, next) => {
 
-    console.log(req.body)
-    if (!req.file) {
-        res.status(400).send('No file uploaded.');
-        return;
-    }
-
+    const buffer = Buffer.from(req.body["PointImageBase64"], 'base64')
     // Create a new blob in the bucket and upload the file data.
-    const blob = bucket.file(req.file.originalname);
+    const id = uuid.v4();
+    const blob = bucket.file("konnect" + id);
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -249,22 +249,22 @@ app.post('/pointdetails', multer.single('file'), async (req, res, next) => {
         });
 
     });
-    blobStream.end(req.file.buffer);
+    blobStream.end(buffer);
 
 });
 
-// app.post('/pointdetails', async (req, res) => {
+app.post('/pointdetails', async (req, res) => {
 
-//     pool.query(`insert into Point_Details Values (?,?,?,?,?,?,?,?,?,?,?)`, ["", req.body.SiteZoneID, req.body.SiteID, req.body.PointNumber, req.body.PointNotes, req.body['UID'], req.body.IsScanned, req.body.PointImage, req.body.MapImage, req.body.AddedUserID, req.body.ScanDateTime], function (error, result, fields) {
-//         if (error) throw error;
-//         if (result.affectedRows > 0) {
-//             return res.status(200).json({ code: 200, message: "success" })
-//         } else {
-//             return res.status(401).json({ code: 401, "message": "unauthorized user" })
-//         }
+    pool.query(`insert into Point_Details Values (?,?,?,?,?,?,?,?,?,?,?)`, ["", req.body.SiteZoneID, req.body.SiteID, req.body.PointNumber, req.body.PointNotes, req.body['UID'], req.body.IsScanned, req.body.PointImage, req.body.MapImage, req.body.AddedUserID, req.body.ScanDateTime], function (error, result, fields) {
+        if (error) throw error;
+        if (result.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "success" })
+        } else {
+            return res.status(401).json({ code: 401, "message": "unauthorized user" })
+        }
 
-//     })
-// })
+    })
+})
 
 
 app.get('/pointdetailsreport', async (req, res) => {
@@ -569,8 +569,11 @@ app.post('/staffCertificate', multer.single('file'), async (req, res, next) => {
         return;
     }
 
+
+    const buffer = Buffer.from(base.demo, 'base64')
+
     // Create a new blob in the bucket and upload the file data.
-    const blob = bucket.file(req.file.originalname);
+    const blob = bucket.file("hello.jpg");
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -580,6 +583,7 @@ app.post('/staffCertificate', multer.single('file'), async (req, res, next) => {
     blobStream.on('finish', () => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+        console.log(publicUrl)
         let query = 'INSERT INTO Staff_Certificate values (?,?,?,?,?,?,?,?,?)';
         let parameters = ["", req.body['StaffID'], req.body['Certification'], req.body['CertificationBody'], req.body['ValidityStartDate'], req.body['ValidityEndDate'], publicUrl, req.body['AddedByUserID'], req.body['AddedDateTime']]
         pool.query(query, parameters, function (err, result) {
@@ -592,7 +596,7 @@ app.post('/staffCertificate', multer.single('file'), async (req, res, next) => {
 
         });
     });
-    blobStream.end(req.file.buffer);
+    blobStream.end(buffer);
 
 });
 
