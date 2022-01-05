@@ -84,13 +84,10 @@ app.get('/site', async (req, res) => {
 
 app.post('/site', multer.single('file'), async (req, res) => {
 
-    if (!req.file) {
-        res.status(400).send('No file uploaded.');
-        return;
-    }
-
+    const buffer = Buffer.from(req.body["SiteMapImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
-    const blob = bucket.file(req.file.originalname);
+    const id = uuid.v4();
+    const blob = bucket.file("konnect" + id);
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -111,7 +108,7 @@ app.post('/site', multer.single('file'), async (req, res) => {
             }
         })
     })
-    blobStream.end(req.file.buffer);
+    blobStream.end(buffer);
 })
 
 app.put('/site', async (req, res) => {
@@ -226,7 +223,7 @@ app.post('/pointdetails', async (req, res, next) => {
     const buffer = Buffer.from(req.body["PointImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
-    const blob = bucket.file("konnect" + id + ".jpg");
+    const blob = bucket.file("konnect" + id);
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -265,7 +262,6 @@ app.post('/pointdetails', async (req, res) => {
 
     })
 })
-
 
 app.get('/pointdetailsreport', async (req, res) => {
     let query = `Select Scan_Details.ScanID,Scan_Details.PointID,SiteZone.Description,Site.SiteName,Point_Details.PointNumber, login.username,Scan_Details.ScanDateTime
@@ -365,7 +361,7 @@ app.put('/contact', async (req, res) => {
                 if (error) throw error
                 console.log(results)
                 if (results.affectedRows > 0) {
-                    
+
                     let values = [];
                     for (let data of contactSiteValues) {
                         let value = []
@@ -426,13 +422,10 @@ app.get('/staff', async (req, res) => {
 
 app.post('/staff', multer.single('file'), async (req, res) => {
 
-    if (!req.file) {
-        res.status(400).send('No file uploaded.');
-        return;
-    }
-
+    const buffer = Buffer.from(req.body["StaffImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
-    const blob = bucket.file(req.file.originalname);
+    const id = uuid.v4();
+    const blob = bucket.file("konnect" + id);
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -452,7 +445,7 @@ app.post('/staff', multer.single('file'), async (req, res) => {
             }
         })
     })
-    blobStream.end(req.file.buffer);
+    blobStream.end(buffer);
 })
 
 app.put('/staff', async (req, res) => {
@@ -492,7 +485,7 @@ app.get('/checkscanid', async (req, res) => {
     pool.query(query, function (error, results, fields) {
         if (error) throw error;
         if (results.affectedRows > 0) {
-            pool.query(`select * from Point_Details where UID = '04779622e37380'`, function (error, results, fields) {
+            pool.query(`select * from Point_Details where UID = '${uid}'`, function (error, results, fields) {
                 if (results.length > 0) {
                     let pointID = results[0].PointID
                     console.log(pointID)
@@ -581,16 +574,11 @@ app.delete('/contactsite', async (req, res) => {
 
 app.post('/staffCertificate', multer.single('file'), async (req, res, next) => {
 
-    if (!req.file) {
-        res.status(400).send('No file uploaded.');
-        return;
-    }
 
-
-    const buffer = Buffer.from(base.demo, 'base64')
-
+    const buffer = Buffer.from(req.body["CertificateImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
-    const blob = bucket.file("hello.jpg");
+    const id = uuid.v4();
+    const blob = bucket.file("konnect" + id);
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
