@@ -531,6 +531,19 @@ app.post('/scandetails', async (req, res) => {
 
 /*Contact site API to create and delete only*/
 
+app.get('/contactsite', async (req, res) => {
+    const ContactID = parseInt(req.query.ContactID)
+    pool.query(`select * from Contact_Site where ContactID = ${ContactID}`, function (error, results, fields) {
+        if (error) throw error;
+        if (results.length > 0) {
+            return res.status(200).json(results)
+        } else {
+            return res.status(401).json({ "code": 401, "message": "No Data Available." })
+        }
+    })
+
+})
+
 app.post('/contactsite', async (req, res) => {
     let query = `INSERT INTO Contact_Site (ConSiteID, ContactID, SiteID) VALUES (?,?,?)`
     let parameters = ["", req.body.ContactID, req.body.SiteID]
