@@ -21,7 +21,7 @@ const { Storage } = require('@google-cloud/storage')
 const multer = Multer({
     storage: Multer.memoryStorage(),
     limits: {
-        fileSize: 5 * 1024 * 1024, // no larger than 5mb, you can change as needed.
+        fileSize: 10 * 1024 * 1024, // no larger than 5mb, you can change as needed.
     },
 })
 
@@ -87,7 +87,7 @@ app.post('/site', multer.single('file'), async (req, res) => {
     const buffer = Buffer.from(req.body["SiteMapImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
-    const blob = bucket.file("konnect" + id);
+    const blob = bucket.file("konnect" + id + ".jpg");
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -112,16 +112,52 @@ app.post('/site', multer.single('file'), async (req, res) => {
 })
 
 app.put('/site', async (req, res) => {
-    let query = `Update Site SET  ` + Object.keys(req.body).map(key => `${key}=?`).join(",") + " where SiteID = ?"
-    const parameters = [...Object.values(req.body), req.body.SiteID]
-    pool.query(query, parameters, function (err, results, fields) {
-        if (err) throw err
-        if (results.affectedRows > 0) {
-            return res.status(200).json({ code: 200, message: "success" })
-        } else {
-            return res.status(401).json({ code: 401, "message": "data not update" })
-        }
-    })
+
+    const detail = req.body
+
+    if (detail['SiteMapImageURL']) {
+
+        const buffer = Buffer.from(detail["SiteMapImageURL"], 'base64')
+        // Create a new blob in the bucket and upload the file data.
+        const id = uuid.v4();
+        const blob = bucket.file("konnect" + id + ".jpg");
+        const blobStream = blob.createWriteStream();
+
+        blobStream.on('error', err => {
+            next(err);
+        });
+        blobStream.on('finish', () => {
+            const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+            detail['SiteMapImageURL'] = publicUrl
+            console.log(Object.keys(detail))
+            console.log(Object.values(detail))
+            let query = `Update Site SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where SiteID = ?"
+            const parameters = [...Object.values(detail), req.query.SiteID]
+            pool.query(query, parameters, function (err, results, fields) {
+                if (err) throw err
+                if (results.affectedRows > 0) {
+                    return res.status(200).json({ code: 200, message: "success" })
+                } else {
+                    return res.status(401).json({ code: 401, "message": "data not update" })
+                }
+            })
+        })
+        blobStream.end(buffer);
+
+    } else {
+        let query = `Update Site SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where SiteID = ?"
+        const parameters = [...Object.values(detail), req.query.SiteID]
+        pool.query(query, parameters, function (err, results, fields) {
+            if (err) throw err
+            console.log(results)
+            if (results.affectedRows > 0) {
+                return res.status(200).json({ code: 200, message: "success" })
+            } else {
+                return res.status(401).json({ code: 401, "message": "data not update" })
+            }
+        })
+    }
+
 })
 
 app.delete('/site', async (req, res) => {
@@ -223,7 +259,7 @@ app.post('/pointdetails', async (req, res, next) => {
     const buffer = Buffer.from(req.body["PointImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
-    const blob = bucket.file("konnect" + id);
+    const blob = bucket.file("konnect" + id + ".jpg");
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -828,6 +864,18 @@ app.get('/staffTitle', async (req, res) => {
         }
     })
 
+})
+
+app.get('/ecssitename', async (req, res) => {
+    let query = `select * from Site where SiteTypeID=${req.query.SiteTypeID} and SiteZoneID =${req.query.SiteZoneID}`
+    pool.query(query, function (err, results, fields) {
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).json(results)
+        } else {
+            return res.status(400).json({ code: 400, "message": "invalid data" })
+        }
+    })
 })
 
 
