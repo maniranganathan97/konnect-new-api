@@ -605,7 +605,6 @@ app.delete('/contactsite', async (req, res) => {
 
 })
 
-
 /*staff certficate Api to create and delete */
 
 app.post('/staffCertificate', multer.single('file'), async (req, res, next) => {
@@ -640,7 +639,6 @@ app.post('/staffCertificate', multer.single('file'), async (req, res, next) => {
     blobStream.end(buffer);
 
 });
-
 
 app.delete('/staffcertificate', async (req, res) => {
 
@@ -693,7 +691,6 @@ app.delete('/sitetype', async (req, res) => {
         }
     })
 })
-
 
 /* imageUrl to store images and get */
 
@@ -887,15 +884,15 @@ app.get('/ecsreports', async (req, res) => {
     JOIN Point_Details ON Point_Details.PointID = Scan_Details.PointID
     JOIN Site ON Site.SiteID = Point_Details.SiteID
     JOIN login ON login.UserID = Scan_Details.UserID
-    WHERE Site.SiteZoneID =  ${req.body.SiteZoneID}
-    AND Site.SiteTypeID = ${req.body.SiteTypeID}
-    AND Site.SiteID = ${req.body.SiteID}
-    AND Scan_Details.ScanDateTime = '${req.body.ScanDateTime}'`
+    WHERE Site.SiteZoneID =  ${req.query.SiteZoneID}
+    AND Site.SiteTypeID = ${req.query.SiteTypeID}
+    AND Site.SiteID = ${req.query.SiteID}
+    AND Scan_Details.ScanDateTime = '${req.query.ScanDateTime}'`
     // let query = `Select Scan_Details.ScanID,Scan_Details.PointID,Site.SiteName,Point_Details.PointNumber, login.username,Scan_Details.ScanDateTime from Scan_Details JOIN Point_Details ON Point_Details.PointID = Scan_Details.PointID JOIN Site ON Site.SiteID = Point_Details.SiteID JOIN login ON login.UserID = Scan_Details.UserID WHERE SiteZoneID = '${req.query.SiteZoneID}' AND SiteTypeID = '${req.query.SiteTypeID}' AND SiteID = '${req.query.SiteID}' AND ScanDateTime = '${req.query.ScanDateTime}'`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length > 0) {
-            const d = new Date(req.body.ScanDateTime)
+            const d = new Date(req.query.ScanDateTime)
             const getMonthFromDate = d.getMonth() + 1
             var date = d.getDate();
             var day = d.getDay();
