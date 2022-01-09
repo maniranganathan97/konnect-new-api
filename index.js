@@ -144,6 +144,7 @@ app.put('/site', async (req, res) => {
         blobStream.end(buffer);
 
     } else {
+
         let query = `Update Site SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where SiteID = ?"
         const parameters = [...Object.values(detail), req.query.SiteID]
         pool.query(query, parameters, function (err, results, fields) {
@@ -904,9 +905,8 @@ app.get('/ecsreports', async (req, res) => {
                 finaloutput['maxpoints'] = result.length
                 return res.status(200).json(finaloutput)
             } else {
-                finaloutput['data'] = []
-                finaloutput['maxpoints'] = 0
-                return res.status(400).json({ code: 200, finaloutput })
+
+                return res.status(200).json({ "data": [], "maxpoints": 0 })
             }
         } else {
             return res.status(400).json({ code: 400, message: "Invalid query" })
