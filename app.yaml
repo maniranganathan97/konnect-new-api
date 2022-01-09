@@ -1,2 +1,7 @@
 runtime: nodejs14 # or another supported version
 
+env_variables:
+  CLOUD_SQL_USERNAME: root
+  CLOUD_SQL_PASSWORD: 1234
+  CLOUD_SQL_DATABASE_NAME: PEST
+  CLOUD_SQL_CONNECTION_NAME: konnectapis:us-central1:konnectsql

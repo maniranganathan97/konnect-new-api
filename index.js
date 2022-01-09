@@ -37,7 +37,7 @@ app.use('/uploads', express.static('uploads'))
 const mysql = require('mysql');
 
 const pool = mysql.createPool({
-    host: "184.168.117.92",
+    host: '184.168.117.92',
     user: 'userCreation',
     password: 'Vp6f}9)U?u)r',
     database: 'PEST',
@@ -876,6 +876,43 @@ app.get('/ecssitename', async (req, res) => {
             return res.status(400).json({ code: 400, "message": "invalid data" })
         }
     })
+})
+
+app.get('/ecsreports', async (req, res) => {
+    let finaloutput = {}
+    let demo = []
+    const output = {}
+    let query = `Select Scan_Details.ScanID,Scan_Details.PointID,Site.SiteName,Point_Details.PointNumber, login.username,Scan_Details.ScanDateTime
+    from Scan_Details 
+    JOIN Point_Details ON Point_Details.PointID = Scan_Details.PointID
+    JOIN Site ON Site.SiteID = Point_Details.SiteID
+    JOIN login ON login.UserID = Scan_Details.UserID
+    WHERE Site.SiteZoneID =  ${req.body.SiteZoneID}
+    AND Site.SiteTypeID = ${req.body.SiteTypeID}
+    AND Site.SiteID = ${req.body.SiteID}
+    AND Scan_Details.ScanDateTime = '${req.body.ScanDateTime}'`
+    // let query = `Select Scan_Details.ScanID,Scan_Details.PointID,Site.SiteName,Point_Details.PointNumber, login.username,Scan_Details.ScanDateTime from Scan_Details JOIN Point_Details ON Point_Details.PointID = Scan_Details.PointID JOIN Site ON Site.SiteID = Point_Details.SiteID JOIN login ON login.UserID = Scan_Details.UserID WHERE SiteZoneID = '${req.query.SiteZoneID}' AND SiteTypeID = '${req.query.SiteTypeID}' AND SiteID = '${req.query.SiteID}' AND ScanDateTime = '${req.query.ScanDateTime}'`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length > 0) {
+            const d = new Date(req.body.ScanDateTime)
+            const getMonthFromDate = d.getMonth() + 1
+            var date = d.getDate();
+            var day = d.getDay();
+            var weekOfMonth = Math.ceil((date - 1 - day) / 7)
+            output['week'] = weekOfMonth + "/" + getMonthFromDate
+            const result = results.map((e) => parseInt(e.PointNumber))
+            output['Points'] = result
+
+            demo.push(output)
+            finaloutput['data'] = demo
+            finaloutput['maxpoints'] = result.length
+            return res.status(200).json(finaloutput)
+        } else {
+            return res.status(400).json({ code: 400, "message": "invalid query" })
+        }
+    })
+
 })
 
 
