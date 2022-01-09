@@ -73,7 +73,7 @@ app.get('/site', async (req, res) => {
     JOIN SiteType ON SiteType.SiteTypeID = Site.SiteTypeID
     JOIN SiteZone ON SiteZone.SiteZoneID = Site.SiteZoneID`, function (error, results, fields) {
         if (error) throw error;
-        console.log(results)
+
         if (results.length > 0) {
             return res.status(200).json(results)
         } else {
@@ -129,8 +129,7 @@ app.put('/site', async (req, res) => {
         blobStream.on('finish', () => {
             const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
             detail['SiteMapImageURL'] = publicUrl
-            console.log(Object.keys(detail))
-            console.log(Object.values(detail))
+
             let query = `Update Site SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where SiteID = ?"
             const parameters = [...Object.values(detail), req.query.SiteID]
             pool.query(query, parameters, function (err, results, fields) {
@@ -149,7 +148,7 @@ app.put('/site', async (req, res) => {
         const parameters = [...Object.values(detail), req.query.SiteID]
         pool.query(query, parameters, function (err, results, fields) {
             if (err) throw err
-            console.log(results)
+
             if (results.affectedRows > 0) {
                 return res.status(200).json({ code: 200, message: "success" })
             } else {
@@ -365,7 +364,7 @@ app.post('/contact', async (req, res) => {
                 value.push(data.AddedDateTime)
                 values.push(value)
             }
-            console.log(values)
+
             var sql = "INSERT INTO Contact_Site (ContactID, SiteID, AddedByUserID, AddedDateTime) VALUES ?";
 
             pool.query(sql, [values], function (err, result) {
@@ -395,7 +394,7 @@ app.put('/contact', async (req, res) => {
             let query = `DELETE FROM Contact_Site WHERE ContactID =${req.body.ContactID}`
             pool.query(query, function (error, results, fields) {
                 if (error) throw error
-                console.log(results)
+
                 if (results.affectedRows > 0) {
 
                     let values = [];
@@ -408,7 +407,7 @@ app.put('/contact', async (req, res) => {
                         value.push(date)
                         values.push(value)
                     }
-                    console.log(values)
+
                     var sql = "INSERT INTO Contact_Site (ContactID, SiteID, AddedByUserID, AddedDateTime) VALUES ?";
 
                     pool.query(sql, [values], function (err, result) {
@@ -524,7 +523,6 @@ app.get('/checkscanid', async (req, res) => {
             pool.query(`select * from Point_Details where UID = '${uid}'`, function (error, results, fields) {
                 if (results.length > 0) {
                     let pointID = results[0].PointID
-                    console.log(pointID)
                     let query = `INSERT INTO Scan_Details(ScanID, UID, PointID, UserID, ScanDateTime) VALUES (?,?,?,?,?)`
                     let parameters = ["", uid, pointID, userID, newDate]
                     pool.query(query, parameters, function (err, results) {
@@ -623,7 +621,6 @@ app.post('/staffCertificate', multer.single('file'), async (req, res, next) => {
     blobStream.on('finish', () => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-        console.log(publicUrl)
         let query = 'INSERT INTO Staff_Certificate values (?,?,?,?,?,?,?,?,?)';
         let parameters = ["", req.body['StaffID'], req.body['Certification'], req.body['CertificationBody'], req.body['ValidityStartDate'], req.body['ValidityEndDate'], publicUrl, req.body['AddedByUserID'], req.body['AddedDateTime']]
         pool.query(query, parameters, function (err, result) {
@@ -891,23 +888,30 @@ app.get('/ecsreports', async (req, res) => {
     // let query = `Select Scan_Details.ScanID,Scan_Details.PointID,Site.SiteName,Point_Details.PointNumber, login.username,Scan_Details.ScanDateTime from Scan_Details JOIN Point_Details ON Point_Details.PointID = Scan_Details.PointID JOIN Site ON Site.SiteID = Point_Details.SiteID JOIN login ON login.UserID = Scan_Details.UserID WHERE SiteZoneID = '${req.query.SiteZoneID}' AND SiteTypeID = '${req.query.SiteTypeID}' AND SiteID = '${req.query.SiteID}' AND ScanDateTime = '${req.query.ScanDateTime}'`
     pool.query(query, function (err, results) {
         if (err) throw err
-        if (results.length > 0) {
-            const d = new Date(req.query.ScanDateTime)
-            const getMonthFromDate = d.getMonth() + 1
-            var date = d.getDate();
-            var day = d.getDay();
-            var weekOfMonth = Math.ceil((date - 1 - day) / 7)
-            output['week'] = weekOfMonth + "/" + getMonthFromDate
-            const result = results.map((e) => parseInt(e.PointNumber))
-            output['Points'] = result
+        if (results) {
+            if (results.length > 0) {
+                const d = new Date(req.query.ScanDateTime)
+                const getMonthFromDate = d.getMonth() + 1
+                var date = d.getDate();
+                var day = d.getDay();
+                var weekOfMonth = Math.ceil((date - 1 - day) / 7)
+                output['week'] = weekOfMonth + "/" + getMonthFromDate
+                const result = results.map((e) => parseInt(e.PointNumber))
+                output['Points'] = result
 
-            demo.push(output)
-            finaloutput['data'] = demo
-            finaloutput['maxpoints'] = result.length
-            return res.status(200).json(finaloutput)
+                demo.push(output)
+                finaloutput['data'] = demo
+                finaloutput['maxpoints'] = result.length
+                return res.status(200).json(finaloutput)
+            } else {
+                finaloutput['data'] = []
+                finaloutput['maxpoints'] = 0
+                return res.status(400).json({ code: 200, finaloutput })
+            }
         } else {
-            return res.status(400).json({ code: 400, "message": "invalid query" })
+            return res.status(400).json({ code: 400, message: "Invalid query" })
         }
+
     })
 
 })
