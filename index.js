@@ -885,8 +885,8 @@ app.get('/ecsreports', async (req, res) => {
     JOIN login ON login.UserID = Scan_Details.UserID
     WHERE Site.SiteZoneID =  ${req.query.SiteZoneID}
     AND Site.SiteTypeID = ${req.query.SiteTypeID}
-    AND Site.SiteID = ${req.query.SiteID}
-    AND Scan_Details.ScanDateTime = '${req.query.ScanDateTime}'`
+    AND Site.SiteID = ${req.query.SiteID}`
+    //AND Scan_Details.ScanDateTime = '${req.query.ScanDateTime}'`
     // let query = `Select Scan_Details.ScanID,Scan_Details.PointID,Site.SiteName,Point_Details.PointNumber, login.username,Scan_Details.ScanDateTime from Scan_Details JOIN Point_Details ON Point_Details.PointID = Scan_Details.PointID JOIN Site ON Site.SiteID = Point_Details.SiteID JOIN login ON login.UserID = Scan_Details.UserID WHERE SiteZoneID = '${req.query.SiteZoneID}' AND SiteTypeID = '${req.query.SiteTypeID}' AND SiteID = '${req.query.SiteID}' AND ScanDateTime = '${req.query.ScanDateTime}'`
     pool.query(query, function (err, results) {
         if (err) throw err
