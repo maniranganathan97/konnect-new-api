@@ -898,7 +898,7 @@ app.get('/ecsreports', async (req, res) => {
                 var day = d.getDay();
                 var weekOfMonth = Math.ceil((date - 1 - day) / 7)
                 output['week'] = weekOfMonth + "/" + getMonthFromDate
-                const result = results.map((e) => parseInt(e.PointNumber))
+                const result = results.map((e) => (e.ScanDateTime))
                 output['Points'] = result
 
                 demo.push(output)
