@@ -513,7 +513,8 @@ app.delete('/staff', async (req, res) => {
 
 app.get('/checkscanid', async (req, res) => {
 
-    var newDate = new Date();
+    var newDate = new Date()
+    newDate.setHours(newDate.getHours() + 8)
     const uid = req.query.UID
     const userID = parseInt(req.query.userID)
     let query = `update Point_Details SET IsScanned = "1" where UID = '${uid}'`
