@@ -449,6 +449,7 @@ app.get('/staff', async (req, res) => {
     pool.query(`select * from Staff`, function (error, results, fields) {
         if (error) throw error;
         if (results.length > 0) {
+
             return res.status(200).json(results)
         } else {
             return res.status(401).json({ "code": 401, "message": "unauthorized user" })
@@ -461,7 +462,7 @@ app.post('/staff', multer.single('file'), async (req, res) => {
     const buffer = Buffer.from(req.body["StaffImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
-    const blob = bucket.file("konnect" + id);
+    const blob = bucket.file("konnect" + id + ".jpg");
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -613,7 +614,7 @@ app.post('/staffCertificate', multer.single('file'), async (req, res, next) => {
     const buffer = Buffer.from(req.body["CertificateImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
-    const blob = bucket.file("konnect" + id);
+    const blob = bucket.file("konnect" + id + ".jpg");
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -893,14 +894,11 @@ app.get('/ecsreports', async (req, res) => {
         if (results) {
             if (results.length > 0) {
                 const d = new Date(req.query.ScanDateTime)
+                const weekOfMondayDate = new Date(d.setDate(d.getDate() - d.getDay() + 1)).getDate();
                 const getMonthFromDate = d.getMonth() + 1
-                var date = d.getDate();
-                var day = d.getDay();
-                var weekOfMonth = Math.ceil((date - 1 - day) / 7)
-                output['week'] = weekOfMonth + "/" + getMonthFromDate
+                output['week'] = getMonthFromDate + "/" + weekOfMondayDate
                 const result = results.map((e) => (e.ScanDateTime))
                 output['Points'] = result
-
                 demo.push(output)
                 finaloutput['data'] = demo
                 finaloutput['maxpoints'] = result.length
