@@ -446,9 +446,10 @@ app.delete('/contact', async (req, res) => {
 
 app.get('/staff', async (req, res) => {
 
-    pool.query(`SELECT Staff.*,AccessControl.AccessControl,StaffTitle.StaffTitle FROM Staff 
+    pool.query(`SELECT Staff.*,AccessControl.AccessControl,StaffTitle.StaffTitle,StaffEmploymentStatus.StaffEmploymentStatus AS EmploymentStatus FROM Staff 
     JOIN AccessControl ON AccessControl.AccessControlID = Staff.AccessControlID
-    JOIN StaffTitle ON StaffTitle.StaffTitleID = Staff.StaffTitleID`, function (error, results, fields) {
+    JOIN StaffTitle ON StaffTitle.StaffTitleID = Staff.StaffTitleID
+    JOIN StaffEmploymentStatus ON StaffEmploymentStatus.StaffEmploymentStatusID = Staff.StaffEmploymentStatusID`, function (error, results, fields) {
         if (error) throw error;
         if (results.length > 0) {
 
