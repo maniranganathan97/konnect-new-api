@@ -506,9 +506,11 @@ app.put('/staff', async (req, res) => {
         blobStream.on('finish', () => {
             const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
             detail['StaffImageURL'] = publicUrl
-
+            console.log(publicUrl)
             let query = `Update Staff SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where StaffID = ?"
-            const parameters = [...Object.values(detail), req.query.staffID]
+            const parameters = [...Object.values(detail), req.query.StaffID]
+            console.log(query)
+            console.log(parameters)
             pool.query(query, parameters, function (err, results, fields) {
                 if (err) throw err
                 if (results.affectedRows > 0) {
@@ -926,6 +928,9 @@ app.get('/ecsreports', async (req, res) => {
     WHERE Site.SiteZoneID =  ${req.query.SiteZoneID}
     AND Site.SiteTypeID = ${req.query.SiteTypeID}
     AND Site.SiteID = ${req.query.SiteID}`
+    let queryPointNumber = `SELECT Point_Details.* FROM Point_Details 
+    JOIN Site ON Point_Details.SiteID = Site.SiteID
+    WHERE Point_Details.SiteID = ${req.query.SiteZoneID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}`
     //AND Scan_Details.ScanDateTime = '${req.query.ScanDateTime}'`
     // let query = `Select Scan_Details.ScanID,Scan_Details.PointID,Site.SiteName,Point_Details.PointNumber, login.username,Scan_Details.ScanDateTime from Scan_Details JOIN Point_Details ON Point_Details.PointID = Scan_Details.PointID JOIN Site ON Site.SiteID = Point_Details.SiteID JOIN login ON login.UserID = Scan_Details.UserID WHERE SiteZoneID = '${req.query.SiteZoneID}' AND SiteTypeID = '${req.query.SiteTypeID}' AND SiteID = '${req.query.SiteID}' AND ScanDateTime = '${req.query.ScanDateTime}'`
     pool.query(query, function (err, results) {
