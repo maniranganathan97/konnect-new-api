@@ -476,7 +476,7 @@ app.post('/staff', multer.single('file'), async (req, res) => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
         let query = `INSERT INTO Staff(StaffID, StaffName, GenderID,SalutationID,StaffTitleID, StaffImageURL,Email, StaffEmploymentType, StaffEmploymentStatusID,Mobile,Telephone,Address1, Address2, PostCode, Nationality, JobStartDate, JobEndDate,IDTypeID, ID, Department,Passport, NextOfKin, NextOfKinMobile, RelationshipID, DOB, MartialStatusID,HighestQualification, Religion,PasswordHash, AccessControlID,AddedByUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-        pool.query(query, ["", req.body.StaffName, req.body.GenderID, req.body.SalutationID, req.body.StaffTitleID, publicUrl, req.body.Email, req.body.StaffEmploymentType, req.body.StaffEmploymentStatusID, req.body.Mobile, req.body.Telephone,req.body.Address1, req.body.Address2, req.body.PostCode, req.body.Nationality, req.body.JobStartDate, req.body.JobEndDate, req.body.IDTypeID, req.body.ID, req.body.Department, req.body.Passport, req.body.NextOfKin, req.body.NextOfKinMobile, req.body.RelationshipID, req.body.DOB, req.body.MartialStatusID, req.body.HighestQualification, req.body.Religion, req.body.PasswordHash, req.body.AccessControlID, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results, fields) {
+        pool.query(query, ["", req.body.StaffName, req.body.GenderID, req.body.SalutationID, req.body.StaffTitleID, publicUrl, req.body.Email, req.body.StaffEmploymentType, req.body.StaffEmploymentStatusID, req.body.Mobile, req.body.Telephone, req.body.Address1, req.body.Address2, req.body.PostCode, req.body.Nationality, req.body.JobStartDate, req.body.JobEndDate, req.body.IDTypeID, req.body.ID, req.body.Department, req.body.Passport, req.body.NextOfKin, req.body.NextOfKinMobile, req.body.RelationshipID, req.body.DOB, req.body.MartialStatusID, req.body.HighestQualification, req.body.Religion, req.body.PasswordHash, req.body.AccessControlID, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results, fields) {
             if (error) return res.send(error);
             if (results.affectedRows > 0) {
                 return res.status(200).json({ code: 200, message: "success" })
@@ -489,16 +489,52 @@ app.post('/staff', multer.single('file'), async (req, res) => {
 })
 
 app.put('/staff', async (req, res) => {
-    let query = `Update Staff SET  ` + Object.keys(req.body).map(key => `${key}=?`).join(",") + " where StaffID = ?"
-    const parameters = [...Object.values(req.body), req.body.StaffID]
-    pool.query(query, parameters, function (err, results, fields) {
-        if (err) throw err
-        if (results.affectedRows > 0) {
-            return res.status(200).json({ code: 200, "message": "Success" })
-        } else {
-            return res.status(401).json({ code: 401, "message": "data not update" })
-        }
-    })
+
+    const detail = req.body
+
+    if (detail['StaffImageURL']) {
+
+        const buffer = Buffer.from(detail["StaffImageURL"], 'base64')
+        // Create a new blob in the bucket and upload the file data.
+        const id = uuid.v4();
+        const blob = bucket.file("konnect" + id + ".jpg");
+        const blobStream = blob.createWriteStream();
+
+        blobStream.on('error', err => {
+            next(err);
+        });
+        blobStream.on('finish', () => {
+            const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+            detail['StaffImageURL'] = publicUrl
+
+            let query = `Update Staff SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where StaffID = ?"
+            const parameters = [...Object.values(detail), req.query.staffID]
+            pool.query(query, parameters, function (err, results, fields) {
+                if (err) throw err
+                if (results.affectedRows > 0) {
+                    return res.status(200).json({ code: 200, message: "success" })
+                } else {
+                    return res.status(401).json({ code: 401, "message": "data not update" })
+                }
+            })
+        })
+        blobStream.end(buffer);
+
+    } else {
+
+        let query = `Update Staff SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where StaffID = ?"
+        const parameters = [...Object.values(detail), req.query.StaffID]
+        pool.query(query, parameters, function (err, results, fields) {
+            if (err) throw err
+
+            if (results.affectedRows > 0) {
+                return res.status(200).json({ code: 200, message: "success" })
+            } else {
+                return res.status(401).json({ code: 401, "message": "data not update" })
+            }
+        })
+    }
+
 })
 
 app.delete('/staff', async (req, res) => {
