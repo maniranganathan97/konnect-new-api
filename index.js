@@ -98,7 +98,7 @@ app.post('/site', multer.single('file'), async (req, res) => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
         let query = 'INSERT INTO Site(`SiteID`, `SiteName`, `SiteStatus`, `Address1`, `Address2`, `IsNFCAvailable`, `PostCode`, `SiteZoneID`, `SiteTypeID`,`SiteMapImageURL`,`AddedByUserID`,`AddedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)'
-        let parameters = ["", req.body.SiteName, req.body.SiteStatus, req.body.Address1, req.body.Address2, req.body.IsNfcAvailable, req.body.PostalCode, req.body.SiteZoneID, req.body.SiteTypeID, publicUrl, req.body.AddedByUserID, req.body.AddedDateTime]
+        let parameters = ["", req.body.SiteName, req.body.SiteStatus, req.body.Address1, req.body.Address2, req.body.IsNFCAvailable, req.body.PostCode, req.body.SiteZoneID, req.body.SiteTypeID, publicUrl, req.body.AddedByUserID, req.body.AddedDateTime]
         pool.query(query, parameters, function (err, results, fields) {
             if (err) throw err
             if (results.affectedRows > 0) {
@@ -917,40 +917,49 @@ app.get('/ecssitename', async (req, res) => {
 })
 
 app.get('/ecsreports', async (req, res) => {
-    let finaloutput = {}
-    let demo = []
-    const output = {}
-    let query = `Select Scan_Details.ScanID,Scan_Details.PointID,Site.SiteName,Point_Details.PointNumber, login.username,Scan_Details.ScanDateTime
-    from Scan_Details 
-    JOIN Point_Details ON Point_Details.PointID = Scan_Details.PointID
-    JOIN Site ON Site.SiteID = Point_Details.SiteID
-    JOIN login ON login.UserID = Scan_Details.UserID
-    WHERE Site.SiteZoneID =  ${req.query.SiteZoneID}
-    AND Site.SiteTypeID = ${req.query.SiteTypeID}
-    AND Site.SiteID = ${req.query.SiteID}`
-    let queryPointNumber = `SELECT Point_Details.* FROM Point_Details 
+    let finalResult = {}
+    let query = `Select Scan_Details.*,Point_Details.PointNumber from Scan_Details 
+    JOIN Point_Details ON Scan_Details.PointID = Point_Details.PointID
+    WHERE Scan_Details.PointID IN (SELECT Point_Details.PointID FROM Point_Details
     JOIN Site ON Point_Details.SiteID = Site.SiteID
-    WHERE Point_Details.SiteID = ${req.query.SiteZoneID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}`
-    //AND Scan_Details.ScanDateTime = '${req.query.ScanDateTime}'`
-    // let query = `Select Scan_Details.ScanID,Scan_Details.PointID,Site.SiteName,Point_Details.PointNumber, login.username,Scan_Details.ScanDateTime from Scan_Details JOIN Point_Details ON Point_Details.PointID = Scan_Details.PointID JOIN Site ON Site.SiteID = Point_Details.SiteID JOIN login ON login.UserID = Scan_Details.UserID WHERE SiteZoneID = '${req.query.SiteZoneID}' AND SiteTypeID = '${req.query.SiteTypeID}' AND SiteID = '${req.query.SiteID}' AND ScanDateTime = '${req.query.ScanDateTime}'`
+    WHERE Point_Details.SiteID = ${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}) ORDER BY Scan_Details.PointID ASC`
+
     pool.query(query, function (err, results) {
         if (err) throw err
-        if (results) {
-            if (results.length > 0) {
-                const d = new Date(req.query.ScanDateTime)
-                const weekOfMondayDate = new Date(d.setDate(d.getDate() - d.getDay() + 1)).getDate();
-                const getMonthFromDate = d.getMonth() + 1
-                output['week'] = getMonthFromDate + "/" + weekOfMondayDate
-                const result = results.map((e) => (e.ScanDateTime))
-                output['Points'] = result
-                demo.push(output)
-                finaloutput['data'] = demo
-                finaloutput['maxpoints'] = result.length
-                return res.status(200).json(finaloutput)
-            } else {
 
-                return res.status(200).json({ "data": [], "maxpoints": 0 })
+        if (results) {
+            let finaloutput = []
+            let output = {}
+            if (results.length > 0) {
+
+                for (let val of results) {
+                    const d = new Date(val.ScanDateTime)
+                    const weekOfMondayDate = new Date(d.setDate(d.getDate() - d.getDay() + 1)).getDate();
+                    const getMonthFromDate = d.getMonth() + 1
+                    output['Week'] = getMonthFromDate + "/" + weekOfMondayDate
+                    output[val.PointNumber] = val.ScanDateTime
+                }
             }
+
+            // if (results.length > 0) {
+            //     const d = new Date(req.query.ScanDateTime)
+            //     const weekOfMondayDate = new Date(d.setDate(d.getDate() - d.getDay() + 1)).getDate();
+            //     const getMonthFromDate = d.getMonth() + 1
+            //     output['week'] = getMonthFromDate + "/" + weekOfMondayDate
+            //     const result = results.map((e) => {
+            //         output[e.PointNumber] = (e.ScanDateTime)
+            //         demo.push(output)
+            //     })
+            //     finaloutput['data'] = demo
+            //     finaloutput['maxpoints'] = result.length
+            //     return res.status(200).json(finaloutput)
+            // } else {
+
+            //     return res.status(200).json({ "data": [], "maxpoints": 0 })
+            // }
+            finaloutput.push(output)
+            return res.status(200).json({ data: finaloutput })
+
         } else {
             return res.status(400).json({ code: 400, message: "Invalid query" })
         }
