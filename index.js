@@ -917,48 +917,47 @@ app.get('/ecssitename', async (req, res) => {
 })
 
 app.get('/ecsreports', async (req, res) => {
-    let finalResult = {}
+
     let query = `Select Scan_Details.*,Point_Details.PointNumber from Scan_Details 
     JOIN Point_Details ON Scan_Details.PointID = Point_Details.PointID
     WHERE Scan_Details.PointID IN (SELECT Point_Details.PointID FROM Point_Details
     JOIN Site ON Point_Details.SiteID = Site.SiteID
-    WHERE Point_Details.SiteID = ${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}) ORDER BY Scan_Details.PointID ASC`
+    WHERE Point_Details.SiteID = ${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteZoneID})
+    AND MONTH(Scan_Details.ScanDateTime) = MONTH('${req.query.ScanDateTime}') AND YEAR(Scan_Details.ScanDateTime) = YEAR('${req.query.ScanDateTime}')
+    ORDER BY Scan_Details.PointID ASC`
 
     pool.query(query, function (err, results) {
+
         if (err) throw err
 
-        if (results) {
-            let finaloutput = []
-            let output = {}
-            if (results.length > 0) {
+        if (results.length > 0) {
+            //     let dataArray = []
+            //     let data = {}
+            //     let header = []
+            //     header.push("Week")
+            //     let output = {}
+            //     console.log(results.length > 0)
+            //     if (results.length > 0) {
+            //         results.forEach((e) => {
+            //             header.push("Point " + e.PointNumber)
+            //         })
 
-                for (let val of results) {
-                    const d = new Date(val.ScanDateTime)
-                    const weekOfMondayDate = new Date(d.setDate(d.getDate() - d.getDay() + 1)).getDate();
-                    const getMonthFromDate = d.getMonth() + 1
-                    output['Week'] = getMonthFromDate + "/" + weekOfMondayDate
-                    output[val.PointNumber] = val.ScanDateTime
-                }
-            }
+            //         for (let val of results) {
+            //             let obj = {}
+            //             const d = new Date(val.ScanDateTime)
+            //             const weekOfMondayDate = new Date(d.setDate(d.getDate() - d.getDay() + 1)).getDate();
+            //             const getMonthFromDate = d.getMonth() + 1
+            //             obj['Week'] = getMonthFromDate + "/" + weekOfMondayDate
+            //             obj["Point " + val.PointNumber] = val.ScanDateTime
 
-            // if (results.length > 0) {
-            //     const d = new Date(req.query.ScanDateTime)
-            //     const weekOfMondayDate = new Date(d.setDate(d.getDate() - d.getDay() + 1)).getDate();
-            //     const getMonthFromDate = d.getMonth() + 1
-            //     output['week'] = getMonthFromDate + "/" + weekOfMondayDate
-            //     const result = results.map((e) => {
-            //         output[e.PointNumber] = (e.ScanDateTime)
-            //         demo.push(output)
-            //     })
-            //     finaloutput['data'] = demo
-            //     finaloutput['maxpoints'] = result.length
-            //     return res.status(200).json(finaloutput)
-            // } else {
+            //             dataArray.push(obj)
 
-            //     return res.status(200).json({ "data": [], "maxpoints": 0 })
-            // }
-            finaloutput.push(output)
-            return res.status(200).json({ data: finaloutput })
+            //         }
+            //     }
+
+            //     output['header'] = Array.from(new Set(header))
+            //     output['data'] = dataArray
+            return res.status(200).send(results)
 
         } else {
             return res.status(400).json({ code: 400, message: "Invalid query" })
