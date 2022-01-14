@@ -360,13 +360,24 @@ app.put('/pointdetails', async (req, res) => {
 })
 
 app.delete('/pointdetails', async (req, res) => {
-    let query = `DELETE FROM Point_Details WHERE PointID =${req.query.PointID}`
-    pool.query(query, function (error, results, fields) {
+    let scanDetailsquery = `DELETE FROM Scan_Details WHERE PointID = ${req.query.PointID}`
+
+    pool.query(scanDetailsquery, function (error, results, fields) {
         if (error) throw error
         if (results.affectedRows > 0) {
-            return res.status(200).json({ code: 200, message: "deleted successfully" })
+            let query = `DELETE FROM Point_Details WHERE PointID =${req.query.PointID}`
+            pool.query(query, function (err, results, fields) {
+                if (err) throw err
+                if (results.affectedRows > 0) {
+                    return res.status(200).json({ code: 200, message: "deleted successfully" })
+                } else {
+                    return res.status(400).json({ code: 400, message: "Point_details deleted successfully" })
+                }
+            })
+
+
         } else {
-            return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+            return res.status(401).json({ "code": 400, "message": "not deleted scan details" })
         }
     })
 })
@@ -634,6 +645,20 @@ app.post('/scandetails', async (req, res) => {
             return res.status(401).json({ code: 401, "message": "unauthorized user" })
         }
 
+    })
+
+})
+
+app.delete('/scandetails', async (req, res) => {
+
+    let query = `DELETE FROM Scan_Details WHERE PointID =${req.query.PointID}`
+    pool.query(query, function (error, results, fields) {
+        if (error) throw error
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "deleted successfully" })
+        } else {
+            return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+        }
     })
 
 })
