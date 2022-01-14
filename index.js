@@ -286,18 +286,18 @@ app.post('/pointdetails', async (req, res, next) => {
 
 });
 
-app.post('/pointdetails', async (req, res) => {
+// app.post('/pointdetails', async (req, res) => {
 
-    pool.query(`insert into Point_Details Values (?,?,?,?,?,?,?,?,?,?,?)`, ["", req.body.SiteZoneID, req.body.SiteID, req.body.PointNumber, req.body.PointNotes, req.body['UID'], req.body.IsScanned, req.body.PointImage, req.body.MapImage, req.body.AddedUserID, req.body.ScanDateTime], function (error, result, fields) {
-        if (error) throw error;
-        if (result.affectedRows > 0) {
-            return res.status(200).json({ code: 200, message: "success" })
-        } else {
-            return res.status(401).json({ code: 401, "message": "unauthorized user" })
-        }
+//     pool.query(`insert into Point_Details Values (?,?,?,?,?,?,?,?,?,?,?)`, ["", req.body.SiteZoneID, req.body.SiteID, req.body.PointNumber, req.body.PointNotes, req.body['UID'], req.body.IsScanned, req.body.PointImage, req.body.MapImage, req.body.AddedUserID, req.body.ScanDateTime], function (error, result, fields) {
+//         if (error) throw error;
+//         if (result.affectedRows > 0) {
+//             return res.status(200).json({ code: 200, message: "success" })
+//         } else {
+//             return res.status(401).json({ code: 401, "message": "unauthorized user" })
+//         }
 
-    })
-})
+//     })
+// })
 
 app.get('/pointdetailsreport', async (req, res) => {
     let query = `Select Scan_Details.ScanID,Scan_Details.PointID,SiteZone.Description,Site.SiteName,Point_Details.PointNumber, login.username,Scan_Details.ScanDateTime
@@ -313,16 +313,50 @@ app.get('/pointdetailsreport', async (req, res) => {
 })
 
 app.put('/pointdetails', async (req, res) => {
-    let query = `Update Point_Details SET  ` + Object.keys(req.body).map(key => `${key}=?`).join(",") + " where PointID = ?"
-    const parameters = [...Object.values(req.body), req.query.PointID]
-    pool.query(query, parameters, function (err, results, fields) {
-        if (err) throw err
-        if (results.affectedRows > 0) {
-            return res.status(200).json({ code: 200, message: "success" })
-        } else {
-            return res.status(401).json({ code: 401, "message": "data not update" })
-        }
-    })
+    const detail = req.body
+
+    if (detail['PointImageURL']) {
+
+        const buffer = Buffer.from(detail["PointImageURL"], 'base64')
+        // Create a new blob in the bucket and upload the file data.
+        const id = uuid.v4();
+        const blob = bucket.file("konnect" + id + ".jpg");
+        const blobStream = blob.createWriteStream();
+
+        blobStream.on('error', err => {
+            next(err);
+        });
+        blobStream.on('finish', () => {
+            const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+            detail['PointImageURL'] = publicUrl
+
+            let query = `Update Point_Details SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where PointID = ?"
+            const parameters = [...Object.values(detail), req.query.PointID]
+
+            pool.query(query, parameters, function (err, results, fields) {
+                if (err) throw err
+                if (results.affectedRows > 0) {
+                    return res.status(200).json({ code: 200, message: "success" })
+                } else {
+                    return res.status(401).json({ code: 400, "message": "data not update" })
+                }
+            })
+        })
+        blobStream.end(buffer);
+
+    } else {
+        let query = `Update Point_Details SET  ` + Object.keys(req.body).map(key => `${key}=?`).join(",") + " where PointID = ?"
+        const parameters = [...Object.values(req.body), req.query.PointID]
+        pool.query(query, parameters, function (err, results, fields) {
+            if (err) throw err
+            if (results.affectedRows > 0) {
+                return res.status(200).json({ code: 200, message: "success" })
+            } else {
+                return res.status(401).json({ code: 401, "message": "data not update" })
+            }
+        })
+    }
+
 })
 
 app.delete('/pointdetails', async (req, res) => {
