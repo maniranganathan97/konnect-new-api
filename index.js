@@ -978,9 +978,9 @@ app.get('/ecssitename', async (req, res) => {
 app.get('/ecsreports', async (req, res) => {
 
     let obj = {}
-    // let pointQuery = `SELECT Point_Details.PointID,PointNumber FROM Point_Details
-    // JOIN Site ON Point_Details.SiteID = Site.SiteID
-    // WHERE Point_Details.SiteID =1 AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}`
+    let pointQuery = `SELECT Point_Details.PointID,PointNumber FROM Point_Details
+    JOIN Site ON Point_Details.SiteID = Site.SiteID
+    WHERE Point_Details.SiteID =1 AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}`
 
     let query = `Select Scan_Details.*,Point_Details.PointNumber from Scan_Details 
     JOIN Point_Details ON Scan_Details.PointID = Point_Details.PointID
@@ -995,13 +995,17 @@ app.get('/ecsreports', async (req, res) => {
         if (err) throw err
         if (results.length > 0) {
 
-            // pool.query(pointQuery, function (err, pointQuery) {
-            //     if (err) throw err
-            //     obj['pointsData'] = pointQuery
-            //     obj['ecsReports'] = results
-            //     return res.status(200).send(obj)
-            // })
-            return res.status(200).send(results)
+            pool.query(pointQuery, function (err, pointQuery) {
+                if (err) throw err
+                if (pointQuery.length > 0) {
+                    obj['pointsData'] = pointQuery
+                    obj['ecsReports'] = results
+                    return res.status(200).send(obj)
+                } else {
+                    return res.status(400).json({ code: 400, message: "Invalid query" })
+                }
+
+            })
 
         } else {
             return res.status(400).json({ code: 400, message: "Invalid query" })
