@@ -952,45 +952,30 @@ app.get('/ecssitename', async (req, res) => {
 
 app.get('/ecsreports', async (req, res) => {
 
+    let obj = {}
+    // let pointQuery = `SELECT Point_Details.PointID,PointNumber FROM Point_Details
+    // JOIN Site ON Point_Details.SiteID = Site.SiteID
+    // WHERE Point_Details.SiteID =1 AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}`
+
     let query = `Select Scan_Details.*,Point_Details.PointNumber from Scan_Details 
     JOIN Point_Details ON Scan_Details.PointID = Point_Details.PointID
     WHERE Scan_Details.PointID IN (SELECT Point_Details.PointID FROM Point_Details
     JOIN Site ON Point_Details.SiteID = Site.SiteID
-    WHERE Point_Details.SiteID = ${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteZoneID})
+    WHERE Point_Details.SiteID = ${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID})
     AND MONTH(Scan_Details.ScanDateTime) = MONTH('${req.query.ScanDateTime}') AND YEAR(Scan_Details.ScanDateTime) = YEAR('${req.query.ScanDateTime}')
-    ORDER BY Scan_Details.PointID ASC`
+    ORDER BY Scan_Details.PointID,Scan_Details.ScanDateTime ASC`
 
     pool.query(query, function (err, results) {
 
         if (err) throw err
-
         if (results.length > 0) {
-            //     let dataArray = []
-            //     let data = {}
-            //     let header = []
-            //     header.push("Week")
-            //     let output = {}
-            //     console.log(results.length > 0)
-            //     if (results.length > 0) {
-            //         results.forEach((e) => {
-            //             header.push("Point " + e.PointNumber)
-            //         })
 
-            //         for (let val of results) {
-            //             let obj = {}
-            //             const d = new Date(val.ScanDateTime)
-            //             const weekOfMondayDate = new Date(d.setDate(d.getDate() - d.getDay() + 1)).getDate();
-            //             const getMonthFromDate = d.getMonth() + 1
-            //             obj['Week'] = getMonthFromDate + "/" + weekOfMondayDate
-            //             obj["Point " + val.PointNumber] = val.ScanDateTime
-
-            //             dataArray.push(obj)
-
-            //         }
-            //     }
-
-            //     output['header'] = Array.from(new Set(header))
-            //     output['data'] = dataArray
+            // pool.query(pointQuery, function (err, pointQuery) {
+            //     if (err) throw err
+            //     obj['pointsData'] = pointQuery
+            //     obj['ecsReports'] = results
+            //     return res.status(200).send(obj)
+            // })
             return res.status(200).send(results)
 
         } else {
@@ -1000,8 +985,6 @@ app.get('/ecsreports', async (req, res) => {
     })
 
 })
-
-
 
 app.listen(port, function () {
     console.log(`${port} is running`)
