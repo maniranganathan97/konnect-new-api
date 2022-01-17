@@ -360,8 +360,8 @@ app.put('/pointdetails', async (req, res) => {
 })
 
 app.delete('/pointdetails', async (req, res) => {
-
     let scanDetailsquery = `DELETE FROM Scan_Details WHERE PointID = ${req.query.PointID}`
+
     pool.query(scanDetailsquery, function (error, results, fields) {
         if (error) throw error
         if (results.affectedRows > 0) {
@@ -375,17 +375,9 @@ app.delete('/pointdetails', async (req, res) => {
                 }
             })
 
+
         } else {
-            let query = `DELETE FROM Point_Details WHERE PointID =${req.query.PointID}`
-            pool.query(query, function (err, results, fields) {
-                if (err) throw err
-                if (results.affectedRows > 0) {
-                    return res.status(200).json({ code: 200, message: "deleted successfully" })
-                } else {
-                    return res.status(400).json({ code: 400, message: "Point_details deleted successfully" })
-                }
-            })
-            // return res.status(400).json({ "code": 400, "message": "not deleted scan details" })
+            return res.status(401).json({ "code": 400, "message": "not deleted scan details" })
         }
     })
 })
@@ -608,43 +600,34 @@ app.delete('/staff', async (req, res) => {
 
 app.get('/checkscanid', async (req, res) => {
 
-    let newDate = new Date()
+    var newDate = new Date()
     newDate.setHours(newDate.getHours() + 8)
     const uid = req.query.UID
     const userID = parseInt(req.query.userID)
     let query = `update Point_Details SET IsScanned = "1" where UID = '${uid}'`
 
     pool.query(query, function (error, results, fields) {
-        if (error) throw error
-
+        if (error) throw error;
         if (results.affectedRows > 0) {
-            let parameters;
-            pool.query(`select * from Point_Details where UID = '${uid}' `, function (error, results, fields) {
+            pool.query(`select * from Point_Details where UID = '${uid}'`, function (error, results, fields) {
                 if (results.length > 0) {
-                    let query = `INSERT INTO Scan_Details(ScanID, UID, PointID, UserID, ScanDateTime) VALUES (?,?,?,?,?)`
                     let pointID = results[0].PointID
-                    let dateTime = new Date(req.query.ScanDateTime)
-                    if (results.length <= 2) {//2<=2
-                        if (dateTime.getTime() > results[0].ScanDateTime.getTime()) {
-                            parameters = ["", uid, pointID, userID, dateTime]
+                    let query = `INSERT INTO Scan_Details(ScanID, UID, PointID, UserID, ScanDateTime) VALUES (?,?,?,?,?)`
+                    let parameters = ["", uid, pointID, userID, newDate]
+                    pool.query(query, parameters, function (err, results) {
+                        if (err) throw err
+                        if (results.affectedRows > 0) {
+                            return res.status(200).json({ code: 200, message: "success" })
+                        } else {
+                            return res.status(400).json({ code: 400, message: "Invalid Data" })
                         }
-                        pool.query(query, parameters, function (err, results) {
-                            if (err) throw err
-                            if (results.affectedRows > 0) {
-                                return res.status(200).json({ code: 200, message: "success" })
-                            } else {
-                                return res.status(400).json({ code: 400, message: "Invalid Data" })
-                            }
-                        })
-                    } else {
-                        return res.status(400).send({ code: 400, "message": "already records added" })
-                    }
+                    })
                 }
             })
 
 
         } else {
-            return res.status(400).json({ "code": 400, "message": "Invalid NFC ID." })
+            return res.status(401).json({ "code": 401, "message": "Invalid NFC ID." })
         }
     })
 
