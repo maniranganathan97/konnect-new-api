@@ -608,20 +608,73 @@ app.delete('/staff', async (req, res) => {
 
 app.get('/checkscanid', async (req, res) => {
 
-    var newDate = new Date()
-    newDate.setHours(newDate.getHours() + 8)
+    // var newDate = new Date()
+    // let singaporeTime =
+    //     newDate.toLocaleString("en-US", {
+    //         timeZone: "Asia/singapore"
+    //     });
+    let scanDate = req.query.ScanDateTime;
     const uid = req.query.UID
     const userID = parseInt(req.query.userID)
-    let query = `update Point_Details SET IsScanned = "1" where UID = '${uid}'`
 
-    pool.query(query, function (error, results, fields) {
-        if (error) throw error;
-        if (results.affectedRows > 0) {
-            pool.query(`select * from Point_Details where UID = '${uid}'`, function (error, results, fields) {
-                if (results.length > 0) {
-                    let pointID = results[0].PointID
+    pool.query(`select * from Point_Details where UID = '${uid}'`, function (error, results, fields) {
+        if (error) throw error
+        if (results.length > 0) {
+            let pointId = results[0].PointID
+            console.log(results.length > 0 && results.length == 1)
+            console.log(results.length > 0 && results.length >= 2)
+            pool.query(`select * from Scan_Details where UID='${uid}' AND UserID=${userID}`, function (err, results, fields) {
+
+                if (results.length > 0 && results.length == 1) {
+
+                    if (new Date(scanDate).getUTCDate() == new Date(results[0].ScanDateTime).getUTCDate()) {
+                        let query = `Update Scan_Details SET  ` + Object.keys(req.query).map(key => `${key}=?`).join(",") + " where UID = ?"
+                        const parameters = [...Object.values(req.query), req.query.UID]
+                        pool.query(query, parameters, function (err, results, fields) {
+                            if (err) throw err
+
+                            if (results.affectedRows > 0) {
+                                return res.status(200).json({ code: 200, message: "success" })
+                            } else {
+                                return res.status(401).json({ code: 401, "message": "data not update" })
+                            }
+                        })
+                    } else {
+                        let query = `INSERT INTO Scan_Details(ScanID, UID, PointID, UserID, ScanDateTime) VALUES (?,?,?,?,?)`
+                        console.log(userID, req.query.ScanDateTime)
+                        let parameters = ["", uid, pointId, userID, req.query.ScanDateTime]
+                        pool.query(query, parameters, function (err, results) {
+                            if (err) throw err
+                            if (results.affectedRows > 0) {
+                                return res.status(200).json({ code: 200, message: "success" })
+                            } else {
+                                return res.status(400).json({ code: 400, message: "Invalid Data" })
+                            }
+                        })
+                    }
+                } else if (results.length > 0 && results.length >= 2) {
+
+                    if (new Date(req.query.ScanDateTime).getDate() > new Date(results[1].ScanDateTime).getDate()) {
+                        return res.status(400).json({ code: 400, message: "invalid data" })
+                    }
+                    if (new Date(req.query.ScanDateTime).getTime() >= new Date(results[1].ScanDateTime)) {
+                        let query = `Update Scan_Details SET  ` + Object.keys(req.query).map(key => `${key}=?`).join(",") + " where ScanID = ?"
+                        const parameters = [...Object.values(req.query), results[1].ScanID]
+                        pool.query(query, parameters, function (err, results, fields) {
+                            if (err) throw err
+
+                            if (results.affectedRows > 0) {
+                                return res.status(200).json({ code: 200, message: "success" })
+                            } else {
+                                return res.status(400).json({ code: 400, "message": "invalid data" })
+                            }
+                        })
+                    }
+
+                } else {
+
                     let query = `INSERT INTO Scan_Details(ScanID, UID, PointID, UserID, ScanDateTime) VALUES (?,?,?,?,?)`
-                    let parameters = ["", uid, pointID, userID, newDate]
+                    let parameters = ["", uid, pointId, userID, req.query.ScanDateTime]
                     pool.query(query, parameters, function (err, results) {
                         if (err) throw err
                         if (results.affectedRows > 0) {
@@ -632,12 +685,48 @@ app.get('/checkscanid', async (req, res) => {
                     })
                 }
             })
-
-
         } else {
-            return res.status(401).json({ "code": 401, "message": "Invalid NFC ID." })
+            return res.status(400).json({ code: 400, message: "Invalid Access" })
         }
     })
+    // let query = `update Point_Details SET IsScanned = "1" where UID = '${uid}'`
+
+    // pool.query(query, function (error, results, fields) {
+    //     if (error) throw error;
+    //     if (results.affectedRows > 0) {
+    //         pool.query(`select * from Point_Details where UID = '${uid}'`, function (error, results, fields) {
+    //             if (results.length > 0) {
+    //                 let pointID = results[0].PointID
+    //                 let query = `INSERT INTO Scan_Details(ScanID, UID, PointID, UserID, ScanDateTime) VALUES (?,?,?,?,?)`
+    //                 let parameters = ["", uid, pointID, userID, req.body.ScanDateTime]
+    //                 pool.query(query, parameters, function (err, results) {
+    //                     if (err) throw err
+    //                     if (results.affectedRows > 0) {
+    //                         return res.status(200).json({ code: 200, message: "success" })
+    //                     } else {
+    //                         return res.status(400).json({ code: 400, message: "Invalid Data" })
+    //                     }
+    //                 })
+    //             } else {
+    //                 let query = `INSERT INTO Scan_Details(ScanID, UID, PointID, UserID, ScanDateTime) VALUES (?,?,?,?,?)`
+    //                 let parameters = ["", uid, pointID, userID, req.body.ScanDateTime]
+    //                 pool.query(query, parameters, function (err, results) {
+    //                     if (err) throw err
+    //                     if (results.affectedRows > 0) {
+    //                         return res.status(200).json({ code: 200, message: "success" })
+    //                     } else {
+    //                         return res.status(400).json({ code: 400, message: "Invalid Data" })
+    //                     }
+    //                 })
+
+    //             }
+    //         })
+
+
+    //     } else {
+    //         return res.status(401).json({ "code": 401, "message": "Invalid NFC ID." })
+    //     }
+    // })
 
 })
 
