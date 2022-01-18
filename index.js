@@ -988,7 +988,7 @@ app.get('/ecsreports', async (req, res) => {
     let obj = {}
     let pointQuery = `SELECT Point_Details.PointID,PointNumber FROM Point_Details
     JOIN Site ON Point_Details.SiteID = Site.SiteID
-    WHERE Point_Details.SiteID =1 AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}`
+    WHERE Point_Details.SiteID =${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}`
 
     let query = `Select Scan_Details.*,Point_Details.PointNumber from Scan_Details 
     JOIN Point_Details ON Scan_Details.PointID = Point_Details.PointID
