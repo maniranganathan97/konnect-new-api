@@ -269,8 +269,8 @@ app.post('/pointdetails', async (req, res, next) => {
     blobStream.on('finish', () => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-        let query = 'insert into Point_Details Values (?,?,?,?,?,?,?,?,?,?)';
-        let parameters = ["", req.body.SiteZoneID, req.body.SiteID, req.body.PointNumber, req.body.PointNotes, req.body['UID'], req.body.IsScanned, publicUrl, req.body.AddedUserID, req.body.ScanDateTime]
+        let query = 'insert into Point_Details Values (?,?,?,?,?,?,?,?,?,?,?,?)';
+        let parameters = ["", req.body.SiteZoneID, req.body.SiteID, req.body.PointNumber, req.body.PointNotes, req.body['UID'], req.body.IsScanned, publicUrl, req.body.AddedUserID, req.body.ScanDateTime, req.body.scanSessionOne, req.body.scanSessionTwo]
         pool.query(query, parameters, function (err, result) {
             if (err) throw err
             if (result.affectedRows > 0) {
@@ -448,7 +448,8 @@ app.put('/contact', async (req, res) => {
             let query = `DELETE FROM Contact_Site WHERE ContactID =${req.body.ContactID}`
             pool.query(query, function (error, results, fields) {
                 if (error) throw error
-                //if (results.affectedRows > 0) {
+
+                if (results.affectedRows > 0) {
 
                     let values = [];
                     for (let data of contactSiteValues) {
@@ -472,9 +473,9 @@ app.put('/contact', async (req, res) => {
                             return res.status(401).json({ code: 401, "message": "data not update" })
                         }
                     });
-                /*} else {
+                } else {
                     return res.status(401).json({ "code": 401, "message": "unauthorized user" })
-                }*/
+                }
             })
         } else {
             return res.status(401).json({ code: 401, "message": "data not update" })
@@ -620,10 +621,8 @@ app.get('/checkscanid', async (req, res) => {
         if (error) throw error
         if (results.length > 0) {
             let pointId = results[0].PointID
-            console.log(results.length > 0 && results.length == 1)
-            console.log(results.length > 0 && results.length >= 2)
-            pool.query(`select * from Scan_Details where UID='${uid}' AND UserID=${userID}`, function (err, results, fields) {
 
+            pool.query(`select * from Scan_Details where UID='${uid}' AND UserID=${userID}`, function (err, results, fields) {
                 if (results.length > 0 && results.length == 1) {
 
                     if (new Date(scanDate).getUTCDate() == new Date(results[0].ScanDateTime).getUTCDate()) {
@@ -631,21 +630,43 @@ app.get('/checkscanid', async (req, res) => {
                         const parameters = [...Object.values(req.query), req.query.UID]
                         pool.query(query, parameters, function (err, results, fields) {
                             if (err) throw err
-
                             if (results.affectedRows > 0) {
-                                return res.status(200).json({ code: 200, message: "success" })
+                                let query = `Update Point_Details SET scanSessionOne = '${req.query.ScanDateTime}' where PointID = ${pointId}`
+                                pool.query(query, function (err, results) {
+                                    if (err) throw err
+                                    if (results.affectedRows > 0) {
+                                        return res.status(200).json({ code: 200, message: "success" })
+                                    } else {
+                                        return res.status(400).json({ code: 400, message: "point details not update" })
+                                    }
+                                })
+
                             } else {
                                 return res.status(401).json({ code: 401, "message": "data not update" })
                             }
                         })
                     } else {
-                        let query = `INSERT INTO Scan_Details(ScanID, UID, PointID, UserID, ScanDateTime) VALUES (?,?,?,?,?)`
-                        console.log(userID, req.query.ScanDateTime)
-                        let parameters = ["", uid, pointId, userID, req.query.ScanDateTime]
+                        let query = `INSERT INTO Scan_Details( UID, PointID, UserID, ScanDateTime) VALUES (?,?,?,?)`
+                        let parameters = [uid, pointId, userID, req.query.ScanDateTime]
                         pool.query(query, parameters, function (err, results) {
                             if (err) throw err
                             if (results.affectedRows > 0) {
-                                return res.status(200).json({ code: 200, message: "success" })
+                                pool.query(query, parameters, function (err, results) {
+                                    if (err) throw err
+                                    if (results.affectedRows > 0) {
+                                        let query = `Update Point_Details SET scanSessionTwo = '${req.query.ScanDateTime}' where PointID = ${pointId}`
+                                        pool.query(query, function (err, results) {
+                                            if (err) throw err
+                                            if (results.affectedRows > 0) {
+                                                return res.status(200).json({ code: 200, message: "success" })
+                                            } else {
+                                                return res.status(400).json({ code: 400, message: "point details not update" })
+                                            }
+                                        })
+                                    } else {
+                                        return res.status(400).json({ code: 400, message: "Invalid Data" })
+                                    }
+                                })
                             } else {
                                 return res.status(400).json({ code: 400, message: "Invalid Data" })
                             }
@@ -671,13 +692,22 @@ app.get('/checkscanid', async (req, res) => {
                     }
 
                 } else {
-
-                    let query = `INSERT INTO Scan_Details(ScanID, UID, PointID, UserID, ScanDateTime) VALUES (?,?,?,?,?)`
-                    let parameters = ["", uid, pointId, userID, req.query.ScanDateTime]
+                    console.log(pointId)
+                    let query = `INSERT INTO Scan_Details( UID, PointID, UserID, ScanDateTime) VALUES (?,?,?,?)`
+                    let parameters = [uid, pointId, userID, req.query.ScanDateTime]
                     pool.query(query, parameters, function (err, results) {
                         if (err) throw err
                         if (results.affectedRows > 0) {
-                            return res.status(200).json({ code: 200, message: "success" })
+                            console.log(pointId)
+                            let query = `Update Point_Details SET scanSessionOne = '${req.query.ScanDateTime}' where PointID = ${pointId}`
+                            pool.query(query, function (err, results) {
+                                if (err) throw err
+                                if (results.affectedRows > 0) {
+                                    return res.status(200).json({ code: 200, message: "success" })
+                                } else {
+                                    return res.status(400).json({ code: 400, message: "point details not update" })
+                                }
+                            })
                         } else {
                             return res.status(400).json({ code: 400, message: "Invalid Data" })
                         }
