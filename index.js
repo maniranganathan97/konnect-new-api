@@ -449,7 +449,7 @@ app.put('/contact', async (req, res) => {
             pool.query(query, function (error, results, fields) {
                 if (error) throw error
 
-                if (results.affectedRows > 0) {
+                //if (results.affectedRows > 0) {
 
                     let values = [];
                     for (let data of contactSiteValues) {
@@ -462,6 +462,8 @@ app.put('/contact', async (req, res) => {
                         values.push(value)
                     }
 
+                    if(values.length > 0)
+                    {
                     var sql = "INSERT INTO Contact_Site (ContactID, SiteID, AddedByUserID, AddedDateTime) VALUES ?";
 
                     pool.query(sql, [values], function (err, result) {
@@ -473,9 +475,12 @@ app.put('/contact', async (req, res) => {
                             return res.status(401).json({ code: 401, "message": "data not update" })
                         }
                     });
-                } else {
-                    return res.status(401).json({ "code": 401, "message": "unauthorized user" })
                 }
+                else
+                    return res.status(200).json({ code: 200, message: "success" })
+                /*} else {
+                    return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+                }*/
             })
         } else {
             return res.status(401).json({ code: 401, "message": "data not update" })
