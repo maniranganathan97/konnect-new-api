@@ -448,8 +448,7 @@ app.put('/contact', async (req, res) => {
             let query = `DELETE FROM Contact_Site WHERE ContactID =${req.body.ContactID}`
             pool.query(query, function (error, results, fields) {
                 if (error) throw error
-
-                if (results.affectedRows > 0) {
+                //if (results.affectedRows > 0) {
 
                     let values = [];
                     for (let data of contactSiteValues) {
@@ -473,9 +472,9 @@ app.put('/contact', async (req, res) => {
                             return res.status(401).json({ code: 401, "message": "data not update" })
                         }
                     });
-                } else {
+                /*} else {
                     return res.status(401).json({ "code": 401, "message": "unauthorized user" })
-                }
+                }*/
             })
         } else {
             return res.status(401).json({ code: 401, "message": "data not update" })
