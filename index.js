@@ -622,6 +622,116 @@ app.delete('/staff', async (req, res) => {
     })
 })
 
+/*Staff Certificate Type get,post,delete and put*/
+
+app.get('/certificatetype', async (req, res) => {
+    pool.query(`select * from CertificateType`, function (error, results, fields) {
+        if (error) throw error;
+        if (results.length > 0) {
+            return res.status(200).json(results)
+        } else {
+            return res.status(401).json({ "code": 401, "message": "No Data Available." })
+        }
+    })
+
+})
+
+app.post('/certificatetype', async (req, res) => {
+    let query = `INSERT INTO CertificateType (CertTypeID,CertTypeName, AddedByUser, AddedDateTime) VALUES (?,?,?,?)`
+    let parameters = ["", req.body.CertTypeName, req.body.AddedByUser,req.body.AddedDateTime]
+    pool.query(query, parameters, function (error, results, fields) {
+        if (error) throw error
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "Inserted successfully." })
+        } else {
+            return res.status(401).json({ "code": 401, "message": "Not inserted." })
+        }
+
+    })
+})
+
+app.delete('/certificatetype', async (req, res) => {
+
+    let query = `DELETE FROM CertificateType WHERE CertTypeID =${req.query.CertTypeID}`
+    pool.query(query, function (error, results, fields) {
+        if (error) throw error
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "Deleted successfully." })
+        } else {
+            return res.status(401).json({ "code": 401, "message": "Delete unsuccessful." })
+        }
+    })
+
+})
+
+app.put('/certificatetype', async (req, res) => {
+    let query = `Update CertificateType SET CertTypeName = '${req.body.CertTypeName}' where CertTypeID = ${req.body.CertTypeID}`
+    /*const parameters = [...Object.values(req.body.CertTypeName),req.body.CertTypeID]*/
+    pool.query(query, function (err, results, fields) {
+        if (err) throw err
+        if (results.affectedRows > 0) {
+            return res.status(401).json({ code: 401, "message": "Update Successful." })
+        } else {
+            return res.status(401).json({ code: 401, "message": "Data not updated." })
+        }
+    })
+})
+
+
+/*Staff Certificate Body get,post,delete and put*/
+
+app.get('/certificatebody', async (req, res) => {
+    pool.query(`select * from CertificateBody`, function (error, results, fields) {
+        if (error) throw error;
+        if (results.length > 0) {
+            return res.status(200).json(results)
+        } else {
+            return res.status(401).json({ "code": 401, "message": "No Data Available." })
+        }
+    })
+
+})
+
+app.post('/certificatebody', async (req, res) => {
+    let query = `INSERT INTO CertificateBody (CertBodyID,CertBodyName, AddedByUser, AddedDateTime) VALUES (?,?,?,?)`
+    let parameters = ["", req.body.CertBodyName, req.body.AddedByUser,req.body.AddedDateTime]
+    pool.query(query, parameters, function (error, results, fields) {
+        if (error) throw error
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "Inserted successfully." })
+        } else {
+            return res.status(401).json({ "code": 401, "message": "Not inserted." })
+        }
+
+    })
+})
+
+app.delete('/certificatebody', async (req, res) => {
+
+    let query = `DELETE FROM CertificateBody WHERE CertBodyID =${req.query.CertBodyID}`
+    pool.query(query, function (error, results, fields) {
+        if (error) throw error
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "Deleted successfully." })
+        } else {
+            return res.status(401).json({ "code": 401, "message": "Delete unsuccessful." })
+        }
+    })
+
+})
+
+app.put('/certificatebody', async (req, res) => {
+    let query = `Update CertificateBody SET CertBodyName = '${req.body.CertBodyName}' where CertBodyID = ${req.body.CertBodyID}`
+    pool.query(query, function (err, results, fields) {
+        if (err) throw err
+        if (results.affectedRows > 0) {
+            return res.status(401).json({ code: 401, "message": "Update Successful." })
+        } else {
+            return res.status(401).json({ code: 401, "message": "Data not updated." })
+        }
+    })
+})
+
 /*scandetails GET_POST*/
 
 app.get('/checkscanid', async (req, res) => {
