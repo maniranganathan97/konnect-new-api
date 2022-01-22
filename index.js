@@ -623,7 +623,7 @@ app.put('/staff', async (req, res) => {
                         const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
                         var sql = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
 
-                        pool.query(sql, ["", results.insertId, req.body.CertTypeID, req.body.CertBodyID, req.body.CertValidityStartDate, req.body.CertValidityEndDate, publicUrl1, req.body.AddedByUserID, req.body.AddedDateTime], function (err, result) {
+                        pool.query(sql, ["", req.query.StaffID, req.body.CertTypeID, req.body.CertBodyID, req.body.CertValidityStartDate, req.body.CertValidityEndDate, publicUrl1, req.body.AddedByUserID, req.body.AddedDateTime], function (err, result) {
                             if (err) throw err;
                             if (result.affectedRows > 0) {
                                 return res.status(200).json({ code: 200, message: "Success." })
