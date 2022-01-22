@@ -516,10 +516,14 @@ app.delete('/contact', async (req, res) => {
 
 app.get('/staff', async (req, res) => {
 
-    pool.query(`SELECT Staff.*,AccessControl.AccessControl,StaffTitle.StaffTitle,StaffEmploymentStatus.StaffEmploymentStatus AS EmploymentStatus FROM Staff 
-    JOIN AccessControl ON AccessControl.AccessControlID = Staff.AccessControlID
-    JOIN StaffTitle ON StaffTitle.StaffTitleID = Staff.StaffTitleID
-    JOIN StaffEmploymentStatus ON StaffEmploymentStatus.StaffEmploymentStatusID = Staff.StaffEmploymentStatusID`, function (error, results, fields) {
+    pool.query(`SELECT Staff.*,AccessControl.AccessControl,StaffTitle.StaffTitle,StaffEmploymentStatus.StaffEmploymentStatus AS EmploymentStatus,
+    Staff_Certificate.CertTypeID,Staff_Certificate.CertBodyID,Staff_Certificate.ValidityStartDate,Staff_Certificate.ValidityEndDate,Staff_Certificate.CertificateImageURL 
+    FROM Staff 
+        JOIN AccessControl ON AccessControl.AccessControlID = Staff.AccessControlID
+        JOIN StaffTitle ON StaffTitle.StaffTitleID = Staff.StaffTitleID
+        JOIN StaffEmploymentStatus ON StaffEmploymentStatus.StaffEmploymentStatusID = Staff.StaffEmploymentStatusID
+        LEFT JOIN Staff_Certificate ON Staff_Certificate.StaffID = Staff.StaffID
+        ORDER BY Staff.StaffID`, function (error, results, fields) {
         if (error) throw error;
         if (results.length > 0) {
 
