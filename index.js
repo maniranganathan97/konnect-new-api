@@ -464,19 +464,18 @@ app.put('/contact', async (req, res) => {
 
                 //if (results.affectedRows > 0) {
 
-                    let values = [];
-                    for (let data of contactSiteValues) {
-                        let value = []
-                        let date = new Date(data.AddedDateTime)
-                        value.push(contactObjects.ContactID)
-                        value.push(data.SiteID)
-                        value.push(data.AddedByUserID)
-                        value.push(date)
-                        values.push(value)
-                    }
+                let values = [];
+                for (let data of contactSiteValues) {
+                    let value = []
+                    let date = new Date(data.AddedDateTime)
+                    value.push(contactObjects.ContactID)
+                    value.push(data.SiteID)
+                    value.push(data.AddedByUserID)
+                    value.push(date)
+                    values.push(value)
+                }
 
-                    if(values.length > 0)
-                    {
+                if (values.length > 0) {
                     var sql = "INSERT INTO Contact_Site (ContactID, SiteID, AddedByUserID, AddedDateTime) VALUES ?";
 
                     pool.query(sql, [values], function (err, result) {
@@ -542,7 +541,6 @@ app.post('/staff', multer.single('file'), async (req, res) => {
     blobStream.on('error', err => {
         next(err);
     });
-
     blobStream.on('finish', () => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
@@ -550,9 +548,31 @@ app.post('/staff', multer.single('file'), async (req, res) => {
         pool.query(query, ["", req.body.StaffName, req.body.GenderID, req.body.SalutationID, req.body.StaffTitleID, publicUrl, req.body.Email, req.body.StaffEmploymentType, req.body.StaffEmploymentStatusID, req.body.Mobile, req.body.Telephone, req.body.Address1, req.body.Address2, req.body.PostCode, req.body.Nationality, req.body.JobStartDate, req.body.JobEndDate, req.body.IDTypeID, req.body.ID, req.body.Department, req.body.Passport, req.body.NextOfKin, req.body.NextOfKinMobile, req.body.RelationshipID, req.body.DOB, req.body.MartialStatusID, req.body.HighestQualification, req.body.Religion, req.body.PasswordHash, req.body.AccessControlID, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results, fields) {
             if (error) return res.send(error);
             if (results.affectedRows > 0) {
-                return res.status(200).json({ code: 200, message: "success" })
+                const buffer1 = Buffer.from(req.body["StaffCertificateURL"], 'base64')
+                // Create a new blob in the bucket and upload the file data.
+                const id1 = uuid.v4();
+                const blob1 = bucket.file("konnect" + id1 + ".jpg");
+                const blobStream1 = blob1.createWriteStream();
+                blobStream1.on('error', err => {
+                    next(err);
+                });
+                blobStream1.on('finish', () => {
+                    const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
+                    var sql = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
+
+                    pool.query(sql, ["", results.insertId, req.body.CertTypeID, req.body.CertBodyID, req.body.CertValidityStartDate, req.body.CertValidityEndDate, publicUrl1, req.body.AddedByUserID, req.body.AddedDateTime], function (err, result) {
+                        if (err) throw err;
+                        if (result.affectedRows > 0) {
+                            return res.status(200).json({ code: 200, message: "Success." })
+                        }
+                        else {
+                            return res.status(401).json({ code: 401, "message": "Data not inserted." })
+                        }
+                    });
+                });
+                blobStream1.end(buffer1);
             } else {
-                return res.status(401).json({ code: 401, "message": "unauthorized user" })
+                return res.status(401).json({ code: 401, "message": "Data not inserted." })
             }
         })
     })
@@ -585,7 +605,36 @@ app.put('/staff', async (req, res) => {
             pool.query(query, parameters, function (err, results, fields) {
                 if (err) throw err
                 if (results.affectedRows > 0) {
-                    return res.status(200).json({ code: 200, message: "success" })
+
+                    let query = `DELETE FROM Staff_Certificate WHERE StaffID =${req.query.StaffID}`
+                    pool.query(query, function (error, results, fields) {
+                        if (error) throw error
+                    })
+                    if ((req.body.CertBodyID.length > 0) || (req.body.CertTypeID.length > 0)) {
+                        const buffer1 = Buffer.from(req.body["StaffCertificateURL"], 'base64')
+                    // Create a new blob in the bucket and upload the file data.
+                    const id1 = uuid.v4();
+                    const blob1 = bucket.file("konnect" + id1 + ".jpg");
+                    const blobStream1 = blob1.createWriteStream();
+                    blobStream1.on('error', err => {
+                        next(err);
+                    });
+                    blobStream1.on('finish', () => {
+                        const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
+                        var sql = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
+
+                        pool.query(sql, ["", results.insertId, req.body.CertTypeID, req.body.CertBodyID, req.body.CertValidityStartDate, req.body.CertValidityEndDate, publicUrl1, req.body.AddedByUserID, req.body.AddedDateTime], function (err, result) {
+                            if (err) throw err;
+                            if (result.affectedRows > 0) {
+                                return res.status(200).json({ code: 200, message: "Success." })
+                            }
+                            else {
+                                return res.status(401).json({ code: 401, "message": "Data not inserted." })
+                            }
+                        });
+                    });
+                    blobStream1.end(buffer1);
+                    }
                 } else {
                     return res.status(401).json({ code: 401, "message": "data not update" })
                 }
@@ -638,7 +687,7 @@ app.get('/certificatetype', async (req, res) => {
 
 app.post('/certificatetype', async (req, res) => {
     let query = `INSERT INTO CertificateType (CertTypeID,CertTypeName, AddedByUser, AddedDateTime) VALUES (?,?,?,?)`
-    let parameters = ["", req.body.CertTypeName, req.body.AddedByUser,req.body.AddedDateTime]
+    let parameters = ["", req.body.CertTypeName, req.body.AddedByUser, req.body.AddedDateTime]
     pool.query(query, parameters, function (error, results, fields) {
         if (error) throw error
         if (results.affectedRows > 0) {
@@ -694,7 +743,7 @@ app.get('/certificatebody', async (req, res) => {
 
 app.post('/certificatebody', async (req, res) => {
     let query = `INSERT INTO CertificateBody (CertBodyID,CertBodyName, AddedByUser, AddedDateTime) VALUES (?,?,?,?)`
-    let parameters = ["", req.body.CertBodyName, req.body.AddedByUser,req.body.AddedDateTime]
+    let parameters = ["", req.body.CertBodyName, req.body.AddedByUser, req.body.AddedDateTime]
     pool.query(query, parameters, function (error, results, fields) {
         if (error) throw error
         if (results.affectedRows > 0) {
