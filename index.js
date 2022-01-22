@@ -670,7 +670,7 @@ app.put('/certificatetype', async (req, res) => {
     pool.query(query, function (err, results, fields) {
         if (err) throw err
         if (results.affectedRows > 0) {
-            return res.status(401).json({ code: 200, "message": "Update Successful." })
+            return res.status(200).json({ code: 200, "message": "Update Successful." })
         } else {
             return res.status(401).json({ code: 401, "message": "Data not updated." })
         }
@@ -725,7 +725,7 @@ app.put('/certificatebody', async (req, res) => {
     pool.query(query, function (err, results, fields) {
         if (err) throw err
         if (results.affectedRows > 0) {
-            return res.status(401).json({ code: 200, "message": "Update Successful." })
+            return res.status(200).json({ code: 200, "message": "Update Successful." })
         } else {
             return res.status(401).json({ code: 401, "message": "Data not updated." })
         }
