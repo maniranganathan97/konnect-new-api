@@ -670,7 +670,7 @@ app.put('/certificatetype', async (req, res) => {
     pool.query(query, function (err, results, fields) {
         if (err) throw err
         if (results.affectedRows > 0) {
-            return res.status(401).json({ code: 401, "message": "Update Successful." })
+            return res.status(401).json({ code: 200, "message": "Update Successful." })
         } else {
             return res.status(401).json({ code: 401, "message": "Data not updated." })
         }
@@ -725,7 +725,7 @@ app.put('/certificatebody', async (req, res) => {
     pool.query(query, function (err, results, fields) {
         if (err) throw err
         if (results.affectedRows > 0) {
-            return res.status(401).json({ code: 401, "message": "Update Successful." })
+            return res.status(401).json({ code: 200, "message": "Update Successful." })
         } else {
             return res.status(401).json({ code: 401, "message": "Data not updated." })
         }
@@ -982,7 +982,7 @@ app.post('/staffCertificate', multer.single('file'), async (req, res, next) => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
         let query = 'INSERT INTO Staff_Certificate values (?,?,?,?,?,?,?,?,?)';
-        let parameters = ["", req.body['StaffID'], req.body['Certification'], req.body['CertificationBody'], req.body['ValidityStartDate'], req.body['ValidityEndDate'], publicUrl, req.body['AddedByUserID'], req.body['AddedDateTime']]
+        let parameters = ["", req.body['StaffID'], req.body['CertTypeID'], req.body['CertBodyID'], req.body['ValidityStartDate'], req.body['ValidityEndDate'], publicUrl, req.body['AddedByUserID'], req.body['AddedDateTime']]
         pool.query(query, parameters, function (err, result) {
             if (err) throw err
             if (result.affectedRows > 0) {
