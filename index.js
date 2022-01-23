@@ -587,6 +587,19 @@ app.put('/staff', async (req, res) => {
 
     const detail = req.body
 
+    let values = [];
+                values.push(req.body.CertTypeID)
+                values.push(req.body.CertBodyID)
+                values.push(req.body.ValidityStartDate)
+                values.push(req.body.ValidityEndDate)
+                values.push(req.body.CertificateImageURL)
+
+    const staffObjects = req.body
+    delete staffObjects['CertTypeID']
+    delete staffObjects['CertBodyID']
+    delete staffObjects['ValidityStartDate']
+    delete staffObjects['ValidityEndDate']
+    delete staffObjects['CertificateImageURL']
     if (detail['StaffImageURL']) {
 
         const buffer = Buffer.from(detail["StaffImageURL"], 'base64')
@@ -601,21 +614,18 @@ app.put('/staff', async (req, res) => {
         blobStream.on('finish', () => {
             const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
             detail['StaffImageURL'] = publicUrl
-            console.log(publicUrl)
-            let query = `Update Staff SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where StaffID = ?"
-            const parameters = [...Object.values(detail), req.query.StaffID]
-            console.log(query)
-            console.log(parameters)
+            let query = `Update Staff SET  ` + Object.keys(staffObjects).map(key => `${key}=?`).join(",") + " where StaffID = ?"
+            const parameters = [...Object.values(staffObjects), req.body.StaffID]
             pool.query(query, parameters, function (err, results, fields) {
                 if (err) throw err
                 if (results.affectedRows > 0) {
 
-                    let query = `DELETE FROM Staff_Certificate WHERE StaffID =${req.query.StaffID}`
+                    let query = `DELETE FROM Staff_Certificate WHERE StaffID =${req.body.StaffID}`
                     pool.query(query, function (error, results, fields) {
                         if (error) throw error
                     })
-                    if ((req.body.CertBodyID.length > 0) || (req.body.CertTypeID.length > 0)) {
-                        const buffer1 = Buffer.from(req.body["CertificateImageURL"], 'base64')
+                    if ((values[0] !== null) || (values[1] !== null) ||(values[2] !== null) ||(values[3] !== null) ||(values[4] !== null)) {
+                        const buffer1 = Buffer.from(values[4], 'base64')
                     // Create a new blob in the bucket and upload the file data.
                     const id1 = uuid.v4();
                     const blob1 = bucket.file("konnect" + id1 + ".jpg");
@@ -627,7 +637,7 @@ app.put('/staff', async (req, res) => {
                         const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
                         var sql = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
 
-                        pool.query(sql, ["", req.query.StaffID, req.body.CertTypeID, req.body.CertBodyID, req.body.ValidityStartDate, req.body.ValidityEndDate, publicUrl1, req.body.AddedByUserID, req.body.AddedDateTime], function (err, result) {
+                        pool.query(sql, ["", req.body.StaffID, values[0], values[1], values[2], values[3], publicUrl1, req.body.AddedByUserID, req.body.AddedDateTime], function (err, result) {
                             if (err) throw err;
                             if (result.affectedRows > 0) {
                                 return res.status(200).json({ code: 200, message: "Success." })
