@@ -407,10 +407,30 @@ app.delete('/pointdetails', async (req, res) => {
 
 app.get('/contact', async (req, res) => {
 
-    pool.query(`select * from Contact`, function (error, results, fields) {
+    pool.query(`SELECT * from Contact`, function (error, listContacts, fields) {
         if (error) throw error;
-        if (results.length > 0) {
-            return res.status(200).json(results)
+        if (listContacts.length > 0) {
+            // let query = `SELECT Contact_Site.ContactID,Site.SiteName FROM Contact_Site JOIN Site ON Site.SiteID = Contact_Site.SiteID WHERE ContactID = Contact_Site.ContactID`
+            // pool.query(query, function (err, results) {
+            //     if (err) throw err
+            //     if (results.length > 0) {
+            //         for (let contact of listContacts) {
+            //             let siteName = results.map((e) => {
+            //                 if (e.ContactID.includes(contact.ContactID)) {
+            //                    console.log( e.siteName
+            //                 }
+            //             })
+            //         }
+
+            //     }
+            // })
+            // return res.status(200).json(listContacts)
+
+
+            return res.status(200).json(listContacts)
+
+
+
         } else {
             return res.status(401).json({ "code": 401, "message": "unauthorized user" })
         }
@@ -588,11 +608,11 @@ app.put('/staff', async (req, res) => {
     const detail = req.body
 
     let values = [];
-                values.push(req.body.CertTypeID)
-                values.push(req.body.CertBodyID)
-                values.push(req.body.ValidityStartDate)
-                values.push(req.body.ValidityEndDate)
-                values.push(req.body.CertificateImageURL)
+    values.push(req.body.CertTypeID)
+    values.push(req.body.CertBodyID)
+    values.push(req.body.ValidityStartDate)
+    values.push(req.body.ValidityEndDate)
+    values.push(req.body.CertificateImageURL)
 
     const staffObjects = req.body
     delete staffObjects['CertTypeID']
@@ -624,30 +644,30 @@ app.put('/staff', async (req, res) => {
                     pool.query(query, function (error, results, fields) {
                         if (error) throw error
                     })
-                    if ((values[0] !== null) || (values[1] !== null) ||(values[2] !== null) ||(values[3] !== null) ||(values[4] !== null)) {
+                    if ((values[0] !== null) || (values[1] !== null) || (values[2] !== null) || (values[3] !== null) || (values[4] !== null)) {
                         const buffer1 = Buffer.from(values[4], 'base64')
-                    // Create a new blob in the bucket and upload the file data.
-                    const id1 = uuid.v4();
-                    const blob1 = bucket.file("konnect" + id1 + ".jpg");
-                    const blobStream1 = blob1.createWriteStream();
-                    blobStream1.on('error', err => {
-                        next(err);
-                    });
-                    blobStream1.on('finish', () => {
-                        const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
-                        var sql = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
-
-                        pool.query(sql, ["", req.body.StaffID, values[0], values[1], values[2], values[3], publicUrl1, req.body.AddedByUserID, req.body.AddedDateTime], function (err, result) {
-                            if (err) throw err;
-                            if (result.affectedRows > 0) {
-                                return res.status(200).json({ code: 200, message: "Success." })
-                            }
-                            else {
-                                return res.status(401).json({ code: 401, "message": "Data not inserted." })
-                            }
+                        // Create a new blob in the bucket and upload the file data.
+                        const id1 = uuid.v4();
+                        const blob1 = bucket.file("konnect" + id1 + ".jpg");
+                        const blobStream1 = blob1.createWriteStream();
+                        blobStream1.on('error', err => {
+                            next(err);
                         });
-                    });
-                    blobStream1.end(buffer1);
+                        blobStream1.on('finish', () => {
+                            const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
+                            var sql = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
+
+                            pool.query(sql, ["", req.body.StaffID, values[0], values[1], values[2], values[3], publicUrl1, req.body.AddedByUserID, req.body.AddedDateTime], function (err, result) {
+                                if (err) throw err;
+                                if (result.affectedRows > 0) {
+                                    return res.status(200).json({ code: 200, message: "Success." })
+                                }
+                                else {
+                                    return res.status(401).json({ code: 401, "message": "Data not inserted." })
+                                }
+                            });
+                        });
+                        blobStream1.end(buffer1);
                     }
                 } else {
                     return res.status(401).json({ code: 401, "message": "data not update" })
@@ -799,12 +819,6 @@ app.put('/certificatebody', async (req, res) => {
 
 app.get('/checkscanid', async (req, res) => {
 
-    // var newDate = new Date()
-    // let singaporeTime =
-    //     newDate.toLocaleString("en-US", {
-    //         timeZone: "Asia/singapore"
-    //     });
-    let scanDate = req.query.ScanDateTime;
     const uid = req.query.UID
     const userID = parseInt(req.query.userID)
 
@@ -1112,57 +1126,6 @@ app.delete('/sitetype', async (req, res) => {
     })
 })
 
-/* imageUrl to store images and get */
-
-// const storage = multer.diskStorage({
-//     destination: function (req, file, cb) {
-//         cb(null, './uploads/')
-//     },
-//     filename: function (req, file, cb) {
-//         cb(null, file.originalname)
-//     }
-// })
-
-// const fileFilter = (req, file, cb) => {
-//     if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
-//         cb(null, true)
-//     } else {
-//         cb(null, false)
-//     }
-// }
-
-// const upload = multer({ storage: storage, limits: { fileSize: 1024 * 1024 * 5 }, fileFilter: fileFilter })
-
-// app.post('/imagesupload', upload.single('image'), (req, res) => {
-
-//     let query = "INSERT INTO `imagesurl`(`imageurl`) VALUES (?)"
-//     pool.query(query, req.file.path, function (err, results) {
-
-//         if (err) throw err
-//         if (results.affectedRows > 0) {
-//             return res.status(200).json({ code: 200, message: "success" })
-//         } else {
-//             return res.status(401).json({ code: 401, "message": "unauthorized user" })
-//         }
-
-//     })
-// })
-
-// app.get('/imagesupload', async (req, res) => {
-
-//     pool.query(`select * from imagesurl`, function (err, results, fields) {
-//         if (err) throw err
-
-//         if (results.length > 0) {
-//             let demo = results.map(e => `https://konnect68.herokuapp.com/${e.imageurl}`)
-
-//             return res.status(200).json(demo)
-//         } else {
-//             return res.status(401).json({ "code": 401, "message": results.imageurl })
-//         }
-//     })
-// })
-
 app.get('/contactType', async (req, res) => {
 
     let query = "select ContactTypeID, ContactType from ContactType"
@@ -1333,6 +1296,53 @@ app.get('/ecsreports', async (req, res) => {
 
     })
 
+})
+
+selectAllElements = () => {
+    return new Promise((resolve, reject) => {
+        pool.query('SELECT * FROM Contact ', (error, elements) => {
+            if (error) {
+                return reject(error);
+            }
+            return resolve(elements);
+        });
+    });
+};
+
+selectSites = (id) => {
+    return new Promise((resolve, reject) => {
+        pool.query(`SELECT Contact_Site.ContactID,Site.SiteName FROM Contact_Site JOIN Site ON Site.SiteID = Contact_Site.SiteID WHERE ContactID = ${id}`, (error, elements) => {
+            if (error) {
+                return reject(error);
+            }
+            return resolve(elements)
+        })
+    })
+}
+
+app.get('/demo', async (req, res) => {
+    try {
+        let arr = []
+        const results = await selectAllElements()
+        for (let data of results) {
+            let listSite = await selectSites(data.ContactID)
+            let siteName = listSite.map((e) => e.SiteName)
+            data['linkedSites'] = siteName
+            arr.push(data)
+        }
+        return res.json(arr)
+    } catch (e) {
+        console.log(e)
+    }
+})
+
+
+app.get('/contactsitelist', async (req, res) => {
+    let query = `SELECT Contact_Site.ContactID,Site.SiteName FROM Contact_Site JOIN Site ON Site.SiteID = Contact_Site.SiteID WHERE ContactID = Contact_Site.ContactID`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        return res.status(200).json(results)
+    })
 })
 
 app.listen(port, function () {
