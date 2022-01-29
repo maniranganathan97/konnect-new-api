@@ -1346,6 +1346,7 @@ app.get('/contactsitelist', async (req, res) => {
 })
 
 
+<<<<<<< HEAD
 
 app.get('/sitecontactlist', async (req, res) => {
     let query = `SELECT 
@@ -1356,6 +1357,154 @@ app.get('/sitecontactlist', async (req, res) => {
     pool.query(query, function (err, results) {
         if (err) throw err
         return res.status(200).json(results)
+=======
+app.get('/po', async (req, res) => {
+    let query = `select * from PO`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).json(results)
+        } else {
+            return res.status(400).json({ code: 400, message: "No data found" })
+        }
+    })
+})
+
+app.post('/po', async (req, res) => {
+    const buffer = Buffer.from(req.body["POImageURL"], 'base64')
+    // Create a new blob in the bucket and upload the file data.
+    const id = uuid.v4();
+    const blob = bucket.file("konnect" + id + ".jpg");
+    const blobStream = blob.createWriteStream();
+
+    blobStream.on('error', err => {
+        next(err);
+    });
+    blobStream.on('finish', () => {
+        // The public URL can be used to directly access the file via HTTP.
+        const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+        let query = `INSERT INTO PO(POID,POnumber,POdate,POimageURL,ContactID,AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?)`
+        pool.query(query, ["", req.body.POnumber, req.body.POdate, publicUrl, req.body.ContactID, req.body.AddedbyUserID, req.body.AddedDateTime], function (error, results) {
+            if (error) return res.send(error);
+            if (results.affectedRows > 0) {
+
+                return res.status(200).send({ message: "Image Uploaded SuccessFUlly" })
+
+            } else {
+                return res.status(400).json({ code: 400, "message": "Data is not inserted." })
+            }
+        })
+    })
+    blobStream.end(buffer);
+})
+
+app.put('/po', async (req, res) => {
+
+    const detail = req.body
+    if (detail['POImageURL']) {
+
+        const buffer = Buffer.from(detail["POImageURL"], 'base64')
+        // Create a new blob in the bucket and upload the file data.
+        const id = uuid.v4();
+        const blob = bucket.file("konnect" + id + ".jpg");
+        const blobStream = blob.createWriteStream();
+
+        blobStream.on('error', err => {
+            next(err);
+        });
+        blobStream.on('finish', () => {
+            const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+            detail['POImageURL'] = publicUrl
+            let query = `Update PO SET  ` + Object.keys(staffObjects).map(key => `${key}=?`).join(",") + " where POID = ?"
+            const parameters = [...Object.values(staffObjects), req.query.POID]
+            pool.query(query, parameters, function (err, results, fields) {
+                if (err) throw err
+                if (results.affectedRows > 0) {
+                    return res.status(200).json({ code: 200, "message": "Data is updated sucessfully" })
+
+                } else {
+                    return res.status(400).json({ code: 400, "message": "data not update" })
+                }
+            })
+        })
+        blobStream.end(buffer);
+
+    } else {
+
+        let query = `Update PO SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where POID = ?"
+        const parameters = [...Object.values(detail), req.query.POID]
+        pool.query(query, parameters, function (err, results, fields) {
+            if (err) throw err
+
+            if (results.affectedRows > 0) {
+                return res.status(200).json({ code: 200, message: "success" })
+            } else {
+                return res.status(400).json({ code: 400, "message": "data not update" })
+            }
+        })
+    }
+
+})
+
+app.delete('/po', async (req, res) => {
+    let query = `DELETE FROM PO WHERE POID =${req.query.POID}`
+    pool.query(query, function (error, results, fields) {
+        if (error) throw error
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "deleted successfully" })
+        } else {
+            return res.status(400).json({ "code": 400, "message": "Given POinID is not there" })
+        }
+    })
+})
+
+app.get('/workorder', async (req, res) => {
+    let query = `select * from WorkOrder`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).json(results)
+        } else {
+            return res.status(400).json({ code: 400, message: "No data found" })
+        }
+    })
+})
+
+app.post('/workorder', async (req, res) => {
+    let query = `Insert into WorkOrder values (?,?,?,?,?,?,?,?,?)`
+    let parameters = ["", req.body.SiteID, req.body.WorkTypeID, req.body.RequestedStartDate, req.body.RequestedEndDate, req.body.AssignedDateTime, req.body.WorkStatusID, req.body.UpdatedbyUserID, req.body.UpdatedDateTime]
+    pool.query(query, parameters, function (err, result) {
+        if (result.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "Data is inserted successfully" })
+        } else {
+            return res.status(400).json({ code: 400, message: "Data is not inserted" })
+        }
+    })
+})
+
+app.put('/workorder', async (req, res) => {
+    let query = "Update WorkOrder SET" + Object.keys(staffObjects).map(key => `${key}=?`).join(",") + `where WorkOrderID = ${req.query.WorkOrderID}`
+    const parameters = [...Object.values(req.body), req.query.WorkOrderID]
+    pool.query(query, parameters, function (err, results, fields) {
+        if (err) throw err
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, "message": "Update Successful." })
+        } else {
+            return res.status(401).json({ code: 401, "message": "Data not updated." })
+        }
+    })
+})
+
+app.delete('/workorder', async (req, res) => {
+    let query = `DELETE FROM WorkOrder WHERE WorkOrderID  =${req.query.WorkOrderID}`
+    pool.query(query, function (error, results, fields) {
+        if (error) throw error
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "deleted successfully" })
+        } else {
+            return res.status(400).json({ "code": 400, "message": "Given POinID is not there" })
+        }
+>>>>>>> a913a56c292127d00c95c194a28194459009b6d2
     })
 })
 
