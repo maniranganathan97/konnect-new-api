@@ -1345,6 +1345,20 @@ app.get('/contactsitelist', async (req, res) => {
     })
 })
 
+
+
+app.get('/sitecontactlist', async (req, res) => {
+    let query = `SELECT 
+    Contact_Site.SiteID,Contact.ContactName 
+    FROM Contact_Site 
+    JOIN Contact ON Contact.ContactID = Contact_Site.ContactID
+    ORDER By Contact.ContactName`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        return res.status(200).json(results)
+    })
+})
+
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
