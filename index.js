@@ -1371,7 +1371,7 @@ app.get('/po', async (req, res) => {
 })
 
 app.post('/po', async (req, res) => {
-    const buffer = Buffer.from(req.body["POimageURL"], 'base64')
+    const buffer = Buffer.from(req.body["POImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
     const blob = bucket.file("konnect" + id + ".jpg");
@@ -1383,6 +1383,7 @@ app.post('/po', async (req, res) => {
     blobStream.on('finish', () => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+
         let query = `INSERT INTO PO(POID,POnumber,POdate,POimageURL,ContactID,StaffID, AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?)`
         pool.query(query, ["", req.body.POnumber, req.body.POdate, publicUrl, req.body.ContactID, req.body.StaffID, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results) {
             if (error) return res.send(error);
@@ -1476,7 +1477,7 @@ app.post('/workorder', async (req, res) => {
     let parameters = ["", req.body.SiteID, req.body.WorkTypeID, req.body.RequestedStartDate, req.body.RequestedEndDate, req.body.AssignedDateTime, req.body.WorkStatusID, req.body.UpdatedByUserID, req.body.UpdatedDateTime]
     pool.query(query, parameters, function (err, result) {
         if (err)
-          throw err;
+            throw err;
         if (result.affectedRows > 0) {
             return res.status(200).json({ code: 200, message: "Data is inserted successfully" })
         } else {
@@ -1508,6 +1509,69 @@ app.delete('/workorder', async (req, res) => {
             return res.status(400).json({ "code": 400, "message": "Given POinID is not there" })
         }
 
+    })
+})
+
+app.get('/staffdetails', async (req, res) => {
+    let query = `select StaffID,StaffName from Staff`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(400).json({ code: 400, message: "Data is not there" })
+        }
+
+    })
+})
+
+app.get('/contactdetails', async (req, res) => {
+    let query = `select ContactID,ContactName from Contact`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(400).json({ code: 400, message: "Data is not there" })
+        }
+
+    })
+})
+
+app.get('/sitedetails', async (req, res) => {
+    let query = `select SiteID,SiteName from Site`
+    pool.query(query, parameters, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(400).json({ code: 400, message: "Data is not there" })
+        }
+    })
+})
+
+app.get('/worktype', async (req, res) => {
+    let query = `select WorkTypeID,WorkTypeName from WorkType`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(400).json({ code: 400, message: "Data is not there" })
+        }
+
+    })
+})
+
+app.get('/workstatus', async (req, res) => {
+    let query = `select WorkStatusID,WorkStatus from WorkStatus`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(400).json({ code: 400, message: "Data is not there" })
+        }
     })
 })
 
