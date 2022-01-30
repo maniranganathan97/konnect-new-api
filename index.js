@@ -1346,8 +1346,6 @@ app.get('/contactsitelist', async (req, res) => {
 })
 
 
-<<<<<<< HEAD
-
 app.get('/sitecontactlist', async (req, res) => {
     let query = `SELECT 
     Contact_Site.SiteID,Contact.ContactName 
@@ -1357,7 +1355,9 @@ app.get('/sitecontactlist', async (req, res) => {
     pool.query(query, function (err, results) {
         if (err) throw err
         return res.status(200).json(results)
-=======
+    })
+})
+
 app.get('/po', async (req, res) => {
     let query = `select * from PO`
     pool.query(query, function (err, results) {
@@ -1371,7 +1371,7 @@ app.get('/po', async (req, res) => {
 })
 
 app.post('/po', async (req, res) => {
-    const buffer = Buffer.from(req.body["POImageURL"], 'base64')
+    const buffer = Buffer.from(req.body["POimageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
     const blob = bucket.file("konnect" + id + ".jpg");
@@ -1383,12 +1383,12 @@ app.post('/po', async (req, res) => {
     blobStream.on('finish', () => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-        let query = `INSERT INTO PO(POID,POnumber,POdate,POimageURL,ContactID,AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?)`
-        pool.query(query, ["", req.body.POnumber, req.body.POdate, publicUrl, req.body.ContactID, req.body.AddedbyUserID, req.body.AddedDateTime], function (error, results) {
+        let query = `INSERT INTO PO(POID,POnumber,POdate,POimageURL,ContactID,StaffID, AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?)`
+        pool.query(query, ["", req.body.POnumber, req.body.POdate, publicUrl, req.body.ContactID, req.body.StaffID, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results) {
             if (error) return res.send(error);
             if (results.affectedRows > 0) {
 
-                return res.status(200).send({ message: "Image Uploaded SuccessFUlly" })
+                return res.status(200).send({ message: "Data uploaded successfUlly." })
 
             } else {
                 return res.status(400).json({ code: 400, "message": "Data is not inserted." })
@@ -1471,9 +1471,12 @@ app.get('/workorder', async (req, res) => {
 })
 
 app.post('/workorder', async (req, res) => {
+
     let query = `Insert into WorkOrder values (?,?,?,?,?,?,?,?,?)`
-    let parameters = ["", req.body.SiteID, req.body.WorkTypeID, req.body.RequestedStartDate, req.body.RequestedEndDate, req.body.AssignedDateTime, req.body.WorkStatusID, req.body.UpdatedbyUserID, req.body.UpdatedDateTime]
+    let parameters = ["", req.body.SiteID, req.body.WorkTypeID, req.body.RequestedStartDate, req.body.RequestedEndDate, req.body.AssignedDateTime, req.body.WorkStatusID, req.body.UpdatedByUserID, req.body.UpdatedDateTime]
     pool.query(query, parameters, function (err, result) {
+        if (err)
+          throw err;
         if (result.affectedRows > 0) {
             return res.status(200).json({ code: 200, message: "Data is inserted successfully" })
         } else {
@@ -1504,7 +1507,7 @@ app.delete('/workorder', async (req, res) => {
         } else {
             return res.status(400).json({ "code": 400, "message": "Given POinID is not there" })
         }
->>>>>>> a913a56c292127d00c95c194a28194459009b6d2
+
     })
 })
 
