@@ -1402,24 +1402,25 @@ app.post('/po', async (req, res) => {
 app.put('/po', async (req, res) => {
 
     const detail = req.body
-    if (detail['POImageURL']) {
+    if (detail['POimageURL']) {
 
-        const buffer = Buffer.from(detail["POImageURL"], 'base64')
+        const buffer = Buffer.from(detail["POimageURL"], 'base64')
         // Create a new blob in the bucket and upload the file data.
         const id = uuid.v4();
         const blob = bucket.file("konnect" + id + ".jpg");
         const blobStream = blob.createWriteStream();
 
         blobStream.on('error', err => {
-            next(err);
+            throw(err);
         });
         blobStream.on('finish', () => {
             const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-            detail['POImageURL'] = publicUrl
-            let query = `Update PO SET  ` + Object.keys(staffObjects).map(key => `${key}=?`).join(",") + " where POID = ?"
-            const parameters = [...Object.values(staffObjects), req.query.POID]
+            detail['POimageURL'] = publicUrl
+            let query = `Update PO SET  ` + Object.keys(req.body).map(key => `${key}=?`).join(",") + " where POID = ?"
+            const parameters = [...Object.values(req.body), req.query.POID]
             pool.query(query, parameters, function (err, results, fields) {
                 if (err) throw err
+                
                 if (results.affectedRows > 0) {
                     return res.status(200).json({ code: 200, "message": "Data is updated sucessfully" })
 
@@ -1487,7 +1488,7 @@ app.post('/workorder', async (req, res) => {
 })
 
 app.put('/workorder', async (req, res) => {
-    let query = "Update WorkOrder SET" + Object.keys(staffObjects).map(key => `${key}=?`).join(",") + `where WorkOrderID = ${req.query.WorkOrderID}`
+    let query = "Update WorkOrder SET" + Object.keys(req.body).map(key => `${key}=?`).join(",") + `where WorkOrderID = ${req.query.WorkOrderID}`
     const parameters = [...Object.values(req.body), req.query.WorkOrderID]
     pool.query(query, parameters, function (err, results, fields) {
         if (err) throw err
