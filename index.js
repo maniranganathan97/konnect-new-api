@@ -572,32 +572,43 @@ app.post('/staff', multer.single('file'), async (req, res) => {
         pool.query(query, ["", req.body.StaffName, req.body.GenderID, req.body.SalutationID, req.body.StaffTitleID, publicUrl, req.body.Email, req.body.StaffEmploymentType, req.body.StaffEmploymentStatusID, req.body.Mobile, req.body.Telephone, req.body.Address1, req.body.Address2, req.body.PostCode, req.body.Nationality, req.body.JobStartDate, req.body.JobEndDate, req.body.IDTypeID, req.body.ID, req.body.Department, req.body.Passport, req.body.NextOfKin, req.body.NextOfKinMobile, req.body.RelationshipID, req.body.DOB, req.body.MartialStatusID, req.body.HighestQualification, req.body.Religion, req.body.PasswordHash, req.body.AccessControlID, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results, fields) {
             if (error) return res.send(error);
             if (results.affectedRows > 0) {
-                const buffer1 = Buffer.from(req.body["CertificateImageURL"], 'base64')
-                // Create a new blob in the bucket and upload the file data.
-                const id1 = uuid.v4();
-                const blob1 = bucket.file("konnect" + id1 + ".jpg");
-                const blobStream1 = blob1.createWriteStream();
-                blobStream1.on('error', err => {
-                    next(err);
-                });
-                blobStream1.on('finish', () => {
-                    const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
-                    var sql = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
 
-                    pool.query(sql, ["", results.insertId, req.body.CertTypeID, req.body.CertBodyID, req.body.ValidityStartDate, req.body.ValidityEndDate, publicUrl1, req.body.AddedByUserID, req.body.AddedDateTime], function (err, result) {
-                        if (err) throw err;
-                        if (result.affectedRows > 0) {
-                            return res.status(200).json({ code: 200, message: "Success." })
-                        }
-                        else {
-                            return res.status(401).json({ code: 401, "message": "Data not inserted." })
-                        }
+                for (let certificateDetail of req.body.CertificateDetails) {
+                    const buffer1 = Buffer.from(certificateDetail["CertificateImageURL"], 'base64')
+                    // Create a new blob in the bucket and upload the file data.
+                    const id1 = uuid.v4();
+                    const blob1 = bucket.file("konnect" + id1 + ".jpg");
+                    const blobStream1 = blob1.createWriteStream();
+                    blobStream1.on('error', err => {
+                        next(err);
                     });
-                });
-                blobStream1.end(buffer1);
+                    blobStream1.on('finish', () => {
+                        const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
+                        var sql = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
+
+                        pool.query(sql, ["", results.insertId, certificateDetail.CertTypeID, certificateDetail.CertBodyID, certificateDetail.ValidityStartDate, certificateDetail.ValidityEndDate, publicUrl1, certificateDetail.AddedByUserID, certificateDetail.AddedDateTime], function (err, result) {
+                            if (err) throw err;
+                            if (result.affectedRows > 0) {
+
+                                console.log(result.affectedRows)
+                                //  return res.status(200).json({ code: 200, message: "Success." })
+                            }
+                            else {
+                                console.log("oopsss!!!!!!!!!!!")
+                                //  return res.status(401).json({ code: 401, "message": "Data not inserted." })
+                            }
+                        });
+                    });
+                    blobStream1.end(buffer1);
+                }
+
+
+
             } else {
                 return res.status(401).json({ code: 401, "message": "Data not inserted." })
             }
+
+            return res.status(200).json({ code: 200, message: "Multiple Data is inserted" })
         })
     })
     blobStream.end(buffer);
