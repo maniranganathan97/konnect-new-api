@@ -1464,7 +1464,11 @@ app.delete('/po', async (req, res) => {
 })
 
 app.get('/workorder', async (req, res) => {
-    let query = `select * from WorkOrder`
+    let query = `Select WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus from WorkOrder
+    JOIN Site ON Site.SiteID = WorkOrder.SiteID
+    JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+    ORDER BY WorkOrder.WorkOrderID`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length > 0) {
@@ -1544,7 +1548,7 @@ app.get('/contactdetails', async (req, res) => {
 
 app.get('/sitedetails', async (req, res) => {
     let query = `select SiteID,SiteName from Site`
-    pool.query(query, parameters, function (err, results) {
+    pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
             return res.status(200).send(results)
