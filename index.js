@@ -1359,7 +1359,10 @@ app.get('/sitecontactlist', async (req, res) => {
 })
 
 app.get('/po', async (req, res) => {
-    let query = `select * from PO`
+    let query = `select PO.*,Contact.ContactName,Staff.StaffName from PO 
+    JOIN Contact ON Contact.ContactID = PO.ContactID
+    JOIN Staff ON Staff.StaffID = PO.StaffID
+    ORDER BY POID`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length > 0) {
