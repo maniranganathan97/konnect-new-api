@@ -1423,7 +1423,6 @@ app.put('/po', async (req, res) => {
             const parameters = [...Object.values(req.body), req.query.POID]
             pool.query(query, parameters, function (err, results, fields) {
                 if (err) throw err
-                
                 if (results.affectedRows > 0) {
                     return res.status(200).json({ code: 200, "message": "Data is updated sucessfully" })
 
@@ -1495,7 +1494,7 @@ app.post('/workorder', async (req, res) => {
 })
 
 app.put('/workorder', async (req, res) => {
-    let query = "Update WorkOrder SET" + Object.keys(req.body).map(key => `${key}=?`).join(",") + `where WorkOrderID = ${req.query.WorkOrderID}`
+    let query = "Update WorkOrder SET " + Object.keys(req.body).map(key => `${key}=?`).join(",") + `where WorkOrderID = ${req.query.WorkOrderID}`
     const parameters = [...Object.values(req.body), req.query.WorkOrderID]
     pool.query(query, parameters, function (err, results, fields) {
         if (err) throw err
