@@ -1405,22 +1405,21 @@ app.post('/po', async (req, res) => {
 app.put('/po', async (req, res) => {
 
     const detail = req.body
-    if (detail['POimageURL']) {
-
-        const buffer = Buffer.from(detail["POimageURL"], 'base64')
+    if (detail['POImageURL']) {
+        const buffer = Buffer.from(detail["POImageURL"], 'base64')
         // Create a new blob in the bucket and upload the file data.
         const id = uuid.v4();
         const blob = bucket.file("konnect" + id + ".jpg");
         const blobStream = blob.createWriteStream();
 
         blobStream.on('error', err => {
-            throw(err);
+            throw (err);
         });
         blobStream.on('finish', () => {
             const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-            detail['POimageURL'] = publicUrl
-            let query = `Update PO SET  ` + Object.keys(req.body).map(key => `${key}=?`).join(",") + " where POID = ?"
-            const parameters = [...Object.values(req.body), req.query.POID]
+            detail['POImageURL'] = publicUrl
+            let query = `Update PO SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where POID = ?"
+            const parameters = [...Object.values(detail), req.query.POID]
             pool.query(query, parameters, function (err, results, fields) {
                 if (err) throw err
                 if (results.affectedRows > 0) {
