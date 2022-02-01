@@ -41,6 +41,7 @@ const pool = mysql.createPool({
     user: 'userCreation',
     password: 'Vp6f}9)U?u)r',
     database: 'PEST',
+    multipleStatements: true,
 })
 
 const port = process.env.PORT || 3001
@@ -442,28 +443,39 @@ app.post('/contact', async (req, res) => {
     pool.query(`insert into Contact(ContactID, SalutationID,ContactName, ContactTypeID, AccessControlID, Email1, Email2, CompanyName, BillingAddress1, BillingAddress2, Mobile, Telephone, BillingPOSTCode,AddedByUserID, AddedDateTime) Values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, ["", req.body.SalutationID, req.body.ContactName, req.body.ContactTypeID, req.body.AccessControlID, req.body.Email1, req.body.Email2, req.body.CompanyName, req.body.BillingAddress1, req.body.BillingAddress2, req.body.Mobile, req.body.Telephone, req.body.BillingPOSTCode, req.body.AddedByUserID, req.body.AddedDateTime], function (error, result, fields) {
         if (error) throw error;
         if (result.affectedRows > 0) {
-            let values = [];
-            for (let data of req.body['LinkedSites']) {
-                let value = []
-                value.push(result.insertId)
-                value.push(data.SiteID)
-                value.push(data.AddedByUserID)
-                value.push(data.AddedDateTime)
-                values.push(value)
+
+            console.log(result)
+            if (req.body.LinkedSites.length > 0) {
+                let values = [];
+
+                for (let data of req.body['LinkedSites']) {
+                    let value = []
+                    value.push(result.insertId)
+                    value.push(data.SiteID)
+                    value.push(data.AddedByUserID)
+                    value.push(data.AddedDateTime)
+                    values.push(value)
+                }
+
+                var sql = "INSERT INTO Contact_Site (ContactID, SiteID, AddedByUserID, AddedDateTime) VALUES ?";
+
+                pool.query(sql, [values], function (err, result) {
+                    if (err) throw err;
+                    if (result.affectedRows > 0) {
+                        return res.status(200).json({ code: 200, message: "success" })
+                    }
+                    else {
+                        return res.status(401).json({ code: 401, "message": "data not update" })
+                    }
+                });
+
+
             }
 
-            var sql = "INSERT INTO Contact_Site (ContactID, SiteID, AddedByUserID, AddedDateTime) VALUES ?";
+            return res.status(200).json({ code: 200, message: "success" })
 
-            pool.query(sql, [values], function (err, result) {
-                if (err) throw err;
-                if (result.affectedRows > 0) {
-                    return res.status(200).json({ code: 200, message: "success" })
-                }
-                else {
-                    return res.status(401).json({ code: 401, "message": "data not update" })
-                }
-            });
-
+        } else {
+            return res.status(400).json({ code: 400, message: "data is missing" })
         }
 
     })
@@ -478,42 +490,49 @@ app.put('/contact', async (req, res) => {
     pool.query(query, parameters, function (err, results, fields) {
         if (err) throw err
         if (results.affectedRows > 0) {
-            let query = `DELETE FROM Contact_Site WHERE ContactID =${req.body.ContactID}`
-            pool.query(query, function (error, results, fields) {
-                if (error) throw error
 
-                //if (results.affectedRows > 0) {
+            if (contactSiteValues.length > 0) {
 
-                let values = [];
-                for (let data of contactSiteValues) {
-                    let value = []
-                    let date = new Date(data.AddedDateTime)
-                    value.push(contactObjects.ContactID)
-                    value.push(data.SiteID)
-                    value.push(data.AddedByUserID)
-                    value.push(date)
-                    values.push(value)
-                }
+                let query = `DELETE FROM Contact_Site WHERE ContactID =${req.body.ContactID}`
+                pool.query(query, function (error, results, fields) {
+                    if (error) throw error
 
-                if (values.length > 0) {
-                    var sql = "INSERT INTO Contact_Site (ContactID, SiteID, AddedByUserID, AddedDateTime) VALUES ?";
+                    //if (results.affectedRows > 0) {
 
-                    pool.query(sql, [values], function (err, result) {
-                        if (err) throw err;
-                        if (result.affectedRows > 0) {
-                            return res.status(200).json({ code: 200, message: "success" })
-                        }
-                        else {
-                            return res.status(401).json({ code: 401, "message": "data not update" })
-                        }
-                    });
-                }
-                else
-                    return res.status(200).json({ code: 200, message: "success" })
-                /*} else {
-                    return res.status(401).json({ "code": 401, "message": "unauthorized user" })
-                }*/
-            })
+                    let values = [];
+                    for (let data of contactSiteValues) {
+                        let value = []
+                        let date = new Date(data.AddedDateTime)
+                        value.push(contactObjects.ContactID)
+                        value.push(data.SiteID)
+                        value.push(data.AddedByUserID)
+                        value.push(date)
+                        values.push(value)
+                    }
+
+                    if (values.length > 0) {
+                        var sql = "INSERT INTO Contact_Site (ContactID, SiteID, AddedByUserID, AddedDateTime) VALUES ?";
+
+                        pool.query(sql, [values], function (err, result) {
+                            if (err) throw err;
+                            if (result.affectedRows > 0) {
+                                return res.status(200).json({ code: 200, message: "success" })
+                            }
+                            else {
+                                return res.status(401).json({ code: 401, "message": "data not update" })
+                            }
+                        });
+                    }
+                    else
+                        return res.status(200).json({ code: 200, message: "success" })
+                    /*} else {
+                        return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+                    }*/
+                })
+
+            }
+            return res.status(200).json({ code: 200, message: "success" })
+
         } else {
             return res.status(401).json({ code: 401, "message": "data not update" })
         }
@@ -617,6 +636,10 @@ app.post('/staff', multer.single('file'), async (req, res) => {
 app.put('/staff', async (req, res) => {
 
     const detail = req.body
+    if (detail['CertificateDetails']) {
+        delete detail['CertificateDetails']
+    }
+    console.log(detail)
 
     let values = [];
     values.push(req.body.CertTypeID)
@@ -642,6 +665,7 @@ app.put('/staff', async (req, res) => {
         blobStream.on('error', err => {
             next(err);
         });
+
         blobStream.on('finish', () => {
             const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
             detail['StaffImageURL'] = publicUrl
@@ -701,6 +725,11 @@ app.put('/staff', async (req, res) => {
             }
         })
     }
+
+})
+
+app.put('/staff', async (req, res) => {
+
 
 })
 
@@ -1376,7 +1405,7 @@ app.get('/po', async (req, res) => {
     ORDER BY POID`
     pool.query(query, function (err, results) {
         if (err) throw err
-        if (results.length > 0) {
+        if (results.length >= 0) {
             return res.status(200).json(results)
         } else {
             return res.status(400).json({ code: 400, message: "No data found" })
@@ -1398,7 +1427,7 @@ app.post('/po', async (req, res) => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
 
-        let query = `INSERT INTO PO(POID,POnumber,POdate,POimageURL,ContactID,StaffID, AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?)`
+        let query = `INSERT INTO PO(POID,POnumber,POdate,POImageURL,ContactID,StaffID, AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?)`
         pool.query(query, ["", req.body.POnumber, req.body.POdate, publicUrl, req.body.ContactID, req.body.StaffID, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results) {
             if (error) return res.send(error);
             if (results.affectedRows > 0) {
