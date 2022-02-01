@@ -1379,7 +1379,15 @@ app.get('/contactsitelist', async (req, res) => {
     let query = `SELECT Contact_Site.ContactID,Site.SiteName FROM Contact_Site JOIN Site ON Site.SiteID = Contact_Site.SiteID WHERE ContactID = Contact_Site.ContactID`
     pool.query(query, function (err, results) {
         if (err) throw err
-        return res.status(200).json(results)
+        if (results.length >= 0)
+        {
+            return res.status(200).json(results)
+        }
+        else
+        {
+            return res.status(400).json({code:400, message: "No data found."})
+        }
+        
     })
 })
 
