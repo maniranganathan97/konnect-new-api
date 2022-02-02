@@ -792,11 +792,11 @@ app.put('/staff', async (req, res, next) => {
 
                                         if (results.affectedRows > 0) {
                                             console.log(results)
-                                            
+
                                         } else {
                                             return res.status(400).json({ code: 400, message: "Staff certificate values has some error" })
                                         }
-                                        
+
                                     })
 
                                 })
@@ -1743,7 +1743,7 @@ app.get('/workstatus', async (req, res) => {
 
 
 app.get('/poJobDetails', async (req, res) => {
-    let query = `SELECT WorkOrder.WorkOrderID, Site.SiteName, WorkType.WorkTypeName
+    let query = `SELECT WorkOrder.WorkOrderID, Site.SiteName,WorkType.WorkTypeID, WorkType.WorkTypeName
     FROM WorkOrder
     JOIN WorkOrderStaff ON WorkOrder.WorkOrderID = WorkOrderStaff.WorkOrderID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
