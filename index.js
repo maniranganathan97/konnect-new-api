@@ -57,9 +57,20 @@ app.get('/', function (req, res) {
 
 app.post('/authentication', async (req, res) => {
 
+
     pool.query(`SELECT * from login where username=? AND password=?`, [req.body.username, req.body.password], function (error, results, fields) {
         if (results.length > 0) {
-            return res.status(200).json(results[0])
+            let query = `Select WorkTypeID,WorkTypeName from WorkType`
+            pool.query(query, function (err, result) {
+                if (err) throw err
+                if (result.length > 0) {
+                    console.log(result)
+                    let data = results[0]
+                    data['workType'] = result
+                    return res.status(200).json(data)
+                }
+            })
+
         } else {
             return res.status(401).json({ "code": 401, "message": "unauthorized user" })
         }
@@ -737,6 +748,7 @@ app.post('/staff', multer.single('file'), async (req, res, next) => {
 
 app.put('/staff', async (req, res, next) => {
 
+    console.log(req.body.StaffID)
     const certificates = req.body.CertificateDetails
     const detail = req.body
 
@@ -821,12 +833,75 @@ app.put('/staff', async (req, res, next) => {
     } else {
 
         let query = `Update Staff SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where StaffID = ?"
-        const parameters = [...Object.values(detail), req.query.StaffID]
+        const parameters = [...Object.values(detail), req.body.StaffID]
         pool.query(query, parameters, function (err, results, fields) {
             if (err) throw err
-
             if (results.affectedRows > 0) {
-                return res.status(200).json({ code: 200, message: "success" })
+                let result = 0;
+                if (certificates.length > 0) {
+                    let query = `DELETE FROM Staff_Certificate WHERE StaffID =${req.body.StaffID}`
+                    pool.query(query, function (error, results, fields) {
+                        if (error) throw error
+                    })
+
+                    for (let certficate of certificates) {
+                        if (certficate['CertificateImageURL']) {
+                            const buffer1 = Buffer.from(certficate['CertificateImageURL'], 'base64')
+                            // Create a new blob in the bucket and upload the file data.
+                            const id1 = uuid.v4();
+                            const blob1 = bucket.file("konnect" + id1 + ".jpg");
+                            const blobStream1 = blob1.createWriteStream();
+                            blobStream1.on('error', err => {
+                                next(err);
+                            });
+                            blobStream1.on('finish', () => {
+                                const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
+                                let query = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
+                                let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, publicUrl1, certficate.AddedByUserID, certficate.AddedDateTime]
+                                pool.query(query, parameters, function (err, results) {
+                                    if (err) throw err
+
+                                    if (results.affectedRows > 0) {
+                                        result = results.affectedRows
+
+                                    } else {
+                                        return res.status(400).json({ code: 400, message: "Staff certificate values has some error" })
+                                    }
+
+                                    if (result > 0) {
+                                        return res.status(200).json({ code: 200, message: "staff certificate values updated" })
+                                    }
+
+                                })
+
+                            })
+                            blobStream1.end(buffer1)
+                        } else {
+                            let query = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?)";
+                            let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, certficate.AddedByUserID, certficate.AddedDateTime]
+                            pool.query(query, parameters, function (err, results) {
+                                if (err) throw err
+
+                                if (results.affectedRows > 0) {
+                                    console.log(results)
+
+                                } else {
+                                    return res.status(400).json({ code: 400, message: "Staff certificate values has some error" })
+                                }
+
+                            })
+                        }
+                    }
+                } else {
+                    let query = `DELETE FROM Staff_Certificate WHERE StaffID =${req.body.StaffID}`
+                    pool.query(query, function (error, results, fields) {
+                        if (error) throw error
+                        return res.status(200).json({ code: 200, message: "Deleted contact sites." })
+                    })
+                }
+
+                return res.status(200).json({ code: 200, message: "staff only updated" })
+
             } else {
                 return res.status(401).json({ code: 401, "message": "data not update" })
             }
@@ -1743,22 +1818,32 @@ app.get('/workstatus', async (req, res) => {
 
 
 app.get('/poJobDetails', async (req, res) => {
-    let query = `SELECT WorkOrder.WorkOrderID, Site.SiteName,WorkType.WorkTypeID, WorkType.WorkTypeName
-    FROM WorkOrder
-    JOIN WorkOrderStaff ON WorkOrder.WorkOrderID = WorkOrderStaff.WorkOrderID
-    JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
-    JOIN Site ON Site.SiteID = WorkOrder.SiteID
-    WHERE WorkOrderStaff.StaffID = ${req.query.StaffID}
-    AND WorkOrder.RequestedStartDate = DATE('${req.query.RequestedStartDate}')`
-    pool.query(query, function (err, results) {
 
-        if (err) throw err
-        if (results.length > 0) {
-            return res.status(200).send(results)
-        } else {
-            return res.status(400).send({ code: 400, message: "No job available for this user" })
+    let query = `select WorkNatureID,WorkNature from WorkNature`
+    pool.query(query, function (err, workNature) {
+        if (workNature.length > 0) {
+
+            let query = `SELECT WorkOrder.WorkOrderID, Site.SiteName,WorkType.WorkTypeID, WorkType.WorkTypeName
+            FROM WorkOrder
+            JOIN WorkOrderStaff ON WorkOrder.WorkOrderID = WorkOrderStaff.WorkOrderID
+            JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+            JOIN Site ON Site.SiteID = WorkOrder.SiteID
+            WHERE WorkOrderStaff.StaffID = ${req.query.StaffID}
+            AND WorkOrder.RequestedStartDate = DATE('${req.query.RequestedStartDate}')`
+            pool.query(query, function (err, results) {
+
+                if (err) throw err
+                if (results.length > 0) {
+
+                    return res.status(200).json({ workNature: workNature, workOrder: results })
+                } else {
+                    return res.status(400).send({ code: 400, message: "No job available for this user" })
+                }
+            })
+
         }
     })
+
 })
 
 app.listen(port, function () {
