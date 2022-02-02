@@ -1626,7 +1626,37 @@ app.post('/po', async (req, res) => {
         pool.query(query, ["", req.body.POnumber, req.body.POdate, publicUrl, req.body.ContactID, req.body.StaffID, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results) {
             if (error) return res.send(error);
             if (results.affectedRows > 0) {
-
+                if (req.body.WorkOrders.length > 0) {
+                    let values = [];
+    
+                    for (let data of req.body['WorkOrders']) {
+                        let value = []
+                        value.push(results.insertId)
+                        value.push(data.SiteID)
+                        value.push(data.WorkTypeID)
+                        value.push(data.RequestedStartDate)
+                        value.push(data.RequestedEndDate)
+                        value.push(data.WorkStatusID)
+                        value.push(data.AssignedDateTime)
+                        value.push(data.UpdatedByUserID)
+                        value.push(data.UpdatedDateTime)
+                        values.push(value)
+                    }
+    
+                    var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime) VALUES ?";
+    
+                    pool.query(sql, [values], function (err, result) {
+                        if (err) throw err;
+                        if (result.affectedRows > 0) {
+                            console.log(result)
+                        }
+                        else {
+                            return res.status(401).json({ code: 401, "message": "Failed to create work order." })
+                        }
+                    });
+    
+    
+                }
                 return res.status(200).send({ message: "Data uploaded successfUlly." })
 
             } else {
@@ -1640,6 +1670,10 @@ app.post('/po', async (req, res) => {
 app.put('/po', async (req, res) => {
 
     const detail = req.body
+    let workOrderValues = req.body.WorkOrders
+    //let contactObjects = req.body
+    delete detail['WorkOrders']
+
     if (detail['POImageURL']) {
         const buffer = Buffer.from(detail["POImageURL"], 'base64')
         // Create a new blob in the bucket and upload the file data.
@@ -1657,9 +1691,22 @@ app.put('/po', async (req, res) => {
             const parameters = [...Object.values(detail), req.query.POID]
             pool.query(query, parameters, function (err, results, fields) {
                 if (err) throw err
+                console.log(results.affectedRows)
                 if (results.affectedRows > 0) {
+                    for (let woValues of workOrderValues) {
+                        console.log(woValues)
+                        let query = `Update WorkOrder SET  ` + Object.keys(woValues).map(key => `${key}=?`).join(",") + " where WorkOrderID = ?"
+                    const parameters = [...Object.values(woValues), woValues.WorkOrderID]
+                    pool.query(query, parameters, function (err, results, fields) {
+                        if (results.affectedRows > 0) {
+                            console.log(results)
+                        }
+                        else{
+                            return res.status(400).json({ code: 400, "message": "data not update" })
+                        }
+                    })
+                    }
                     return res.status(200).json({ code: 200, "message": "Data is updated sucessfully" })
-
                 } else {
                     return res.status(400).json({ code: 400, "message": "data not update" })
                 }
@@ -1702,6 +1749,22 @@ app.get('/workorder', async (req, res) => {
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
     JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
     ORDER BY WorkOrder.WorkOrderID`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).json(results)
+        } else {
+            return res.status(400).json({ code: 400, message: "No data found" })
+        }
+    })
+})
+
+app.get('/poworkorder', async (req, res) => {
+    let query = `Select WorkOrder.* 
+    FROM WorkOrder
+    JOIN PO ON PO.POID = WorkOrder.POID
+    WHERE PO.POID = ${req.query.POID}
+    ORDER By WorkOrder.WorkOrderID`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length > 0) {
