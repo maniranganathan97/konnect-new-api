@@ -326,7 +326,7 @@ app.get('/pointdetailsreport', async (req, res) => {
     })
 })
 
-app.put('/pointdetails', async (req, res) => {
+app.put('/pointdetails', async (req, res, next) => {
     const detail = req.body
 
     if (detail['PointImageURL']) {
@@ -531,14 +531,13 @@ app.put('/contact', async (req, res) => {
                 })
                 //return res.status(200).json({ code: 200, message: "success" })
             }
-            else
-            {
+            else {
                 let query = `DELETE FROM Contact_Site WHERE ContactID =${req.body.ContactID}`
                 pool.query(query, function (error, results, fields) {
                     if (error) throw error
-                       return res.status(200).json({ code: 200, message: "Deleted contact sites." })
+                    return res.status(200).json({ code: 200, message: "Deleted contact sites." })
                 })
-            }   
+            }
 
         } else {
             return res.status(401).json({ code: 401, "message": "data not update" })
@@ -580,7 +579,7 @@ app.get('/staff', async (req, res) => {
     })
 })
 
-app.post('/staff', multer.single('file'), async (req, res) => {
+app.post('/staff', multer.single('file'), async (req, res, next) => {
 
     const buffer = Buffer.from(req.body["StaffImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
@@ -616,7 +615,7 @@ app.post('/staff', multer.single('file'), async (req, res) => {
                             if (err) throw err;
                             if (result.affectedRows > 0) {
 
-                                console.log(result.affectedRows)
+                                console.log(result)
                                 //  return res.status(200).json({ code: 200, message: "Success." })
                             }
                             else {
@@ -640,29 +639,114 @@ app.post('/staff', multer.single('file'), async (req, res) => {
     blobStream.end(buffer);
 })
 
-app.put('/staff', async (req, res) => {
+// app.put('/staff', async (req, res) => {
 
+//     const detail = req.body
+//     if (detail['CertificateDetails']) {
+//         delete detail['CertificateDetails']
+//     }
+
+
+//     let values = [];
+//     values.push(req.body.CertTypeID)
+//     values.push(req.body.CertBodyID)
+//     values.push(req.body.ValidityStartDate)
+//     values.push(req.body.ValidityEndDate)
+//     values.push(req.body.CertificateImageURL)
+
+//     const staffObjects = req.body
+//     delete staffObjects['CertTypeID']
+//     delete staffObjects['CertBodyID']
+//     delete staffObjects['ValidityStartDate']
+//     delete staffObjects['ValidityEndDate']
+//     delete staffObjects['CertificateImageURL']
+//     if (detail['StaffImageURL']) {
+
+//         const buffer = Buffer.from(detail["StaffImageURL"], 'base64')
+//         // Create a new blob in the bucket and upload the file data.
+//         const id = uuid.v4();
+//         const blob = bucket.file("konnect" + id + ".jpg");
+//         const blobStream = blob.createWriteStream();
+
+//         blobStream.on('error', err => {
+//             next(err);
+//         });
+
+//         blobStream.on('finish', () => {
+//             const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+//             detail['StaffImageURL'] = publicUrl
+//             let query = `Update Staff SET  ` + Object.keys(staffObjects).map(key => `${key}=?`).join(",") + " where StaffID = ?"
+//             const parameters = [...Object.values(staffObjects), req.body.StaffID]
+//             pool.query(query, parameters, function (err, results, fields) {
+//                 if (err) throw err
+//                 if (results.affectedRows > 0) {
+
+//                     let query = `DELETE FROM Staff_Certificate WHERE StaffID =${req.body.StaffID}`
+//                     pool.query(query, function (error, results, fields) {
+//                         if (error) throw error
+//                     })
+//                     if ((values[0] !== null) || (values[1] !== null) || (values[2] !== null) || (values[3] !== null) || (values[4] !== null)) {
+//                         const buffer1 = Buffer.from(values[4], 'base64')
+//                         // Create a new blob in the bucket and upload the file data.
+//                         const id1 = uuid.v4();
+//                         const blob1 = bucket.file("konnect" + id1 + ".jpg");
+//                         const blobStream1 = blob1.createWriteStream();
+//                         blobStream1.on('error', err => {
+//                             next(err);
+//                         });
+//                         blobStream1.on('finish', () => {
+//                             const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
+//                             var sql = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
+
+//                             pool.query(sql, ["", req.body.StaffID, values[0], values[1], values[2], values[3], publicUrl1, req.body.AddedByUserID, req.body.AddedDateTime], function (err, result) {
+//                                 if (err) throw err;
+//                                 if (result.affectedRows > 0) {
+//                                     return res.status(200).json({ code: 200, message: "Success." })
+//                                 }
+//                                 else {
+//                                     return res.status(401).json({ code: 401, "message": "Data not inserted." })
+//                                 }
+//                             });
+//                         });
+//                         blobStream1.end(buffer1);
+//                     }
+
+
+
+//                 } else {
+//                     return res.status(401).json({ code: 401, "message": "data not update" })
+//                 }
+//             })
+//         })
+//         blobStream.end(buffer);
+
+//     } else {
+
+//         let query = `Update Staff SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where StaffID = ?"
+//         const parameters = [...Object.values(detail), req.query.StaffID]
+//         pool.query(query, parameters, function (err, results, fields) {
+//             if (err) throw err
+
+//             if (results.affectedRows > 0) {
+//                 return res.status(200).json({ code: 200, message: "success" })
+//             } else {
+//                 return res.status(401).json({ code: 401, "message": "data not update" })
+//             }
+//         })
+//     }
+
+// })
+
+app.put('/staff', async (req, res, next) => {
+
+    const certificates = req.body.CertificateDetails
     const detail = req.body
+
     if (detail['CertificateDetails']) {
         delete detail['CertificateDetails']
     }
-    console.log(detail)
 
-    let values = [];
-    values.push(req.body.CertTypeID)
-    values.push(req.body.CertBodyID)
-    values.push(req.body.ValidityStartDate)
-    values.push(req.body.ValidityEndDate)
-    values.push(req.body.CertificateImageURL)
-
-    const staffObjects = req.body
-    delete staffObjects['CertTypeID']
-    delete staffObjects['CertBodyID']
-    delete staffObjects['ValidityStartDate']
-    delete staffObjects['ValidityEndDate']
-    delete staffObjects['CertificateImageURL']
     if (detail['StaffImageURL']) {
-
         const buffer = Buffer.from(detail["StaffImageURL"], 'base64')
         // Create a new blob in the bucket and upload the file data.
         const id = uuid.v4();
@@ -676,48 +760,63 @@ app.put('/staff', async (req, res) => {
         blobStream.on('finish', () => {
             const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
             detail['StaffImageURL'] = publicUrl
-            let query = `Update Staff SET  ` + Object.keys(staffObjects).map(key => `${key}=?`).join(",") + " where StaffID = ?"
-            const parameters = [...Object.values(staffObjects), req.body.StaffID]
-            pool.query(query, parameters, function (err, results, fields) {
+            let query = `Update Staff SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where StaffID = ?"
+            const parameters = [...Object.values(detail), req.body.StaffID]
+
+            pool.query(query, parameters, function (err, results) {
                 if (err) throw err
+                console.log(results)
                 if (results.affectedRows > 0) {
+                    console.log(results)
+                    if (certificates.length > 0) {
 
-                    let query = `DELETE FROM Staff_Certificate WHERE StaffID =${req.body.StaffID}`
-                    pool.query(query, function (error, results, fields) {
-                        if (error) throw error
-                    })
-                    if ((values[0] !== null) || (values[1] !== null) || (values[2] !== null) || (values[3] !== null) || (values[4] !== null)) {
-                        const buffer1 = Buffer.from(values[4], 'base64')
-                        // Create a new blob in the bucket and upload the file data.
-                        const id1 = uuid.v4();
-                        const blob1 = bucket.file("konnect" + id1 + ".jpg");
-                        const blobStream1 = blob1.createWriteStream();
-                        blobStream1.on('error', err => {
-                            next(err);
-                        });
-                        blobStream1.on('finish', () => {
-                            const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
-                            var sql = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
+                        let query = `DELETE FROM Staff_Certificate WHERE StaffID =${req.body.StaffID}`
+                        pool.query(query, function (error, results, fields) {
+                            if (error) throw error
+                        })
 
-                            pool.query(sql, ["", req.body.StaffID, values[0], values[1], values[2], values[3], publicUrl1, req.body.AddedByUserID, req.body.AddedDateTime], function (err, result) {
-                                if (err) throw err;
-                                if (result.affectedRows > 0) {
-                                    return res.status(200).json({ code: 200, message: "Success." })
-                                }
-                                else {
-                                    return res.status(401).json({ code: 401, "message": "Data not inserted." })
-                                }
-                            });
-                        });
-                        blobStream1.end(buffer1);
+                        for (let certficate of certificates) {
+                            if (certficate['CertificateImageURL']) {
+                                const buffer1 = Buffer.from(certficate['CertificateImageURL'], 'base64')
+                                // Create a new blob in the bucket and upload the file data.
+                                const id1 = uuid.v4();
+                                const blob1 = bucket.file("konnect" + id1 + ".jpg");
+                                const blobStream1 = blob1.createWriteStream();
+                                blobStream1.on('error', err => {
+                                    next(err);
+                                });
+                                blobStream1.on('finish', () => {
+                                    const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
+                                    let query = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
+                                    let parameters = ["", results.insertId, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, publicUrl1, certficate.AddedByUserID, certficate.AddedDateTime]
+                                    pool.query(query, parameters, function (err, results) {
+                                        if (err) throw err
+                                        if (results.affectedRows > 0) {
+
+                                            console.log(results)
+                                        } else {
+                                            return res.status(400).json({ code: 400, message: "Staff certificate values has some error" })
+                                        }
+                                    })
+
+                                })
+                                blobStream1.end(buffer1)
+                            }
+                        }
+                    } else {
+                        let query = `DELETE FROM Staff_Certificate WHERE StaffID =${req.body.StaffID}`
+                        pool.query(query, function (error, results, fields) {
+                            if (error) throw error
+                            return res.status(200).json({ code: 200, message: "Deleted contact sites." })
+                        })
                     }
                 } else {
-                    return res.status(401).json({ code: 401, "message": "data not update" })
+                    return res.status(400).json({ code: 400, message: "staff data is not updated" })
                 }
             })
+
         })
         blobStream.end(buffer);
-
     } else {
 
         let query = `Update Staff SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where StaffID = ?"
@@ -732,11 +831,6 @@ app.put('/staff', async (req, res) => {
             }
         })
     }
-
-})
-
-app.put('/staff', async (req, res) => {
-
 
 })
 
@@ -1386,15 +1480,13 @@ app.get('/contactsitelist', async (req, res) => {
     let query = `SELECT Contact_Site.ContactID,Site.SiteName FROM Contact_Site JOIN Site ON Site.SiteID = Contact_Site.SiteID WHERE ContactID = Contact_Site.ContactID`
     pool.query(query, function (err, results) {
         if (err) throw err
-        if (results.length >= 0)
-        {
+        if (results.length >= 0) {
             return res.status(200).json(results)
         }
-        else
-        {
-            return res.status(400).json({code:400, message: "No data found."})
+        else {
+            return res.status(400).json({ code: 400, message: "No data found." })
         }
-        
+
     })
 })
 
@@ -1630,6 +1722,24 @@ app.get('/workstatus', async (req, res) => {
             return res.status(200).send(results)
         } else {
             return res.status(400).json({ code: 400, message: "Data is not there" })
+        }
+    })
+})
+
+
+app.get('/poJobDetails', async (req, res) => {
+    let query = `SELECT WorkOrder.WorkOrderID, Site.SiteName, WorkType.WorkTypeName
+    FROM WorkOrder
+    JOIN WorkOrderStaff ON WorkOrder.WorkOrderID = WorkOrderStaff.WorkOrderID
+    JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+    JOIN Site ON Site.SiteID = WorkOrder.SiteID
+    WHERE WorkOrderStaff.StaffID = ${req.query.StaffID}
+    AND WorkOrder.RequestedStartDate = ${req.query.RequestedStartDate}`
+    pool.query(query, function (err, results) {
+        if (results.length > 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).send({ code: 200, message: "No job available for this user" })
         }
     })
 })
