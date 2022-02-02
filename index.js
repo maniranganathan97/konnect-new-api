@@ -1233,8 +1233,8 @@ app.get('/staffcertificate', async (req, res) => {
     let query = `Select * from Staff_Certificate where StaffID =${req.query.StaffID}`
     pool.query(query, function (error, results, fields) {
         if (error) throw error
-        if (results.affectedRows > 0) {
-            return res.status(200).json({ message: "Retrieved successfully." })
+        if (results.length > 0) {
+            return res.status(200).json(results)
         } else {
             return res.status(401).json({ "code": 401, "message": "No certificates available." })
         }
