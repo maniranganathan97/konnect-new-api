@@ -561,13 +561,11 @@ app.delete('/contact', async (req, res) => {
 
 app.get('/staff', async (req, res) => {
 
-    pool.query(`SELECT Staff.*,AccessControl.AccessControl,StaffTitle.StaffTitle,StaffEmploymentStatus.StaffEmploymentStatus AS EmploymentStatus,
-    Staff_Certificate.CertTypeID,Staff_Certificate.CertBodyID,Staff_Certificate.ValidityStartDate,Staff_Certificate.ValidityEndDate,Staff_Certificate.CertificateImageURL 
+    pool.query(`SELECT Staff.*,AccessControl.AccessControl,StaffTitle.StaffTitle,StaffEmploymentStatus.StaffEmploymentStatus AS EmploymentStatus
     FROM Staff 
         JOIN AccessControl ON AccessControl.AccessControlID = Staff.AccessControlID
         JOIN StaffTitle ON StaffTitle.StaffTitleID = Staff.StaffTitleID
         JOIN StaffEmploymentStatus ON StaffEmploymentStatus.StaffEmploymentStatusID = Staff.StaffEmploymentStatusID
-        LEFT JOIN Staff_Certificate ON Staff_Certificate.StaffID = Staff.StaffID
         ORDER BY Staff.StaffID`, function (error, results, fields) {
         if (error) throw error;
         if (results.length > 0) {
@@ -1225,6 +1223,20 @@ app.delete('/staffcertificate', async (req, res) => {
             return res.status(200).json({ message: "deleted successfully" })
         } else {
             return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+        }
+    })
+
+})
+
+app.get('/staffcertificate', async (req, res) => {
+
+    let query = `Select * from Staff_Certificate where StaffID =${req.query.StaffID}`
+    pool.query(query, function (error, results, fields) {
+        if (error) throw error
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ message: "Retrieved successfully." })
+        } else {
+            return res.status(401).json({ "code": 401, "message": "No certificates available." })
         }
     })
 
