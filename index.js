@@ -765,9 +765,9 @@ app.put('/staff', async (req, res, next) => {
 
             pool.query(query, parameters, function (err, results) {
                 if (err) throw err
-                console.log(results)
+                //console.log(results)
                 if (results.affectedRows > 0) {
-                    console.log(results)
+                    //console.log(results)
                     if (certificates.length > 0) {
 
                         let query = `DELETE FROM Staff_Certificate WHERE StaffID =${req.body.StaffID}`
@@ -788,21 +788,24 @@ app.put('/staff', async (req, res, next) => {
                                 blobStream1.on('finish', () => {
                                     const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
                                     let query = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
-                                    let parameters = ["", results.insertId, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, publicUrl1, certficate.AddedByUserID, certficate.AddedDateTime]
+                                    let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, publicUrl1, certficate.AddedByUserID, certficate.AddedDateTime]
                                     pool.query(query, parameters, function (err, results) {
                                         if (err) throw err
-                                        if (results.affectedRows > 0) {
 
+                                        if (results.affectedRows > 0) {
                                             console.log(results)
+                                            
                                         } else {
                                             return res.status(400).json({ code: 400, message: "Staff certificate values has some error" })
                                         }
+                                        
                                     })
 
                                 })
                                 blobStream1.end(buffer1)
                             }
                         }
+                        return res.status(200).json({ code: 200, message: "Staff certificate values updated." })
                     } else {
                         let query = `DELETE FROM Staff_Certificate WHERE StaffID =${req.body.StaffID}`
                         pool.query(query, function (error, results, fields) {
