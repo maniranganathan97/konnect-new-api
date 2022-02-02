@@ -485,7 +485,7 @@ app.put('/contact', async (req, res) => {
     let contactSiteValues = req.body.LinkedSites
     let contactObjects = req.body
     delete contactObjects['LinkedSites']
-    let query = `Update Contact SET  ` + Object.keys(req.body).map(key => `${key}=?`).join(",") + "where ContactID = ?"
+    let query = `Update Contact SET  ` + Object.keys(req.body).map(key => `${key}=?`).join(",") + " where ContactID = ?"
     const parameters = [...Object.values(contactObjects), req.body.ContactID]
     pool.query(query, parameters, function (err, results, fields) {
         if (err) throw err
@@ -561,13 +561,11 @@ app.delete('/contact', async (req, res) => {
 
 app.get('/staff', async (req, res) => {
 
-    pool.query(`SELECT Staff.*,AccessControl.AccessControl,StaffTitle.StaffTitle,StaffEmploymentStatus.StaffEmploymentStatus AS EmploymentStatus,
-    Staff_Certificate.CertTypeID,Staff_Certificate.CertBodyID,Staff_Certificate.ValidityStartDate,Staff_Certificate.ValidityEndDate,Staff_Certificate.CertificateImageURL 
+    pool.query(`SELECT Staff.*,AccessControl.AccessControl,StaffTitle.StaffTitle,StaffEmploymentStatus.StaffEmploymentStatus AS EmploymentStatus
     FROM Staff 
         JOIN AccessControl ON AccessControl.AccessControlID = Staff.AccessControlID
         JOIN StaffTitle ON StaffTitle.StaffTitleID = Staff.StaffTitleID
         JOIN StaffEmploymentStatus ON StaffEmploymentStatus.StaffEmploymentStatusID = Staff.StaffEmploymentStatusID
-        LEFT JOIN Staff_Certificate ON Staff_Certificate.StaffID = Staff.StaffID
         ORDER BY Staff.StaffID`, function (error, results, fields) {
         if (error) throw error;
         if (results.length > 0) {
@@ -765,9 +763,9 @@ app.put('/staff', async (req, res, next) => {
 
             pool.query(query, parameters, function (err, results) {
                 if (err) throw err
-                console.log(results)
+                //console.log(results)
                 if (results.affectedRows > 0) {
-                    console.log(results)
+                    //console.log(results)
                     if (certificates.length > 0) {
 
                         let query = `DELETE FROM Staff_Certificate WHERE StaffID =${req.body.StaffID}`
@@ -788,21 +786,24 @@ app.put('/staff', async (req, res, next) => {
                                 blobStream1.on('finish', () => {
                                     const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
                                     let query = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
-                                    let parameters = ["", results.insertId, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, publicUrl1, certficate.AddedByUserID, certficate.AddedDateTime]
+                                    let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, publicUrl1, certficate.AddedByUserID, certficate.AddedDateTime]
                                     pool.query(query, parameters, function (err, results) {
                                         if (err) throw err
-                                        if (results.affectedRows > 0) {
 
+                                        if (results.affectedRows > 0) {
                                             console.log(results)
+                                            
                                         } else {
                                             return res.status(400).json({ code: 400, message: "Staff certificate values has some error" })
                                         }
+                                        
                                     })
 
                                 })
                                 blobStream1.end(buffer1)
                             }
                         }
+                        return res.status(200).json({ code: 200, message: "Staff certificate values updated." })
                     } else {
                         let query = `DELETE FROM Staff_Certificate WHERE StaffID =${req.body.StaffID}`
                         pool.query(query, function (error, results, fields) {
@@ -1222,6 +1223,20 @@ app.delete('/staffcertificate', async (req, res) => {
             return res.status(200).json({ message: "deleted successfully" })
         } else {
             return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+        }
+    })
+
+})
+
+app.get('/staffcertificate', async (req, res) => {
+
+    let query = `Select * from Staff_Certificate where StaffID =${req.query.StaffID}`
+    pool.query(query, function (error, results, fields) {
+        if (error) throw error
+        if (results.length > 0) {
+            return res.status(200).json(results)
+        } else {
+            return res.status(200).json({ "code": 200, "message": "No certificates available." })
         }
     })
 
