@@ -1628,7 +1628,7 @@ app.post('/po', async (req, res) => {
             if (results.affectedRows > 0) {
                 if (req.body.WorkOrders.length > 0) {
                     let values = [];
-    
+
                     for (let data of req.body['WorkOrders']) {
                         let value = []
                         value.push(results.insertId)
@@ -1642,9 +1642,9 @@ app.post('/po', async (req, res) => {
                         value.push(data.UpdatedDateTime)
                         values.push(value)
                     }
-    
+
                     var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime) VALUES ?";
-    
+
                     pool.query(sql, [values], function (err, result) {
                         if (err) throw err;
                         if (result.affectedRows > 0) {
@@ -1654,8 +1654,8 @@ app.post('/po', async (req, res) => {
                             return res.status(401).json({ code: 401, "message": "Failed to create work order." })
                         }
                     });
-    
-    
+
+
                 }
                 return res.status(200).send({ message: "Data uploaded successfUlly." })
 
@@ -1696,15 +1696,15 @@ app.put('/po', async (req, res) => {
                     for (let woValues of workOrderValues) {
                         console.log(woValues)
                         let query = `Update WorkOrder SET  ` + Object.keys(woValues).map(key => `${key}=?`).join(",") + " where WorkOrderID = ?"
-                    const parameters = [...Object.values(woValues), woValues.WorkOrderID]
-                    pool.query(query, parameters, function (err, results, fields) {
-                        if (results.affectedRows > 0) {
-                            console.log(results)
-                        }
-                        else{
-                            return res.status(400).json({ code: 400, "message": "data not update" })
-                        }
-                    })
+                        const parameters = [...Object.values(woValues), woValues.WorkOrderID]
+                        pool.query(query, parameters, function (err, results, fields) {
+                            if (results.affectedRows > 0) {
+                                console.log(results)
+                            }
+                            else {
+                                return res.status(400).json({ code: 400, "message": "data not update" })
+                            }
+                        })
                     }
                     return res.status(200).json({ code: 200, "message": "Data is updated sucessfully" })
                 } else {
@@ -1904,6 +1904,8 @@ app.get('/poJobDetails', async (req, res) => {
                 }
             })
 
+        } else {
+            return res.status(400).send({ code: 400, message: "No job available for this user" })
         }
     })
 
