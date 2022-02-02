@@ -485,7 +485,7 @@ app.put('/contact', async (req, res) => {
     let contactSiteValues = req.body.LinkedSites
     let contactObjects = req.body
     delete contactObjects['LinkedSites']
-    let query = `Update Contact SET  ` + Object.keys(req.body).map(key => `${key}=?`).join(",") + "where ContactID = ?"
+    let query = `Update Contact SET  ` + Object.keys(req.body).map(key => `${key}=?`).join(",") + " where ContactID = ?"
     const parameters = [...Object.values(contactObjects), req.body.ContactID]
     pool.query(query, parameters, function (err, results, fields) {
         if (err) throw err
