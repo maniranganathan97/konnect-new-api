@@ -1734,8 +1734,10 @@ app.get('/poJobDetails', async (req, res) => {
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
     JOIN Site ON Site.SiteID = WorkOrder.SiteID
     WHERE WorkOrderStaff.StaffID = ${req.query.StaffID}
-    AND WorkOrder.RequestedStartDate = ${req.query.RequestedStartDate}`
+    AND WorkOrder.RequestedStartDate = '${req.query.RequestedStartDate}'`
     pool.query(query, function (err, results) {
+
+        if (err) throw err
         if (results.length > 0) {
             return res.status(200).send(results)
         } else {
