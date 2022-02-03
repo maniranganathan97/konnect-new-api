@@ -1884,13 +1884,30 @@ app.put('/workorder', async (req, res) => {
 })
 
 app.delete('/workorder', async (req, res) => {
-    let query = `DELETE FROM WorkOrder WHERE WorkOrderID  =${req.query.WorkOrderID}`
+    let query = `SELECT * FROM WorkOrderStaff WHERE WorkOrderID  =${req.query.WorkOrderID}`
     pool.query(query, function (error, results, fields) {
         if (error) throw error
+        if (results.affectedRows > 0)
+        {
+            let query = `DELETE FROM WorkOrderStaff WHERE WorkOrderID  =${req.query.WorkOrderID}`
+            pool.query(query, function (error, results, fields) {
+                if (error) throw error
+                if (results.affectedRows > 0) {
+                    console.log(results)
+                }
+                else {
+                    return res.status(400).json({ "code": 400, "message": "WorkOrderStaff not deleted." })
+                }
+            })
+        }
+    })
+    let query1 = `DELETE FROM WorkOrder WHERE WorkOrderID  =${req.query.WorkOrderID}`
+    pool.query(query1, function (error, results, fields) {
+        if (error) throw error
         if (results.affectedRows > 0) {
-            return res.status(200).json({ code: 200, message: "deleted successfully" })
+            return res.status(200).json({ code: 200, message: "WorkOrder deleted successfully" })
         } else {
-            return res.status(400).json({ "code": 400, "message": "Given POinID is not there" })
+            return res.status(400).json({ "code": 400, "message": "WorkOrder not deleted." })
         }
 
     })
