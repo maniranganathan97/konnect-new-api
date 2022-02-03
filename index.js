@@ -1669,145 +1669,114 @@ app.post('/po', async (req, res) => {
 })
 
 app.put('/po', async (req, res) => {
-    
-    const detail = req.body
-    let workOrderValues = req.body.WorkOrders
-    //let contactObjects = req.body
-    delete detail['WorkOrders']
+    try {
+        const detail = req.body
+        let workOrderValues = req.body.WorkOrders
+        //let contactObjects = req.body
+        delete detail['WorkOrders']
 
-    if (detail['POImageURL']) {
-        const buffer = Buffer.from(detail["POImageURL"], 'base64')
-        // Create a new blob in the bucket and upload the file data.
-        const id = uuid.v4();
-        const blob = bucket.file("konnect" + id + ".jpg");
-        const blobStream = blob.createWriteStream();
+        if (detail['POImageURL']) {
+            const buffer = Buffer.from(detail["POImageURL"], 'base64')
+            // Create a new blob in the bucket and upload the file data.
+            const id = uuid.v4();
+            const blob = bucket.file("konnect" + id + ".jpg");
+            const blobStream = blob.createWriteStream();
 
-        blobStream.on('error', err => {
-            throw (err);
-        });
-        blobStream.on('finish', () => {
-            const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-            detail['POImageURL'] = publicUrl
+            blobStream.on('error', err => {
+                throw (err);
+            });
+            blobStream.on('finish', () => {
+                const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+                detail['POImageURL'] = publicUrl
+                let query = `Update PO SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where POID = ?"
+                const parameters = [...Object.values(detail), req.query.POID]
+                pool.query(query, parameters, function (err, poresults, fields) {
+                    if (err) throw err
+
+                    for (let woValues of workOrderValues) {
+                        console.log(woValues)
+                        if (!!!woValues['WorkOrderID']) {
+                            var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
+                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime']]
+                            pool.query(sql, parameters, function (err, result, fields) {
+                                if (err) throw err;
+                                if (result.affectedRows > 0) {
+                                    //console.log(result)
+                                }
+                                else {
+                                    return res.status(401).json({ code: 401, "message": "Failed to create work order." })
+                                }
+                            });
+                        }
+                        else {
+                            console.log("in else")
+                            let sql = `SELECT 1 FROM WorkOrder WHERE workorderid = ${woValues['WorkOrderID']}`
+                            pool.query(sql, function (err, result, fields) {
+                                if (err) throw err;
+                                if (result.length > 0) {
+                                    let query = `Update WorkOrder SET  ` + Object.keys(woValues).map(key => `${key}=?`).join(",") + " where WorkOrderID = ?"
+                                    const parameters = [...Object.values(woValues), woValues['WorkOrderID']]
+                                    pool.query(query, parameters, function (err, results, fields) {
+                                        if (results.affectedRows > 0) {
+                                            console.log(results)
+                                        }
+                                    })
+                                }
+                            });
+                        }
+                    }
+                })
+
+                return res.status(200).json({ code: 200, "message": "Data updated sucessfully" })
+            })
+            blobStream.end(buffer);
+
+        } else {
             let query = `Update PO SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where POID = ?"
             const parameters = [...Object.values(detail), req.query.POID]
             pool.query(query, parameters, function (err, poresults, fields) {
                 if (err) throw err
-                
-                if (poresults.affectedRows > 0) {
-                    let query = `Select 1 FROM WorkOrder where POID = ${req.query.POID}`
-                    pool.query(query, function (err, workOrderResult) {
-                        if (err) throw err;
-                        if ((workOrderValues.length > 0) && (workOrderResult.affectedRows > 0)) {
-                            for (let woValues of workOrderValues) {
+
+                for (let woValues of workOrderValues) {
+                    console.log(woValues)
+                    if (!!!woValues['WorkOrderID']) {
+                        var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
+                        let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime']]
+                        pool.query(sql, parameters, function (err, result, fields) {
+                            if (err) throw err;
+                            if (result.affectedRows > 0) {
+                                //console.log(result)
+                            }
+                            else {
+                                return res.status(401).json({ code: 401, "message": "Failed to create work order." })
+                            }
+                        });
+                    }
+                    else {
+                        console.log("in else")
+                        let sql = `SELECT 1 FROM WorkOrder WHERE workorderid = ${woValues['WorkOrderID']}`
+                        pool.query(sql, function (err, result, fields) {
+                            if (err) throw err;
+                            if (result.length > 0) {
                                 let query = `Update WorkOrder SET  ` + Object.keys(woValues).map(key => `${key}=?`).join(",") + " where WorkOrderID = ?"
-                                const parameters = [...Object.values(woValues), woValues.WorkOrderID]
+                                const parameters = [...Object.values(woValues), woValues['WorkOrderID']]
                                 pool.query(query, parameters, function (err, results, fields) {
                                     if (results.affectedRows > 0) {
                                         console.log(results)
                                     }
-                                    else {
-                                        return res.status(400).json({ code: 400, "message": "data not update" })
-                                    }
                                 })
                             }
-                        }
-                        else if ((workOrderValues.length > 0) && (workOrderResult.affectedRows = 0)){
-                            for (let woValues of workOrderValues) {
-                                var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime) VALUES ?,?,?,?,?,?,?,?,?";
-                                let parameters = [req.query.POID,woValues['SiteID'],woValues['WorkTypeID'],woValues['RequestedStartDate'],woValues['RequestedEndDate'],woValues['WorkStatusID'],woValues['AssignedDateTime'],woValues['UpdatedByUserID'],woValues['UpdatedByUserID'],woValues['UpdatedDateTime']]
-                                pool.query(sql, parameters, function (err, result,fields) {
-                                    if (err) throw err;
-                                    if (result.affectedRows > 0) {
-                                        console.log(result)
-                                    }
-                                    else {
-                                        return res.status(401).json({ code: 401, "message": "Failed to create work order." })
-                                    }
-                                });
-                            }
-                        }
-                        else {
-                            let query = `DELETE FROM WorkOrder WHERE POID =${req.query.POID}`
-                            pool.query(query, function (error, results, fields) {
-                                if (error) throw error
-                                if (results.affectedRows > 0) {
-                                    console.log(results)
-                                }
-                                else {
-                                    return res.status(401).json({ code: 401, "message": "data not update" })
-                                }
-                            })
-                        }
-                    })
-                    return res.status(200).json({ code: 200, "message": "Data is updated sucessfully" })
-                } else {
-                    return res.status(400).json({ code: 400, "message": "data not update" })
+                        });
+                    }
                 }
             })
-        })
-        blobStream.end(buffer);
 
-    } else {
-
-        let query = `Update PO SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where POID = ?"
-            const parameters = [...Object.values(detail), req.query.POID]
-            pool.query(query, parameters, function (err, poresults, fields) {
-                if (err) throw err
-                if (poresults.affectedRows > 0) {
-                    let query = `Select * FROM WorkOrder where POID = ${req.query.POID}`
-                    pool.query(query, function (err, workOrderResult) {
-                        if (err) throw err;
-                        if ((workOrderValues.length > 0) && (workOrderResult.length > 0)) {
-                            for (let woValues of workOrderValues) {
-                                let query = `Update WorkOrder SET  ` + Object.keys(woValues).map(key => `${key}=?`).join(",") + " where WorkOrderID = ?"
-                                const parameters = [...Object.values(woValues), woValues.WorkOrderID]
-                                pool.query(query, parameters, function (err, results, fields) {
-                                    console.log(results.affectedRows)
-                                    if (results.affectedRows > 0) {
-                                        console.log(results)
-                                    }
-                                    else {
-                                        return res.status(400).json({ code: 400, "message": "data not update" })
-                                    }
-                                })
-                            }
-                        }
-                        else if ((workOrderValues.length > 0) && (workOrderResult.length == 0)){
-                            
-                            for (let woValues of workOrderValues) {
-
-                                var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
-                                let parameters = [req.query.POID,woValues['SiteID'],woValues['WorkTypeID'],woValues['RequestedStartDate'],woValues['RequestedEndDate'],woValues['WorkStatusID'],woValues['AssignedDateTime'],woValues['UpdatedByUserID'],woValues['UpdatedByUserID'],woValues['UpdatedDateTime']]
-                                pool.query(sql, parameters, function (err, result,fields) {
-                                    if (err) throw err;
-                                    if (result.affectedRows > 0) {
-                                        console.log(result)
-                                    }
-                                    else {
-                                        return res.status(401).json({ code: 401, "message": "Failed to create work order." })
-                                    }
-                                });
-                            }
-                        }
-                        else {
-                            let query = `DELETE FROM WorkOrder WHERE POID =${req.query.POID}`
-                            pool.query(query, function (error, results, fields) {
-                                if (error) throw error
-                                if (results.affectedRows > 0) {
-                                    console.log(results)
-                                }
-                                else {
-                                    return res.status(401).json({ code: 401, "message": "data not update" })
-                                }
-                            })
-                        }
-                    })
-                    return res.status(200).json({ code: 200, "message": "Data is updated sucessfully" })
-                } else {
-                    return res.status(400).json({ code: 400, "message": "data not update" })
-                }
-            })
+            return res.status(200).json({ code: 200, "message": "Data updated sucessfully" })
+        }
+    } catch (error) {
+        return res.status(500).json({ "message": error })
     }
+
 
 })
 
@@ -1887,8 +1856,7 @@ app.delete('/workorder', async (req, res) => {
     let query = `SELECT * FROM WorkOrderStaff WHERE WorkOrderID  =${req.query.WorkOrderID}`
     pool.query(query, function (error, results, fields) {
         if (error) throw error
-        if (results.affectedRows > 0)
-        {
+        if (results.affectedRows > 0) {
             let query = `DELETE FROM WorkOrderStaff WHERE WorkOrderID  =${req.query.WorkOrderID}`
             pool.query(query, function (error, results, fields) {
                 if (error) throw error
