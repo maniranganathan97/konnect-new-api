@@ -596,8 +596,8 @@ app.post('/staff', multer.single('file'), async (req, res, next) => {
     const buffer = Buffer.from(req.body["StaffImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
-    console.log(string.indexOf(req.body["StaffImageFileName"]))
-    const blob = bucket.file("konnect" + id + ".jpg");
+    //console.log(string.indexOf(req.body["StaffImageFileName"]))
+    const blob = bucket.file("konnect" + id + "."+req.body['StaffImageFileName'].split('.').pop());
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -615,7 +615,7 @@ app.post('/staff', multer.single('file'), async (req, res, next) => {
                     const buffer1 = Buffer.from(certificateDetail["CertificateImageURL"], 'base64')
                     // Create a new blob in the bucket and upload the file data.
                     const id1 = uuid.v4();
-                    const blob1 = bucket.file("konnect" + id1 + ".jpg");
+                    const blob1 = bucket.file("konnect" + id1 + "."+req.body['CertFileName'].split('.').pop());
                     const blobStream1 = blob1.createWriteStream();
                     blobStream1.on('error', err => {
                         next(err);
@@ -762,7 +762,7 @@ app.put('/staff', async (req, res, next) => {
         const buffer = Buffer.from(detail["StaffImageURL"], 'base64')
         // Create a new blob in the bucket and upload the file data.
         const id = uuid.v4();
-        const blob = bucket.file("konnect" + id + "."+certficate['StaffImageFileName'].split('.').pop());
+        const blob = bucket.file("konnect" + id + "."+detail['StaffImageFileName'].split('.').pop());
         const blobStream = blob.createWriteStream();
 
         blobStream.on('error', err => {
@@ -1265,7 +1265,7 @@ app.post('/staffCertificate', multer.single('file'), async (req, res, next) => {
     const buffer = Buffer.from(req.body["CertificateImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
-    const blob = bucket.file("konnect" + id + ".jpg");
+    const blob = bucket.file("konnect" + id + "."+req.body['CertFileName'].split('.').pop());
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -1616,7 +1616,7 @@ app.post('/po', async (req, res) => {
     const buffer = Buffer.from(req.body["POImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
-    const blob = bucket.file("konnect" + id + ".jpg");
+    const blob = bucket.file("konnect" + id + "."+req.body['POFilename'].split('.').pop());
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -1683,7 +1683,7 @@ app.put('/po', async (req, res) => {
             const buffer = Buffer.from(detail["POImageURL"], 'base64')
             // Create a new blob in the bucket and upload the file data.
             const id = uuid.v4();
-            const blob = bucket.file("konnect" + id + ".jpg");
+            const blob = bucket.file("konnect" + id + "."+req.body['POFilename'].split('.').pop());
             const blobStream = blob.createWriteStream();
 
             blobStream.on('error', err => {
