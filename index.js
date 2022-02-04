@@ -84,7 +84,8 @@ app.post('/authentication', async (req, res) => {
 app.get('/site', async (req, res) => {
     pool.query(`SELECT SiteName, Address1,SiteType.Description AS SiteType ,SiteZone.Description AS SiteZone,IsNFCAvailable,PostCode,Site.* FROM Site
     JOIN SiteType ON SiteType.SiteTypeID = Site.SiteTypeID
-    JOIN SiteZone ON SiteZone.SiteZoneID = Site.SiteZoneID`, function (error, results, fields) {
+    JOIN SiteZone ON SiteZone.SiteZoneID = Site.SiteZoneID
+    ORDER BY SiteName`, function (error, results, fields) {
         if (error) throw error;
 
         if (results.length > 0) {
@@ -420,7 +421,8 @@ app.delete('/pointdetails', async (req, res) => {
 
 app.get('/contact', async (req, res) => {
 
-    pool.query(`SELECT * from Contact`, function (error, listContacts, fields) {
+    pool.query(`SELECT Contact.*,Company.CompanyName,Company.BillingAddress1,Company.BillingAddress2,Company.BillingPostCode from Contact 
+    JOIN Company ON Company.CompanyID = Contact.CompanyID`, function (error, listContacts, fields) {
         if (error) throw error;
         if (listContacts.length > 0) {
             // let query = `SELECT Contact_Site.ContactID,Site.SiteName FROM Contact_Site JOIN Site ON Site.SiteID = Contact_Site.SiteID WHERE ContactID = Contact_Site.ContactID`
@@ -452,7 +454,7 @@ app.get('/contact', async (req, res) => {
 })
 
 app.post('/contact', async (req, res) => {
-    pool.query(`insert into Contact(ContactID, SalutationID,ContactName, ContactTypeID, AccessControlID, Email1, Email2, CompanyName, BillingAddress1, BillingAddress2, Mobile, Telephone, BillingPOSTCode,AddedByUserID, AddedDateTime) Values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, ["", req.body.SalutationID, req.body.ContactName, req.body.ContactTypeID, req.body.AccessControlID, req.body.Email1, req.body.Email2, req.body.CompanyName, req.body.BillingAddress1, req.body.BillingAddress2, req.body.Mobile, req.body.Telephone, req.body.BillingPOSTCode, req.body.AddedByUserID, req.body.AddedDateTime], function (error, result, fields) {
+    pool.query(`insert into Contact(ContactID, SalutationID,ContactName, ContactTypeID, AccessControlID, Email1, Email2, CompanyID,Mobile, Telephone,AddedByUserID, AddedDateTime) Values (?,?,?,?,?,?,?,?,?,?,?,?)`, ["", req.body.SalutationID, req.body.ContactName, req.body.ContactTypeID, req.body.AccessControlID, req.body.Email1, req.body.Email2, req.body.CompanyID, req.body.Mobile, req.body.Telephone, req.body.AddedByUserID, req.body.AddedDateTime], function (error, result, fields) {
         if (error) throw error;
         if (result.affectedRows > 0) {
 
@@ -1595,9 +1597,11 @@ app.get('/sitecontactlist', async (req, res) => {
 })
 
 app.get('/po', async (req, res) => {
-    let query = `select PO.*,Contact.ContactName,Staff.StaffName from PO 
+    let query = `select PO.*,Contact.ContactName,Staff.StaffName,Company.CompanyName,POStatus.POStatus from PO 
     JOIN Contact ON Contact.ContactID = PO.ContactID
     JOIN Staff ON Staff.StaffID = PO.StaffID
+    JOIN Company ON PO.CompanyID = Company.CompanyID
+    JOIN POStatus ON POStatus.POStatusID = PO.POStatusID
     ORDER BY POID`
     pool.query(query, function (err, results) {
         if (err) throw err
@@ -1623,8 +1627,8 @@ app.post('/po', async (req, res) => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
 
-        let query = `INSERT INTO PO(POID,POnumber,POdate,POImageURL,ContactID,StaffID, AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?)`
-        pool.query(query, ["", req.body.POnumber, req.body.POdate, publicUrl, req.body.ContactID, req.body.StaffID, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results) {
+        let query = `INSERT INTO PO(POID,POnumber,POdate,POImageURL,ContactID,StaffID,POStatusID,CompanyID,POFilename, AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?,?,?,?)`
+        pool.query(query, ["", req.body.POnumber, req.body.POdate, publicUrl, req.body.ContactID, req.body.StaffID,req.body.POStatusID,req.body.CompanyID,req.body.POFilename,req.body.AddedByUserID, req.body.AddedDateTime], function (error, results) {
             if (error) return res.send(error);
             if (results.affectedRows > 0) {
                 if (req.body.WorkOrders.length > 0) {
@@ -1641,10 +1645,11 @@ app.post('/po', async (req, res) => {
                         value.push(data.AssignedDateTime)
                         value.push(data.UpdatedByUserID)
                         value.push(data.UpdatedDateTime)
+                        value.push(data.SiteZoneID)
                         values.push(value)
                     }
 
-                    var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime) VALUES ?";
+                    var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES ?";
 
                     pool.query(sql, [values], function (err, result) {
                         if (err) throw err;
@@ -1696,8 +1701,8 @@ app.put('/po', async (req, res) => {
                     for (let woValues of workOrderValues) {
                         //console.log(woValues)
                         if (!!!woValues['WorkOrderID']) {
-                            var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
-                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime']]
+                            var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?)";
+                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'],woValues['SiteZoneID']]
                             pool.query(sql, parameters, function (err, result, fields) {
                                 if (err) throw err;
                                 if (result.affectedRows > 0) {
@@ -1740,8 +1745,8 @@ app.put('/po', async (req, res) => {
                 for (let woValues of workOrderValues) {
                     console.log(woValues)
                     if (!!!woValues['WorkOrderID']) {
-                        var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
-                        let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime']]
+                        var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?)";
+                        let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                         pool.query(sql, parameters, function (err, result, fields) {
                             if (err) throw err;
                             if (result.affectedRows > 0) {
@@ -1793,8 +1798,11 @@ app.delete('/po', async (req, res) => {
 })
 
 app.get('/workorder', async (req, res) => {
-    let query = `Select WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus from WorkOrder
+    let query = `Select WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus,SiteZone.Description,Staff.StaffName from WorkOrder
+    JOIN PO ON PO.POID = WorkOrder.WorkOrderID
+    JOIN Staff ON Staff.StaffID = PO.StaffID
     JOIN Site ON Site.SiteID = WorkOrder.SiteID
+    JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
     JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
     ORDER BY WorkOrder.WorkOrderID`
@@ -1990,7 +1998,7 @@ app.get('/company', async (req, res) => {
 })
 
 app.get('/contactcompany', async (req, res) => {
-    let query = `select * from Contact where companyname = ${req.query.CompanyName}`
+    let query = `select * from Contact where companyid = ${req.query.CompanyID}`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
@@ -2010,6 +2018,32 @@ app.get('/workers', async (req, res) => {
             return res.status(200).send(results)
         } else {
             return res.status(200).json({ code: 200, message: "No worker staffs available." })
+        }
+
+    })
+})
+
+app.get('/postatus', async (req, res) => {
+    let query = `select * from postatus`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No PO Status available." })
+        }
+
+    })
+})
+
+app.get('/sitelistbyzone', async (req, res) => {
+    let query = `select * from Site where SiteZoneID = ${req.query.SiteZoneID} ORDER BY SiteName`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No sites available for the zone selected." })
         }
 
     })
