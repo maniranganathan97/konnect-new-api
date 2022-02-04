@@ -476,7 +476,8 @@ app.post('/contact', async (req, res) => {
                 pool.query(sql, [values], function (err, result) {
                     if (err) throw err;
                     if (result.affectedRows > 0) {
-                        return res.status(200).json({ code: 200, message: "success" })
+                        //return res.status(200).json({ code: 200, message: "success" })
+                        console.log(result)
                     }
                     else {
                         return res.status(401).json({ code: 401, "message": "data not update" })
