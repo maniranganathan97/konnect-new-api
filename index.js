@@ -1976,6 +1976,45 @@ app.get('/poJobDetails', async (req, res) => {
 
 })
 
+app.get('/company', async (req, res) => {
+    let query = `select * from Company`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No company data available." })
+        }
+
+    })
+})
+
+app.get('/contactcompany', async (req, res) => {
+    let query = `select * from Contact where companyname = ${req.query.CompanyName}`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No contacts available for the company selected." })
+        }
+
+    })
+})
+
+app.get('/workers', async (req, res) => {
+    let query = `select * from Staff where StaffTitleID = 10`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No worker staffs available." })
+        }
+
+    })
+})
+
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
