@@ -1702,7 +1702,7 @@ app.put('/po', async (req, res) => {
                         //console.log(woValues)
                         if (!!!woValues['WorkOrderID']) {
                             var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?)";
-                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'],woValues['SiteZoneID']]
+                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'],woValues['SiteZoneID']]
                             pool.query(sql, parameters, function (err, result, fields) {
                                 if (err) throw err;
                                 if (result.affectedRows > 0) {
