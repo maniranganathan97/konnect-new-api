@@ -871,9 +871,9 @@ app.put('/staff', async (req, res, next) => {
                                         return res.status(400).json({ code: 400, message: "Staff certificate values has some error" })
                                     }
 
-                                    if (result > 0) {
+                                    /*if (result > 0) {
                                         return res.status(200).json({ code: 200, message: "staff certificate values updated" })
-                                    }
+                                    }*/
 
                                 })
 
@@ -903,7 +903,7 @@ app.put('/staff', async (req, res, next) => {
                     })
                 }
 
-                return res.status(200).json({ code: 200, message: "staff only updated" })
+                return res.status(200).json({ code: 200, message: "staff data updated" })
 
             } else {
                 return res.status(401).json({ code: 401, "message": "data not update" })
