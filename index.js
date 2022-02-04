@@ -596,6 +596,7 @@ app.post('/staff', multer.single('file'), async (req, res, next) => {
     const buffer = Buffer.from(req.body["StaffImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
+    console.log(string.indexOf(req.body["StaffImageFileName"]))
     const blob = bucket.file("konnect" + id + ".jpg");
     const blobStream = blob.createWriteStream();
 
@@ -605,8 +606,8 @@ app.post('/staff', multer.single('file'), async (req, res, next) => {
     blobStream.on('finish', () => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-        let query = `INSERT INTO Staff(StaffID, StaffName, GenderID,SalutationID,StaffTitleID, StaffImageURL,Email, StaffEmploymentType, StaffEmploymentStatusID,Mobile,Telephone,Address1, Address2, PostCode, Nationality, JobStartDate, JobEndDate,IDTypeID, ID, Department,Passport, NextOfKin, NextOfKinMobile, RelationshipID, DOB, MartialStatusID,HighestQualification, Religion,PasswordHash, AccessControlID,AddedByUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-        pool.query(query, ["", req.body.StaffName, req.body.GenderID, req.body.SalutationID, req.body.StaffTitleID, publicUrl, req.body.Email, req.body.StaffEmploymentType, req.body.StaffEmploymentStatusID, req.body.Mobile, req.body.Telephone, req.body.Address1, req.body.Address2, req.body.PostCode, req.body.Nationality, req.body.JobStartDate, req.body.JobEndDate, req.body.IDTypeID, req.body.ID, req.body.Department, req.body.Passport, req.body.NextOfKin, req.body.NextOfKinMobile, req.body.RelationshipID, req.body.DOB, req.body.MartialStatusID, req.body.HighestQualification, req.body.Religion, req.body.PasswordHash, req.body.AccessControlID, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results, fields) {
+        let query = `INSERT INTO Staff(StaffID, StaffName, GenderID,SalutationID,StaffTitleID, StaffImageURL, StaffImageFileName, Email, StaffEmploymentType, StaffEmploymentStatusID,Mobile,Telephone,Address1, Address2, PostCode, Nationality, JobStartDate, JobEndDate,IDTypeID, ID, Department,Passport, NextOfKin, NextOfKinMobile, RelationshipID, DOB, MartialStatusID,HighestQualification, Religion,PasswordHash, AccessControlID,AddedByUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        pool.query(query, ["", req.body.StaffName, req.body.GenderID, req.body.SalutationID, req.body.StaffTitleID, publicUrl, req.body.StaffImageFileName, req.body.Email, req.body.StaffEmploymentType, req.body.StaffEmploymentStatusID, req.body.Mobile, req.body.Telephone, req.body.Address1, req.body.Address2, req.body.PostCode, req.body.Nationality, req.body.JobStartDate, req.body.JobEndDate, req.body.IDTypeID, req.body.ID, req.body.Department, req.body.Passport, req.body.NextOfKin, req.body.NextOfKinMobile, req.body.RelationshipID, req.body.DOB, req.body.MartialStatusID, req.body.HighestQualification, req.body.Religion, req.body.PasswordHash, req.body.AccessControlID, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results, fields) {
             if (error) return res.send(error);
             if (results.affectedRows > 0) {
 
@@ -621,9 +622,9 @@ app.post('/staff', multer.single('file'), async (req, res, next) => {
                     });
                     blobStream1.on('finish', () => {
                         const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
-                        var sql = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
+                        var sql = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime,CertFileName) VALUES (?,?,?,?,?,?,?,?,?,?)";
 
-                        pool.query(sql, ["", results.insertId, certificateDetail.CertTypeID, certificateDetail.CertBodyID, certificateDetail.ValidityStartDate, certificateDetail.ValidityEndDate, publicUrl1, certificateDetail.AddedByUserID, certificateDetail.AddedDateTime], function (err, result) {
+                        pool.query(sql, ["", results.insertId, certificateDetail.CertTypeID, certificateDetail.CertBodyID, certificateDetail.ValidityStartDate, certificateDetail.ValidityEndDate, publicUrl1, certificateDetail.AddedByUserID, certificateDetail.AddedDateTime, certificateDetail.CertFileName], function (err, result) {
                             if (err) throw err;
                             if (result.affectedRows > 0) {
 
@@ -750,8 +751,6 @@ app.post('/staff', multer.single('file'), async (req, res, next) => {
 // })
 
 app.put('/staff', async (req, res, next) => {
-
-    console.log(req.body.StaffID)
     const certificates = req.body.CertificateDetails
     const detail = req.body
 
@@ -763,7 +762,7 @@ app.put('/staff', async (req, res, next) => {
         const buffer = Buffer.from(detail["StaffImageURL"], 'base64')
         // Create a new blob in the bucket and upload the file data.
         const id = uuid.v4();
-        const blob = bucket.file("konnect" + id + ".jpg");
+        const blob = bucket.file("konnect" + id + "."+certficate['StaffImageFileName'].split('.').pop());
         const blobStream = blob.createWriteStream();
 
         blobStream.on('error', err => {
@@ -793,15 +792,15 @@ app.put('/staff', async (req, res, next) => {
                                 const buffer1 = Buffer.from(certficate['CertificateImageURL'], 'base64')
                                 // Create a new blob in the bucket and upload the file data.
                                 const id1 = uuid.v4();
-                                const blob1 = bucket.file("konnect" + id1 + ".jpg");
+                                const blob1 = bucket.file("konnect" + id1 + "."+certficate['CertFileName'].split('.').pop());
                                 const blobStream1 = blob1.createWriteStream();
                                 blobStream1.on('error', err => {
                                     next(err);
                                 });
                                 blobStream1.on('finish', () => {
                                     const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
-                                    let query = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
-                                    let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, publicUrl1, certficate.AddedByUserID, certficate.AddedDateTime]
+                                    let query = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime,CertFileName) VALUES (?,?,?,?,?,?,?,?,?,?)";
+                                    let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, publicUrl1, certficate.AddedByUserID, certficate.AddedDateTime,certficate.CertFileName]
                                     pool.query(query, parameters, function (err, results) {
                                         if (err) throw err
 
@@ -852,15 +851,15 @@ app.put('/staff', async (req, res, next) => {
                             const buffer1 = Buffer.from(certficate['CertificateImageURL'], 'base64')
                             // Create a new blob in the bucket and upload the file data.
                             const id1 = uuid.v4();
-                            const blob1 = bucket.file("konnect" + id1 + ".jpg");
+                            const blob1 = bucket.file("konnect" + id1 + "."+certficate['CertFileName'].split('.').pop())
                             const blobStream1 = blob1.createWriteStream();
                             blobStream1.on('error', err => {
                                 next(err);
                             });
                             blobStream1.on('finish', () => {
                                 const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
-                                let query = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?,?)";
-                                let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, publicUrl1, certficate.AddedByUserID, certficate.AddedDateTime]
+                                let query = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime,CertFileName) VALUES (?,?,?,?,?,?,?,?,?,?)";
+                                let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, publicUrl1, certficate.AddedByUserID, certficate.AddedDateTime,certficate.CertFileName]
                                 pool.query(query, parameters, function (err, results) {
                                     if (err) throw err
 
@@ -880,8 +879,8 @@ app.put('/staff', async (req, res, next) => {
                             })
                             blobStream1.end(buffer1)
                         } else {
-                            let query = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,AddedByUserID,AddedDateTime) VALUES (?,?,?,?,?,?,?,?)";
-                            let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, certficate.AddedByUserID, certficate.AddedDateTime]
+                            let query = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,AddedByUserID,AddedDateTime,CertFileName) VALUES (?,?,?,?,?,?,?,?,?)";
+                            let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, certficate.AddedByUserID, certficate.AddedDateTime,certficate.CertFileName]
                             pool.query(query, parameters, function (err, results) {
                                 if (err) throw err
 
@@ -1276,8 +1275,8 @@ app.post('/staffCertificate', multer.single('file'), async (req, res, next) => {
     blobStream.on('finish', () => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-        let query = 'INSERT INTO Staff_Certificate values (?,?,?,?,?,?,?,?,?)';
-        let parameters = ["", req.body['StaffID'], req.body['CertTypeID'], req.body['CertBodyID'], req.body['ValidityStartDate'], req.body['ValidityEndDate'], publicUrl, req.body['AddedByUserID'], req.body['AddedDateTime']]
+        let query = 'INSERT INTO Staff_Certificate values (?,?,?,?,?,?,?,?,?,?)';
+        let parameters = ["", req.body['StaffID'], req.body['CertTypeID'], req.body['CertBodyID'], req.body['ValidityStartDate'], req.body['ValidityEndDate'], publicUrl, req.body['AddedByUserID'], req.body['AddedDateTime'],req.body['CertFileName']]
         pool.query(query, parameters, function (err, result) {
             if (err) throw err
             if (result.affectedRows > 0) {
