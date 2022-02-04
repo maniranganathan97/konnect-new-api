@@ -421,7 +421,7 @@ app.delete('/pointdetails', async (req, res) => {
 
 app.get('/contact', async (req, res) => {
 
-    pool.query(`SELECT Contact.*,Company.CompanyName,Company.BillingAddress1,Company.BillingAddress2,Company.BillingPostCode from Contact 
+    pool.query(`SELECT Contact.*,Company.CompanyID,Company.CompanyName,Company.BillingAddress1,Company.BillingAddress2,Company.BillingPostCode from Contact 
     JOIN Company ON Company.CompanyID = Contact.CompanyID`, function (error, listContacts, fields) {
         if (error) throw error;
         if (listContacts.length > 0) {
