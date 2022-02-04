@@ -1797,7 +1797,7 @@ app.delete('/po', async (req, res) => {
 })
 
 app.get('/workorder', async (req, res) => {
-    let query = `Select WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus,SiteZone.Description,Staff.StaffName from WorkOrder
+    let query = `Select WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus,SiteZone.Description,Staff.StaffName,Staff.StaffID from WorkOrder
     JOIN PO ON PO.POID = WorkOrder.WorkOrderID
     JOIN Staff ON Staff.StaffID = PO.StaffID
     JOIN Site ON Site.SiteID = WorkOrder.SiteID
