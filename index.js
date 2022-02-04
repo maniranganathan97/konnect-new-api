@@ -1934,7 +1934,7 @@ app.get('/worktype', async (req, res) => {
         if (results.length >= 0) {
             return res.status(200).send(results)
         } else {
-            return res.status(400).json({ code: 400, message: "Data is not there" })
+            return res.status(200).json({ code: 200, message: "Data is not there" })
         }
 
     })
@@ -2024,7 +2024,7 @@ app.get('/workers', async (req, res) => {
 })
 
 app.get('/postatus', async (req, res) => {
-    let query = `select * from postatus`
+    let query = `select * from POStatus`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
