@@ -1890,7 +1890,7 @@ app.delete('/workorder', async (req, res) => {
 })
 
 app.get('/staffdetails', async (req, res) => {
-    let query = `select StaffID,StaffName from Staff`
+    let query = `select StaffID,StaffName from Staff order by StaffName`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
@@ -1903,7 +1903,7 @@ app.get('/staffdetails', async (req, res) => {
 })
 
 app.get('/contactdetails', async (req, res) => {
-    let query = `select ContactID,ContactName from Contact`
+    let query = `select ContactID,ContactName from Contact order by ContactName`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
@@ -1916,7 +1916,7 @@ app.get('/contactdetails', async (req, res) => {
 })
 
 app.get('/sitedetails', async (req, res) => {
-    let query = `select SiteID,SiteName from Site`
+    let query = `select SiteID,SiteName from Site order by SiteName`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
@@ -1928,7 +1928,7 @@ app.get('/sitedetails', async (req, res) => {
 })
 
 app.get('/worktype', async (req, res) => {
-    let query = `select WorkTypeID,WorkTypeName from WorkType`
+    let query = `select WorkTypeID,WorkTypeName from WorkType order by WorkTypeName`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
@@ -1941,7 +1941,7 @@ app.get('/worktype', async (req, res) => {
 })
 
 app.get('/workstatus', async (req, res) => {
-    let query = `select WorkStatusID,WorkStatus from WorkStatus`
+    let query = `select WorkStatusID,WorkStatus from WorkStatus order by WorkStatus`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
@@ -1998,7 +1998,7 @@ app.get('/company', async (req, res) => {
 })
 
 app.get('/contactcompany', async (req, res) => {
-    let query = `select * from Contact where companyid = ${req.query.CompanyID}`
+    let query = `select * from Contact where companyid = ${req.query.CompanyID} order by ContactName`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
@@ -2011,7 +2011,7 @@ app.get('/contactcompany', async (req, res) => {
 })
 
 app.get('/workers', async (req, res) => {
-    let query = `select * from Staff where StaffTitleID = 10`
+    let query = `select * from Staff where StaffTitleID = 10 order by StaffName`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
