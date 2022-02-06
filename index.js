@@ -598,7 +598,7 @@ app.post('/staff', multer.single('file'), async (req, res, next) => {
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
     //console.log(string.indexOf(req.body["StaffImageFileName"]))
-    const blob = bucket.file("konnect" + id + "."+req.body['StaffImageFileName'].split('.').pop());
+    const blob = bucket.file("konnect" + id + "." + req.body['StaffImageFileName'].split('.').pop());
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -616,7 +616,7 @@ app.post('/staff', multer.single('file'), async (req, res, next) => {
                     const buffer1 = Buffer.from(certificateDetail["CertificateImageURL"], 'base64')
                     // Create a new blob in the bucket and upload the file data.
                     const id1 = uuid.v4();
-                    const blob1 = bucket.file("konnect" + id1 + "."+req.body['CertFileName'].split('.').pop());
+                    const blob1 = bucket.file("konnect" + id1 + "." + req.body['CertFileName'].split('.').pop());
                     const blobStream1 = blob1.createWriteStream();
                     blobStream1.on('error', err => {
                         next(err);
@@ -763,7 +763,7 @@ app.put('/staff', async (req, res, next) => {
         const buffer = Buffer.from(detail["StaffImageURL"], 'base64')
         // Create a new blob in the bucket and upload the file data.
         const id = uuid.v4();
-        const blob = bucket.file("konnect" + id + "."+detail['StaffImageFileName'].split('.').pop());
+        const blob = bucket.file("konnect" + id + "." + detail['StaffImageFileName'].split('.').pop());
         const blobStream = blob.createWriteStream();
 
         blobStream.on('error', err => {
@@ -793,7 +793,7 @@ app.put('/staff', async (req, res, next) => {
                                 const buffer1 = Buffer.from(certficate['CertificateImageURL'], 'base64')
                                 // Create a new blob in the bucket and upload the file data.
                                 const id1 = uuid.v4();
-                                const blob1 = bucket.file("konnect" + id1 + "."+certficate['CertFileName'].split('.').pop());
+                                const blob1 = bucket.file("konnect" + id1 + "." + certficate['CertFileName'].split('.').pop());
                                 const blobStream1 = blob1.createWriteStream();
                                 blobStream1.on('error', err => {
                                     next(err);
@@ -801,7 +801,7 @@ app.put('/staff', async (req, res, next) => {
                                 blobStream1.on('finish', () => {
                                     const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
                                     let query = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime,CertFileName) VALUES (?,?,?,?,?,?,?,?,?,?)";
-                                    let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, publicUrl1, certficate.AddedByUserID, certficate.AddedDateTime,certficate.CertFileName]
+                                    let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, publicUrl1, certficate.AddedByUserID, certficate.AddedDateTime, certficate.CertFileName]
                                     pool.query(query, parameters, function (err, results) {
                                         if (err) throw err
 
@@ -852,7 +852,7 @@ app.put('/staff', async (req, res, next) => {
                             const buffer1 = Buffer.from(certficate['CertificateImageURL'], 'base64')
                             // Create a new blob in the bucket and upload the file data.
                             const id1 = uuid.v4();
-                            const blob1 = bucket.file("konnect" + id1 + "."+certficate['CertFileName'].split('.').pop())
+                            const blob1 = bucket.file("konnect" + id1 + "." + certficate['CertFileName'].split('.').pop())
                             const blobStream1 = blob1.createWriteStream();
                             blobStream1.on('error', err => {
                                 next(err);
@@ -860,7 +860,7 @@ app.put('/staff', async (req, res, next) => {
                             blobStream1.on('finish', () => {
                                 const publicUrl1 = format(`https://storage.googleapis.com/${bucket.name}/${blob1.name}`);
                                 let query = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,CertificateImageURL,AddedByUserID,AddedDateTime,CertFileName) VALUES (?,?,?,?,?,?,?,?,?,?)";
-                                let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, publicUrl1, certficate.AddedByUserID, certficate.AddedDateTime,certficate.CertFileName]
+                                let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, publicUrl1, certficate.AddedByUserID, certficate.AddedDateTime, certficate.CertFileName]
                                 pool.query(query, parameters, function (err, results) {
                                     if (err) throw err
 
@@ -881,7 +881,7 @@ app.put('/staff', async (req, res, next) => {
                             blobStream1.end(buffer1)
                         } else {
                             let query = "INSERT INTO Staff_Certificate (StaffCertID,StaffID,CertTypeID,CertBodyID,ValidityStartDate,ValidityEndDate,AddedByUserID,AddedDateTime,CertFileName) VALUES (?,?,?,?,?,?,?,?,?)";
-                            let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, certficate.AddedByUserID, certficate.AddedDateTime,certficate.CertFileName]
+                            let parameters = ["", req.body.StaffID, certficate.CertTypeID, certficate.CertBodyID, certficate.ValidityStartDate, certficate.ValidityEndDate, certficate.AddedByUserID, certficate.AddedDateTime, certficate.CertFileName]
                             pool.query(query, parameters, function (err, results) {
                                 if (err) throw err
 
@@ -1266,7 +1266,7 @@ app.post('/staffCertificate', multer.single('file'), async (req, res, next) => {
     const buffer = Buffer.from(req.body["CertificateImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
-    const blob = bucket.file("konnect" + id + "."+req.body['CertFileName'].split('.').pop());
+    const blob = bucket.file("konnect" + id + "." + req.body['CertFileName'].split('.').pop());
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -1277,7 +1277,7 @@ app.post('/staffCertificate', multer.single('file'), async (req, res, next) => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
         let query = 'INSERT INTO Staff_Certificate values (?,?,?,?,?,?,?,?,?,?)';
-        let parameters = ["", req.body['StaffID'], req.body['CertTypeID'], req.body['CertBodyID'], req.body['ValidityStartDate'], req.body['ValidityEndDate'], publicUrl, req.body['AddedByUserID'], req.body['AddedDateTime'],req.body['CertFileName']]
+        let parameters = ["", req.body['StaffID'], req.body['CertTypeID'], req.body['CertBodyID'], req.body['ValidityStartDate'], req.body['ValidityEndDate'], publicUrl, req.body['AddedByUserID'], req.body['AddedDateTime'], req.body['CertFileName']]
         pool.query(query, parameters, function (err, result) {
             if (err) throw err
             if (result.affectedRows > 0) {
@@ -1617,7 +1617,7 @@ app.post('/po', async (req, res) => {
     const buffer = Buffer.from(req.body["POImageURL"], 'base64')
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
-    const blob = bucket.file("konnect" + id + "."+req.body['POFilename'].split('.').pop());
+    const blob = bucket.file("konnect" + id + "." + req.body['POFilename'].split('.').pop());
     const blobStream = blob.createWriteStream();
 
     blobStream.on('error', err => {
@@ -1628,7 +1628,7 @@ app.post('/po', async (req, res) => {
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
 
         let query = `INSERT INTO PO(POID,POnumber,POdate,POImageURL,ContactID,StaffID,POStatusID,CompanyID,POFilename, AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?,?,?,?)`
-        pool.query(query, ["", req.body.POnumber, req.body.POdate, publicUrl, req.body.ContactID, req.body.StaffID,req.body.POStatusID,req.body.CompanyID,req.body.POFilename,req.body.AddedByUserID, req.body.AddedDateTime], function (error, results) {
+        pool.query(query, ["", req.body.POnumber, req.body.POdate, publicUrl, req.body.ContactID, req.body.StaffID, req.body.POStatusID, req.body.CompanyID, req.body.POFilename, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results) {
             if (error) return res.send(error);
             if (results.affectedRows > 0) {
                 if (req.body.WorkOrders.length > 0) {
@@ -1684,7 +1684,7 @@ app.put('/po', async (req, res) => {
             const buffer = Buffer.from(detail["POImageURL"], 'base64')
             // Create a new blob in the bucket and upload the file data.
             const id = uuid.v4();
-            const blob = bucket.file("konnect" + id + "."+req.body['POFilename'].split('.').pop());
+            const blob = bucket.file("konnect" + id + "." + req.body['POFilename'].split('.').pop());
             const blobStream = blob.createWriteStream();
 
             blobStream.on('error', err => {
@@ -1702,7 +1702,7 @@ app.put('/po', async (req, res) => {
                         //console.log(woValues)
                         if (!!!woValues['WorkOrderID']) {
                             var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?)";
-                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'],woValues['SiteZoneID']]
+                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                             pool.query(sql, parameters, function (err, result, fields) {
                                 if (err) throw err;
                                 if (result.affectedRows > 0) {
@@ -1954,29 +1954,21 @@ app.get('/workstatus', async (req, res) => {
 
 
 app.get('/poJobDetails', async (req, res) => {
-
-    let query = `select WorkNatureID,WorkNature from WorkNature`
-    pool.query(query, function (err, workNature) {
-        if (workNature.length > 0) {
-
-            let query = `SELECT WorkOrder.WorkOrderID, Site.SiteName,WorkType.WorkTypeID, WorkType.WorkTypeName
-            FROM WorkOrder
-            JOIN WorkOrderStaff ON WorkOrder.WorkOrderID = WorkOrderStaff.WorkOrderID
-            JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
-            JOIN Site ON Site.SiteID = WorkOrder.SiteID
+    let query = `SELECT WorkOrder.WorkOrderID, WorkOrder.SiteID,Site.SiteName, WorkType.WorkTypeID, WorkType.WorkTypeName, WorkOrder.WorkNatureID,WorkNature.WorkNature,SiteZone.Description,WorkStatus.WorkStatus
+    FROM WorkOrder
+    JOIN WorkOrderStaff ON WorkOrder.WorkOrderID = WorkOrderStaff.WorkOrderID
+    JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+    JOIN WorkNature ON WorkNature.WorkNatureID = WorkOrder.WorkNatureID
+    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+    JOIN Site ON Site.SiteID = WorkOrder.SiteID
+    JOIN SiteZone ON WorkOrder.SiteZoneID = SiteZone.SiteZoneID
             WHERE WorkOrderStaff.StaffID = ${req.query.StaffID}
             AND WorkOrder.RequestedStartDate = DATE('${req.query.RequestedStartDate}')`
-            pool.query(query, function (err, results) {
+    pool.query(query, function (err, results) {
 
-                if (err) throw err
-                if (results.length > 0) {
-
-                    return res.status(200).json({ workNature: workNature, workOrder: results })
-                } else {
-                    return res.status(400).send({ code: 400, message: "No job available for this user" })
-                }
-            })
-
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).send(results)
         } else {
             return res.status(400).send({ code: 400, message: "No job available for this user" })
         }
