@@ -1501,7 +1501,7 @@ app.get('/ecsreports', async (req, res) => {
     JOIN Point_Details ON Scan_Details.PointID = Point_Details.PointID
     WHERE Scan_Details.PointID IN (SELECT Point_Details.PointID FROM Point_Details
     JOIN Site ON Point_Details.SiteID = Site.SiteID
-    WHERE Point_Details.SiteID = CASE WHEN ${req.query.SiteID} = 102 THEN 129 ELSE ${req.query.SiteID} END AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID})
+    WHERE Point_Details.SiteID = ${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID})
     AND MONTH(Scan_Details.ScanDateTime) = MONTH('${req.query.ScanDateTime}') AND YEAR(Scan_Details.ScanDateTime) = YEAR('${req.query.ScanDateTime}')
     ORDER BY Scan_Details.PointID,Scan_Details.ScanDateTime ASC`
 
@@ -2036,6 +2036,22 @@ app.get('/sitelistbyzone', async (req, res) => {
             return res.status(200).send(results)
         } else {
             return res.status(200).json({ code: 200, message: "No sites available for the zone selected." })
+        }
+
+    })
+})
+
+
+app.get('/assignedworker', async (req, res) => {
+    let query = `select WorkOrderStaff.*,Staff.StaffName from WorkOrderStaff
+     JOIN Staff ON Staff.StaffID = WorkOrderStaff.StaffID
+     where WorkOrderID = ${req.query.WorkOrderID}`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No staff available for the workorder selected." })
         }
 
     })
