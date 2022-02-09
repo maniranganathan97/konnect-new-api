@@ -2064,7 +2064,7 @@ app.get('/contactcompany', async (req, res) => {
 })
 
 app.get('/workers', async (req, res) => {
-    let query = `select * from Staff where StaffTitleID = 10 order by StaffName`
+    let query = `select * from Staff order by StaffName`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
