@@ -2118,6 +2118,34 @@ app.get('/assignedworker', async (req, res) => {
     })
 })
 
+app.get('/findings', async (req, res) => {
+    let query = `select * from Findings where FindingsType = ${req.query.FindingsType} ORDER BY FindingsName`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No findings available for the finding type selected." })
+        }
+
+    })
+})
+
+app.get('/getContacts', async (req, res) => {
+    let query = `select Contact_Site.ContactID,Contact.ContactName from Contact_Site
+    JOIN Contact ON Contact.ContactID = Contact_Site.ContactID
+    WHERE Contact_Site.SiteID = ${req.query.SiteID} ORDER BY ContactName`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No findings available for the finding type selected." })
+        }
+
+    })
+})
+
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
