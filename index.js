@@ -2156,7 +2156,7 @@ app.get('/reportsbyPO', async (req, res) => {
     WHERE PO.POnumber = ${req.query.PONumber}
     AND PO.POdate = ${req.query.PODate}
     AND PO.CompanyID = ${req.query.CompanyID}
-    AND WorkStatus.WorkStatusID = ${req.query.OverallStatus}`
+    AND PO.POStatusID = ${req.query.OverallStatus}`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
