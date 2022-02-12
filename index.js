@@ -2183,7 +2183,117 @@ app.get('/workersbyPO', async (req, res) => {
 
     })
 })
-
+app.get("/getReportByPO", async (req, res) => {
+    var allDataPromise = getAllData(req);
+    var workersPromise = getWorkersData(req);
+    var servicesPromise = getServices(req);
+    
+    Promise.all([allDataPromise, workersPromise, servicesPromise]).then((allData) => {
+      var returnData = [];
+      for (var i = 0; i < allData[0].length; i++) {
+          var single = allData[0][i];
+          
+      
+      var allWorkersName = [];
+      for (var j = 0; j < allData[1].length; j++) {
+        var worker = allData[1][j];
+        allWorkersName.push(worker.StaffName);
+      }
+      single.actionBy = allWorkersName;
+      var allServices = [];
+      for (var k = 0; k < allData[2].length; k++) {
+          var service = allData[2][k];
+          allServices.push(service.ServiceTypeID);
+        }
+        single.serviceTypes = allServices;
+  
+      returnData.push(single)
+      
+  }
+  
+      return res.status(200).send(returnData);
+    });
+  });
+  
+  function getServices(req) {
+      return new Promise((resolve, reject) => {
+          var allData;
+          let query = `
+          select ServiceTypeID from ReportService where WorkOrderID = ${req.query.WorkOrderID}
+     
+          `
+          pool.query(query, function (err, results) {
+              if (err) reject(err)
+              if(results.length == 0) {
+                  reject(err);
+              }
+              allData = results;
+              console.log("all results are --->"+ allData);
+              resolve(results);
+             
+      
+          })
+  
+      });
+  }
+  
+  function getWorkersData(req) {
+      return new Promise((resolve, reject) => {
+         let workersQuery = `
+         SELECT 
+         Staff.StaffName
+         FROM WorkOrderStaff
+         JOIN Staff on Staff.StaffID = WorkOrderStaff.StaffID
+         where WorkOrderID = ${req.query.WorkOrderID}
+         
+                     `;
+         pool.query(workersQuery, function (err, workersResults) {
+              if (err)
+                  throw err
+              if (workersResults.length >= 0) {
+     
+                  resolve(workersResults);
+              } else {
+                 reject("Error");
+              }
+     
+          });
+      })
+     
+  };
+  
+  
+  function getAllData(req)  {
+      return new Promise((resolve, reject) => {
+          var allData;
+          let query = `
+          select ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
+      ReportWO.ContactAckSignImageURL, Contact.ContactName, WorkOrder.POID, ReportWO.ServiceTypeOthers,ReportWO.ContactAckDateTime,
+      ReportWO.ContackAckOther, ReportWO.ContactAckID, ReportImage.ImageTypeID, ReportImage.ImageURL
+      from ReportWO
+      JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
+      JOIN Contact on Contact.ContactID = ReportWO.ContactAckID
+      JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
+      JOIN ReportImage on ReportImage.ReportWOID = ReportWO.ReportWOID AND ReportImage.AddedByUserID = ReportWO.UpdatedUserID
+      WHERE ReportWO.ReportWOID = ${req.query.WorkOrderID}
+  
+         
+          `
+          pool.query(query, function (err, results) {
+              if (err) reject(err)
+              if(results.length == 0) {
+                  reject(err);
+              }
+              allData = results;
+              resolve(results);
+             
+      
+          })
+  
+        
+      });
+      
+  }
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
