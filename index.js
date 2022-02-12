@@ -2172,8 +2172,7 @@ app.get('/reportsbyPO', async (req, res) => {
 app.get('/workersbyPO', async (req, res) => {
     let query = `SELECT WorkOrder.WorkOrderID,WorkOrderStaff.StaffID,Staff.StaffName FROM WorkOrder 
     JOIN WorkOrderStaff ON WorkOrderStaff.WorkOrderID = WorkOrder.WorkOrderID
-    JOIN Staff ON Staff.StaffID = WorkOrderStaff.StaffID
-    WHERE WorkOrder.WorkOrderID = ${req.query.WorkOrderID}`
+    JOIN Staff ON Staff.StaffID = WorkOrderStaff.StaffID`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
