@@ -2146,6 +2146,45 @@ app.get('/getContacts', async (req, res) => {
     })
 })
 
+app.get('/reportsbyPO', async (req, res) => {
+    let query = `SELECT WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,WorkStatus.WorkStatus
+    FROM PO JOIN WorkOrder ON PO.POID = WorkOrder.POID
+    JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
+    JOIN Site ON WorkOrder.SiteID = Site.SiteID
+    JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+    WHERE PO.POnumber = ${req.query.PONumber}
+    AND PO.POdate = ${req.query.PODate}
+    AND PO.CompanyID = ${req.query.CompanyID}
+    AND WorkStatus.WorkStatusID = ${req.query.OverallStatus}`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No jobs available for the data selected." })
+        }
+
+    })
+})
+
+
+app.get('/workersbyPO', async (req, res) => {
+    let query = `SELECT WorkOrder.WorkOrderID,WorkOrderStaff.StaffID,Staff.StaffName FROM WorkOrder 
+    JOIN WorkOrderStaff ON WorkOrderStaff.WorkOrderID = WorkOrder.WorkOrderID
+    JOIN Staff ON Staff.StaffID = WorkOrderStaff.StaffID
+    WHERE WorkOrder.WorkOrderID = ${req.query.WorkOrderID}`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No jobs available for the data selected." })
+        }
+
+    })
+})
+
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
