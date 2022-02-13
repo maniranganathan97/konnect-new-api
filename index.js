@@ -2243,6 +2243,24 @@ app.get("/getReportImages", async (req, res) => {
 
 });
 
+app.delete("/deleteImageByDB", async (req, res) => {
+    let query = `
+    DELETE ReportImage WHERE ReportImageID =  ${req.query.ReportImageID}
+
+    `
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "deleted successfully" })
+        } else {
+            return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+        }
+
+    })
+
+});
+
+
 app.get('/getReportWO', async (req, res) => {
     let query = `select * from ReportWO WHERE WorkOrderID = ${req.query.WorkOrderID} and UpdatedUserID = ${req.query.UpdatedUserID}`
     pool.query(query, function (err, results) {
