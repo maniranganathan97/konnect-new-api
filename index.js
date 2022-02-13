@@ -2269,7 +2269,7 @@ app.get("/getReportByPO", async (req, res) => {
       var allServices = [];
       for (var k = 0; k < allData[2].length; k++) {
           var service = allData[2][k];
-          allServices.push(service.ServiceTypeID);
+          allServices.push(service.ServiceName);
         }
         single.serviceTypes = allServices;
   
