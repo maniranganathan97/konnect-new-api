@@ -2147,7 +2147,7 @@ app.get('/getContacts', async (req, res) => {
 })
 
 app.get('/reportsbyPO', async (req, res) => {
-    let query = `SELECT WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,POStatus.POStatus
+    let query = `SELECT PO.POnumber, PO.POdate, WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,POStatus.POStatus
     FROM PO JOIN WorkOrder ON PO.POID = WorkOrder.POID
     JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
     JOIN Site ON WorkOrder.SiteID = Site.SiteID
