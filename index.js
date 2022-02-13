@@ -2268,13 +2268,14 @@ app.get("/getReportByPO", async (req, res) => {
           var allData;
           let query = `
           select ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
-      ReportWO.ContactAckSignImageURL, Contact.ContactName, WorkOrder.POID, ReportWO.ServiceTypeOthers,ReportWO.ContactAckDateTime,
+      ReportWO.ContactAckSignImageURL, Contact.ContactName, WorkOrder.POID, ReportService.ServiceTypeOther,ReportWO.ContactAckDateTime,
       ReportWO.ContackAckOther, ReportWO.ContactAckID, ReportImage.ImageTypeID, ReportImage.ImageURL
       from ReportWO
       JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
       JOIN Contact on Contact.ContactID = ReportWO.ContactAckID
       JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
-      JOIN ReportImage on ReportImage.ReportWOID = ReportWO.ReportWOID AND ReportImage.AddedByUserID = ReportWO.UpdatedUserID
+      JOIN ReportImage on ReportImage.ReportWOID = ReportWO.ReportWOID
+      JOIN ReportService ON ReportService.WorkOrderID = ReportWO.WorkOrderID
       WHERE ReportWO.ReportWOID = ${req.query.WorkOrderID}
   
          
