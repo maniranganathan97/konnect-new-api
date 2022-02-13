@@ -2193,7 +2193,7 @@ app.post("/postImagesToReportImage", multer.single('file'), async (req, res) => 
     const blobStream = blob.createWriteStream();
 
     blobStream.on("error", (err) => {
-      next(err);
+        res.status(401).json({code:401, message: "Failed to upload Image"});
     });
 
     blobStream.on("finish", () => {
