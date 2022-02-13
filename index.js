@@ -2277,7 +2277,9 @@ app.get("/getReportByPO", async (req, res) => {
   }
   
       return res.status(200).send(returnData);
-    });
+    }).catch(err => {
+        return res.status(401).send(err);
+    });;
   });
   
   function getServices(req) {
@@ -2292,7 +2294,7 @@ app.get("/getReportByPO", async (req, res) => {
           pool.query(query, function (err, results) {
               if (err) reject(err)
               if(results.length == 0) {
-                  reject(err);
+                reject({code:401, message:"There is no service data for selected values"});
               }
               allData = results;
               console.log("all results are --->"+ allData);
@@ -2321,7 +2323,7 @@ app.get("/getReportByPO", async (req, res) => {
      
                   resolve(workersResults);
               } else {
-                 reject("Error");
+                reject({code:401, message:"There is no workers data for selected values"});
               }
      
           });
@@ -2351,7 +2353,7 @@ app.get("/getReportByPO", async (req, res) => {
           pool.query(query, function (err, results) {
               if (err) reject(err)
               if(results.length == 0) {
-                  reject(err);
+                reject({code:401, message:"There is no report data for selected values"});
               }
               allData = results;
               resolve(results);
