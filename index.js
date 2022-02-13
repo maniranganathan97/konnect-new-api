@@ -2424,7 +2424,7 @@ app.get("/getReportByPO", async (req, res) => {
       return new Promise((resolve, reject) => {
           var allData;
           let query = `
-          select ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
+          select  ReportWO.WorkOrderID,ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
       ReportWO.ContactAckSignImageURL, Contact.ContactName, WorkOrder.POID, ReportService.ServiceTypeOther,ReportWO.ContactAckDateTime,
       ReportWO.ContackAckOther, ReportWO.ContactAckID, ReportImage.ImageTypeID, ReportImage.ImageURL, PO.POnumber
       from ReportWO
