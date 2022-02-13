@@ -2266,7 +2266,7 @@ app.get("/getReportByPO", async (req, res) => {
       return new Promise((resolve, reject) => {
           var allData;
           let query = `
-          select ServiceTypeID,ServiceType,ServiceName from ReportService
+          select ServiceType,ServiceName from ReportService
           JOIN ServiceType ON ServiceType.ServiceID = ReportService.ServiceTypeID
            where WorkOrderID = ${req.query.WorkOrderID}
      
