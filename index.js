@@ -2247,6 +2247,80 @@ app.get("/getReportImages", async (req, res) => {
 
 });
 
+app.get('/getReportWO', async (req, res) => {
+    let query = `select * from ReportWO WHERE WorkOrderID = ${req.query.WorkOrderID}`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No ReportWO available for the WorkOrder." })
+        }
+
+    })
+})
+
+app.post('/reportWOFogging', async (req, res) => {
+    let query = "INSERT INTO `ReportWO`(`ReportWOID`, `WorkOrderID`, `SiteZoneID`, `SiteID`, `WOstartDateTime`,`UpdatedUserID`,`UpdatedDateTime`) VALUES (?,?,?,?,?,?)"
+    let parameters = ["", req.body.WorkOrderID,req.body.SiteZoneID, req.body.SiteID, req.body.WOstartDateTime, req.body.UpdatedUserID, req.body.UpdatedDateTime]
+    pool.query(query, parameters, function (error, results) {
+        if (error) throw error
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "success" })
+        } else {
+            return res.status(401).json({ code: 401, "message": "ReportWO not inserted." })
+        }
+    })
+})
+
+app.put('/reportWOFogging', async (req, res) => {
+
+    const detail = req.body
+
+    if (detail['ContactAckSignImageURL']) {
+
+        const buffer = Buffer.from(detail["ContactAckSignImageURL"], 'base64')
+        // Create a new blob in the bucket and upload the file data.
+        const id = uuid.v4();
+        const blob = bucket.file("konnect" + id + ".jpg");
+        const blobStream = blob.createWriteStream();
+
+        blobStream.on('error', err => {
+            next(err);
+        });
+        blobStream.on('finish', () => {
+            const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+            detail['ContactAckSignImageURL'] = publicUrl
+
+            let query = `Update ReportWO SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
+            const parameters = [...Object.values(detail), req.query.ReportWOID]
+            pool.query(query, parameters, function (err, results, fields) {
+                if (err) throw err
+                if (results.affectedRows > 0) {
+                    return res.status(200).json({ code: 200, message: "ReportWO data updated successfully." })
+                } else {
+                    return res.status(401).json({ code: 401, "message": "ReportWO data not updated." })
+                }
+            })
+        })
+        blobStream.end(buffer);
+
+    } else {
+
+        let query = `Update ReportWO SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
+        const parameters = [...Object.values(detail), req.query.ReportWOID]
+        pool.query(query, parameters, function (err, results, fields) {
+            if (err) throw err
+
+            if (results.affectedRows > 0) {
+                return res.status(200).json({ code: 200, message: "ReportWO data updated successfully." })
+            } else {
+                return res.status(401).json({ code: 401, "message": "ReportWO data not updated." })
+            }
+        })
+    }
+
+})
 
 app.get("/getReportByPO", async (req, res) => {
     var allDataPromise = getAllData(req);
