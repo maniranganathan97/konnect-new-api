@@ -2261,12 +2261,12 @@ app.get('/getReportWO', async (req, res) => {
 })
 
 app.post('/reportWOFogging', async (req, res) => {
-    let query = "INSERT INTO `ReportWO`(`ReportWOID`, `WorkOrderID`, `SiteZoneID`, `SiteID`, `WOstartDateTime`,`UpdatedUserID`,`UpdatedDateTime`) VALUES (?,?,?,?,?,?)"
-    let parameters = ["", req.body.WorkOrderID,req.body.SiteZoneID, req.body.SiteID, req.body.WOstartDateTime, req.body.UpdatedUserID, req.body.UpdatedDateTime]
+    let query = "INSERT INTO `ReportWO`(`ReportWOID`, `WorkOrderID`, `WorkNatureID`, `WOstartDateTime`,`ServiceMethodID`,`ContactAckMethodID`,`UpdatedUserID`,`UpdatedDateTime`) VALUES (?,?,?,?,?,?,?,?)"
+    let parameters = ["", req.body.WorkOrderID, req.body.WorkNatureID, req.body.WOstartDateTime,req.body.ServiceMethodID, req.body.ContactAckMethodID ,req.body.UpdatedUserID, req.body.UpdatedDateTime]
     pool.query(query, parameters, function (error, results) {
         if (error) throw error
         if (results.affectedRows > 0) {
-            return res.status(200).json({ code: 200, message: "success" })
+            return res.status(200).json({ code: 200, message: "ReportWO inserted successfully." })
         } else {
             return res.status(401).json({ code: 401, "message": "ReportWO not inserted." })
         }
