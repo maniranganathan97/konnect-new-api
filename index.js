@@ -2274,6 +2274,22 @@ app.get('/getReportWO', async (req, res) => {
     })
 })
 
+app.put('/updateReportPO', async (req, res) => {
+
+     let details = req.body;
+     let query = `Update ReportWO SET  ` + Object.keys(details).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
+     const parameters = [...Object.values(details), req.query.ReportWOID]
+
+     pool.query(query, parameters, function (error, results) {
+        if (error) throw error
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "ReportWO updated successfully." })
+        } else {
+            return res.status(401).json({ code: 401, "message": "ReportWO not updated." })
+        }
+    })
+});
+
 app.post('/reportWOFogging', async (req, res) => {
     let query = "INSERT INTO `ReportWO`(`ReportWOID`, `WorkOrderID`, `WorkNatureID`, `WOstartDateTime`,`ServiceMethodID`,`ContactAckMethodID`,`UpdatedUserID`,`UpdatedDateTime`) VALUES (?,?,?,?,?,?,?,?)"
     let parameters = ["", req.body.WorkOrderID, req.body.WorkNatureID, req.body.WOstartDateTime,req.body.ServiceMethodID, req.body.ContactAckMethodID ,req.body.UpdatedUserID, req.body.UpdatedDateTime]
