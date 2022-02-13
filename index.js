@@ -2147,22 +2147,18 @@ app.get('/getContacts', async (req, res) => {
 })
 
 app.get('/reportsbyPO', async (req, res) => {
-    let query = `SELECT WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,POStatus.POStatus
+    let query = `SELECT PO.POnumber, PO.POdate, WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,POStatus.POStatus
     FROM PO JOIN WorkOrder ON PO.POID = WorkOrder.POID
     JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
     JOIN Site ON WorkOrder.SiteID = Site.SiteID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
-    JOIN POStatus ON POStatus.POStatusID = PO.POStatusID
-    WHERE PO.POnumber = ${req.query.PONumber}
-    AND PO.POdate = ${req.query.PODate}
-    AND PO.CompanyID = ${req.query.CompanyID}
-    AND PO.POStatusID = ${req.query.OverallStatus}`
+    JOIN POStatus ON POStatus.POStatusID = PO.POStatusID`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
             return res.status(200).send(results)
         } else {
-            return res.status(200).json({ code: 200, message: "No jobs available for the data selected." })
+            return res.status(200).json({ code: 200, message: "No jobs available." })
         }
 
     })
