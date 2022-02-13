@@ -2183,6 +2183,55 @@ app.get('/workersbyPO', async (req, res) => {
 
     })
 })
+
+app.post("/postImagesToReportImage", multer.single('file'), async (req, res) => {
+
+    console.log(" inside postDataToReportWO--->" + req.body);
+
+    const buffer = Buffer.from(req.body["demo"], "base64");
+    // Create a new blob in the bucket and upload the file data.
+    const id = uuid.v4();
+    const blob = bucket.file("reportImage" + id + ".jpg");
+    const blobStream = blob.createWriteStream();
+
+    blobStream.on("error", (err) => {
+      next(err);
+    });
+
+    blobStream.on("finish", () => {
+      // The public URL can be used to directly access the file via HTTP.
+      const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+       
+      let query = `
+    INSERT INTO ReportWO (ReportWOID, ImageTypeID, ImageRemarks, ImageURL, AddedByUserID, AddedDateTime) 
+    VALUES(?,?,?,?,?,?)
+    `;
+      let parameters = [
+        "",
+        req.body.ReportWOID,
+        req.body.ImageTypeID,
+        req.body.ImageRemarks,
+        publicUrl,
+        req.body.AddedByUserID,
+        req.body.AddedDateTime,
+      ];
+      pool.query(query, parameters, function (error, results, fields) {
+        if (error) throw error;
+        if (results.affectedRows > 0) {
+          return res
+            .status(200)
+            .json({ code: 200, message: "Inserted successfully." });
+        } else {
+          return res.status(401).json({ code: 401, message: "Not inserted." });
+        }
+      });
+    });
+    blobStream.end(buffer);
+
+    
+})
+
+
 app.get("/getReportByPO", async (req, res) => {
     var allDataPromise = getAllData(req);
     var workersPromise = getWorkersData(req);
