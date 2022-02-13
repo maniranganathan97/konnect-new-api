@@ -2186,9 +2186,7 @@ app.get('/workersbyPO', async (req, res) => {
 
 app.post("/postImagesToReportImage", multer.single('file'), async (req, res) => {
 
-    console.log(" inside postDataToReportWO--->" + req.body);
-
-    const buffer = Buffer.from(req.body["demo"], "base64");
+    const buffer = Buffer.from(req.body["imageBase64"], "base64");
     // Create a new blob in the bucket and upload the file data.
     const id = uuid.v4();
     const blob = bucket.file("reportImage" + id + ".jpg");
