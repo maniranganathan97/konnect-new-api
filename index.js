@@ -2201,17 +2201,16 @@ app.post("/postImagesToReportImage", multer.single('file'), async (req, res) => 
       const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
        
       let query = `
-    INSERT INTO ReportWO (ReportWOID, ImageTypeID, ImageRemarks, ImageURL, AddedByUserID, AddedDateTime) 
+    INSERT INTO ReportImage (ReportWOID, ImageTypeID, ImageRemarks, ImageURL, AddedByUserID, AddedDateTime) 
     VALUES(?,?,?,?,?,?)
     `;
       let parameters = [
-        "",
         req.body.ReportWOID,
         req.body.ImageTypeID,
         req.body.ImageRemarks,
         publicUrl,
         req.body.AddedByUserID,
-        req.body.AddedDateTime,
+        req.body.AddedDateTime
       ];
       pool.query(query, parameters, function (error, results, fields) {
         if (error) throw error;
