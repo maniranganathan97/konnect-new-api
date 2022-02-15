@@ -31,6 +31,14 @@ const gc = new Storage({
 })
 const bucket = gc.bucket('images-pest')
 
+async function removeBucketCors() {
+    await storage.bucket(bucketName).setCorsConfiguration([]);
+  
+    console.log(`Removed CORS configuration from bucket ${bucketName}`);
+  }
+  
+  removeBucketCors().catch(console.error);
+
 app.use('/uploads', express.static('uploads'))
 
 //mysql 
