@@ -2291,9 +2291,9 @@ app.put('/updateReportPO', async (req, res) => {
      pool.query(query, parameters, function (error, results) {
         if (error) throw error
         if (results.affectedRows > 0) {
-            return res.status(200).json({ code: 200, message: "ReportWO updated successfully." })
+            return res.status(200).json({ code: 200, message: "Updated successfully." })
         } else {
-            return res.status(401).json({ code: 401, "message": "ReportWO not updated." })
+            return res.status(401).json({ code: 401, "message": "Update Failed." })
         }
     })
 });
