@@ -2253,7 +2253,7 @@ app.get("/getReportImages", async (req, res) => {
 
 app.delete("/deleteImageByDB", async (req, res) => {
     let query = `
-    DELETE ReportImage WHERE ReportImageID =  ${req.query.ReportImageID}
+    DELETE from ReportImage WHERE ReportImageID =  ${req.query.ReportImageID}
 
     `
     pool.query(query, function (err, results) {
