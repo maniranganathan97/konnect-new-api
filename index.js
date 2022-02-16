@@ -2274,7 +2274,7 @@ app.get('/getReportWO', async (req, res) => {
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length > 0) {
-            return res.status(200).send(results)
+            return res.status(200).send(results[0])
         } else {
             return res.status(400).json({ code: 400, message: "No ReportWO available for the WorkOrder." })
         }
