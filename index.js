@@ -2276,7 +2276,7 @@ app.get('/getReportWO', async (req, res) => {
         if (results.length > 0) {
             return res.status(200).send(results)
         } else {
-            return res.status(200).json({ code: 200, message: "No ReportWO available for the WorkOrder." })
+            return res.status(400).json({ code: 400, message: "No ReportWO available for the WorkOrder." })
         }
 
     })
