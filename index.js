@@ -2304,6 +2304,34 @@ app.post('/reportWOFogging', async (req, res) => {
     pool.query(query, parameters, function (error, results) {
         if (error) throw error
         if (results.affectedRows > 0) {
+            let insertCosolidatedReportQuery = `
+            INSERT INTO ConsolidatedReportWO ( ReportWOID, StaffID, StartedDateTime, 
+                LocationPoint, FindingsImages, ServicesProvided, 
+                ServiceImage, UpdatedByUserID, UpdatedDateTime, workOrderID) 
+            VALUES(?,?,?,?,?,?,?,?,?,?)
+            `;
+            let newParameters = [
+           
+                results.insertId,
+                req.body.UpdatedUserID,
+                req.body.WOstartDateTime,
+                "",
+                "",
+                "",
+                "",
+                req.body.UpdatedUserID,
+                req.body.UpdatedDateTime,
+                req.body.WorkOrderID
+              ];
+              pool.query(insertCosolidatedReportQuery, newParameters, function (error, results, fields) {
+                if (error) throw error;
+                if (results.affectedRows > 0) {
+                  console.log("data inserted");
+                } else {
+                 // return res.status(401).json({ code: 401, message: "Not inserted." });
+                 console.log("failed to insert");
+                }
+            });
             return res.status(200).json({ code: 200, message: "ReportWO inserted successfully." })
         } else {
             return res.status(401).json({ code: 401, "message": "ReportWO not inserted." })
@@ -2351,6 +2379,27 @@ app.put('/reportWOFogging', async (req, res) => {
             if (err) throw err
 
             if (results.affectedRows > 0) {
+                let updatedDetails = {
+                    "WorkOrderID": detail.WorkOrderID,
+                    "StartedDateTime": detail.WOstartDateTime,
+                    "UpdatedDateTime": detail.UpdatedDateTime
+                }
+                let query = `Update ConsolidatedReportWO SET  ` + Object.keys(updatedDetails).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
+                const parameters = [...Object.values(updatedDetails), req.query.ReportWOID]
+                pool.query(query, parameters, function (err, results, fields) {
+                if (err)
+                    throw err
+
+                    if (results.affectedRows > 0) {
+                        
+                        console.log("updated");
+
+                    } else {
+                        
+                        console.log("updated failed");
+                    }
+
+});
                 return res.status(200).json({ code: 200, message: "ReportWO data updated successfully." })
             } else {
                 return res.status(401).json({ code: 401, "message": "ReportWO data not updated." })
@@ -2359,6 +2408,24 @@ app.put('/reportWOFogging', async (req, res) => {
     }
 
 })
+
+app.get("/getConsolidatedReportsByWorkWorkOrderId", async (req, res) => {
+    let query = `
+    select * from ConsolidatedReportWO where ConsolidatedReportWO.workOrderID = ${req.query.workOrderID}
+    `;
+
+    
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No ReportWO available for the WorkOrder." })
+        }
+
+    })
+
+});
 
 app.get("/getReportByPO", async (req, res) => {
     var allDataPromise = getAllData(req);
