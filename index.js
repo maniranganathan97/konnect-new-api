@@ -1709,8 +1709,8 @@ app.put('/po', async (req, res) => {
                     for (let woValues of workOrderValues) {
                         //console.log(woValues)
                         if (!!!woValues['WorkOrderID']) {
-                            var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?)";
-                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
+                            var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID,WorkNatureID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?)";
+                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'],woValues['WorkNatureID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                             pool.query(sql, parameters, function (err, result, fields) {
                                 if (err) throw err;
                                 if (result.affectedRows > 0) {
@@ -1753,8 +1753,8 @@ app.put('/po', async (req, res) => {
                 for (let woValues of workOrderValues) {
                     console.log(woValues)
                     if (!!!woValues['WorkOrderID']) {
-                        var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?)";
-                        let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
+                        var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, WorkNatureID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+                        let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['WorkNatureID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                         pool.query(sql, parameters, function (err, result, fields) {
                             if (err) throw err;
                             if (result.affectedRows > 0) {
@@ -2004,6 +2004,19 @@ app.get('/worktype', async (req, res) => {
             return res.status(200).send(results)
         } else {
             return res.status(200).json({ code: 200, message: "Data is not there" })
+        }
+
+    })
+})
+
+app.get('/worknature', async (req, res) => {
+    let query = `select WorkNatureID,WorkNature from WorkNature order by WorkNature`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No work nature data present." })
         }
 
     })
