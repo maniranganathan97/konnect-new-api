@@ -2155,12 +2155,12 @@ app.get('/getContacts', async (req, res) => {
 })
 
 app.get('/reportsbyPO', async (req, res) => {
-    let query = `SELECT PO.POnumber, PO.POdate, WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,POStatus.POStatus
+    let query = `SELECT PO.POnumber, PO.POdate, WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,WorkStatus.WorkStatus
     FROM PO JOIN WorkOrder ON PO.POID = WorkOrder.POID
     JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
     JOIN Site ON WorkOrder.SiteID = Site.SiteID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
-    JOIN POStatus ON POStatus.POStatusID = PO.POStatusID`
+    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
