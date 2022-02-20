@@ -2452,7 +2452,11 @@ function getImages(req) {
     return new Promise((resolve, reject) => {
         
         let query = `
-        select * FROM ReportImage WHERE  ReportWOID =${req.query.workOrderID}
+        SELECT * FROM ReportImage 
+JOIN ReportWO on ReportWO.ReportWOID = ReportImage.ReportWOID
+JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
+
+where WorkOrder.WorkOrderID = ${req.query.workOrderID}
         `;
     
         
