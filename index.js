@@ -1709,8 +1709,8 @@ app.put('/po', async (req, res) => {
                     for (let woValues of workOrderValues) {
                         //console.log(woValues)
                         if (!!!woValues['WorkOrderID']) {
-                            var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?)";
-                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
+                            var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID,WorkNatureID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?)";
+                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'],woValues['WorkNatureID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                             pool.query(sql, parameters, function (err, result, fields) {
                                 if (err) throw err;
                                 if (result.affectedRows > 0) {
@@ -1753,8 +1753,8 @@ app.put('/po', async (req, res) => {
                 for (let woValues of workOrderValues) {
                     console.log(woValues)
                     if (!!!woValues['WorkOrderID']) {
-                        var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?)";
-                        let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
+                        var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, WorkNatureID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+                        let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['WorkNatureID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                         pool.query(sql, parameters, function (err, result, fields) {
                             if (err) throw err;
                             if (result.affectedRows > 0) {
@@ -2009,6 +2009,19 @@ app.get('/worktype', async (req, res) => {
     })
 })
 
+app.get('/worknature', async (req, res) => {
+    let query = `select WorkNatureID,WorkNature from WorkNature order by WorkNature`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No work nature data present." })
+        }
+
+    })
+})
+
 app.get('/workstatus', async (req, res) => {
     let query = `select WorkStatusID,WorkStatus from WorkStatus order by WorkStatus`
     pool.query(query, function (err, results) {
@@ -2155,12 +2168,12 @@ app.get('/getContacts', async (req, res) => {
 })
 
 app.get('/reportsbyPO', async (req, res) => {
-    let query = `SELECT PO.POnumber, PO.POdate, WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,POStatus.POStatus
+    let query = `SELECT PO.POnumber, PO.POdate, WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,WorkStatus.WorkStatus
     FROM PO JOIN WorkOrder ON PO.POID = WorkOrder.POID
     JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
     JOIN Site ON WorkOrder.SiteID = Site.SiteID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
-    JOIN POStatus ON POStatus.POStatusID = PO.POStatusID`
+    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
@@ -2572,13 +2585,14 @@ app.get("/getReportByPO", async (req, res) => {
           var allData;
           let query = `
           select  ReportWO.WorkOrderID,ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
-      ReportWO.ContactAckSignImageURL, Contact.ContactName, WorkOrder.POID, ReportService.ServiceTypeOther,ReportWO.ContactAckDateTime,
+      ReportWO.ContactAckSignImageURL, C1.ContactName AS AckContact ,C2.ContactName AS Requestor, WorkOrder.POID, ReportService.ServiceTypeOther,ReportWO.ContactAckDateTime,
       ReportWO.ContackAckOther, ReportWO.ContactAckID, ReportImage.ImageTypeID, ReportImage.ImageURL, PO.POnumber
       from ReportWO
       JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
-      JOIN Contact on Contact.ContactID = ReportWO.ContactAckID
+      JOIN Contact C1 on C1.ContactID = ReportWO.ContactAckID
       JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
       JOIN PO ON PO.POID = WorkOrder.POID
+      JOIN Contact C2 on C2.ContactID = PO.ContactID
       JOIN ReportImage on ReportImage.ReportWOID = ReportWO.ReportWOID
       JOIN ReportService ON ReportService.WorkOrderID = ReportWO.WorkOrderID
       WHERE ReportWO.ReportWOID = ${req.query.WorkOrderID}
