@@ -2458,11 +2458,9 @@ function getImages(req) {
         
         pool.query(query, function (err, results) {
             if (err) throw err
-            if (results.length == 0) {
-                reject({code:200, message:"There is no data for selected values"});
-            } else {
-                resolve(results);
-            }
+            
+            resolve(results);
+            
     
         });
               
@@ -2484,7 +2482,7 @@ where ConsolidatedReportWO.workOrderID = ${req.query.workOrderID}
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length == 0) {
-            reject({code:200, message:"There is no data for selected values"});
+            reject({code:400, message:"There is no data for selected values"});
         } else {
             resolve(results);
         }
