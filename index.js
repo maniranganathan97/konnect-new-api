@@ -2409,23 +2409,79 @@ app.put('/reportWOFogging', async (req, res) => {
 
 })
 
-app.get("/getConsolidatedReportsByWorkWorkOrderId", async (req, res) => {
+app.get("/getConsolidation", async (req, res) => {
+  var consolidatedPromise = getConsolidationReports(req);
+  var getImagesPromise = getImages(req);
+  Promise.all([consolidatedPromise, getImagesPromise]).then((allData) => {
+    var returnData = [];
+    for (var i = 0; i < allData[0].length; i++) {
+        var single = allData[0][i];
+        
+        var images = [];
+        for (var j = 0; j < allData[1].length; j++) {
+          var image = allData[1][j];
+          images.push(image);
+        }
+
+        single.imagesList = images;
+        returnData.push(single)
+
+        
+    }
+    
+    return res.status(200).send(returnData);
+}).catch(err => {
+    return res.status(200).send(err);
+});;
+});
+
+function getImages(req) {
+    return new Promise((resolve, reject) => {
+        
+        let query = `
+        select * FROM ReportImage WHERE  ReportWOID =${req.query.workOrderID}
+        `;
+    
+        
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.length == 0) {
+                reject({code:200, message:"There is no data for selected values"});
+            } else {
+                resolve(results);
+            }
+    
+        });
+              
+        });
+}
+
+function getConsolidationReports(req) {
+
+    return new Promise((resolve, reject) => {
+        
     let query = `
-    select * from ConsolidatedReportWO where ConsolidatedReportWO.workOrderID = ${req.query.workOrderID}
+    select ConsolidatedReportWO.ConsWOID, ConsolidatedReportWO.ReportWOID, ConsolidatedReportWO.StaffID, ConsolidatedReportWO.StartedDateTime, ConsolidatedReportWO.LocationPoint, ConsolidatedReportWO.FindingsImages, ConsolidatedReportWO.ServicesProvided, ConsolidatedReportWO.ServiceImage, ConsolidatedReportWO.UpdatedByUserID, ConsolidatedReportWO.UpdatedDateTime, ConsolidatedReportWO.workOrderID, Staff.StaffName, ReportWO.FogMachineNum from ConsolidatedReportWO 
+Join Staff on Staff.StaffID = ConsolidatedReportWO.StaffID
+JOIN ReportWO on ReportWO.ReportWOID = ConsolidatedReportWO.ReportWOID
+where ConsolidatedReportWO.workOrderID = ${req.query.workOrderID}
     `;
 
     
     pool.query(query, function (err, results) {
         if (err) throw err
-        if (results.length >= 0) {
-            return res.status(200).send(results)
+        if (results.length == 0) {
+            reject({code:200, message:"There is no data for selected values"});
         } else {
-            return res.status(200).json({ code: 200, message: "No ReportWO available for the WorkOrder." })
+            resolve(results);
         }
 
-    })
+    });
+          
+    });
 
-});
+    
+}
 
 app.get("/getReportByPO", async (req, res) => {
     var allDataPromise = getAllData(req);
