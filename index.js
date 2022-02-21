@@ -2283,7 +2283,12 @@ app.delete("/deleteImageByDB", async (req, res) => {
 
 
 app.get('/getReportWO', async (req, res) => {
-    let query = `select * from ReportWO WHERE WorkOrderID = ${req.query.WorkOrderID} and UpdatedUserID = ${req.query.UpdatedUserID}`
+    let query = `
+    select ReportWO.ReportWOID, ReportWO.WorkOrderID, ReportWO.WOstartDateTime, ReportWO.WOendDateTime,
+ReportWO.WorkNatureID, ReportWO.WorkNatureID, ReportWO.Findings, ReportWO.Location, ReportWO.ServiceMethodID, ReportWO.FogMachineNum,ReportWO.ContactAckMethodID, ReportWO.ContackAckOther, ReportWO.ContactAckSignImageURL, ReportWO.ContactAckDateTime, ReportWO.consolidateDateTime, ReportWO.UpdatedUserID, ReportWO.UpdatedDateTime, WorkOrder.WorkStatusID from ReportWO 
+JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
+WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} and ReportWO.UpdatedUserID = ${req.query.UpdatedUserID}
+    `
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length > 0) {
@@ -2298,6 +2303,26 @@ app.get('/getReportWO', async (req, res) => {
 app.put('/updateReportPO', async (req, res) => {
 
      let detail = req.body;
+     if(detail['ContactAckDateTime'] != null && 
+     (detail['ContactAckID'] != null || detail['ContackAckOther'] != null)) {
+        let query = `UPDATE WorkOrder 
+        JOIN ReportWO
+        on ReportWO.WorkOrderID = WorkOrder.WorkOrderID
+        
+        set WorkOrder.WorkStatusID = 4
+        
+        WHERE ReportWO.ReportWOID = ${req.query.ReportWOID}`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.affectedRows > 0) {
+                return res.status(200).send({ code: 400, message: "update success" })
+            } else {
+                return res.status(400).json({ code: 400, message: "update failed" })
+            }
+    
+        })
+
+     }
 
      if (detail['ContactAckSignImageURL']) {
 
@@ -2458,7 +2483,7 @@ app.put('/reportWOFogging', async (req, res) => {
 
 app.get("/getConsolidation", async (req, res) => {
   var consolidatedPromise = getConsolidationReports(req);
-  var getImagesPromise = getImages(req);
+  var getImagesPromise = getImagesForConsolidation(req);
   Promise.all([consolidatedPromise, getImagesPromise]).then((allData) => {
     var returnData = [];
     for (var i = 0; i < allData[0].length; i++) {
@@ -2482,7 +2507,7 @@ app.get("/getConsolidation", async (req, res) => {
 });;
 });
 
-function getImages(req) {
+function getImagesForConsolidation(req) {
     return new Promise((resolve, reject) => {
         
         let query = `
