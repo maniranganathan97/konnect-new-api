@@ -2590,7 +2590,7 @@ app.get("/getReportByPO", async (req, res) => {
 
         
 
-        return res.status(200).send(returnData);
+        return res.status(200).send(single);
       })
       .catch((err) => {
         return res.status(200).send(err);
@@ -2609,7 +2609,7 @@ app.get("/getReportByPO", async (req, res) => {
         pool.query(query, function (err, results) {
             if (err) reject(err)
             if(results.length == 0) {
-              reject({code:200, message:"There is no service data for selected values"});
+              reject({code:200, message:"There is no workk type data for selected values"});
             }
             resolve(results);
            
@@ -2625,21 +2625,14 @@ function getServiceTypeOther(req) {
     return new Promise((resolve, reject) => {
         
         let query = `
-        select ReportService.ServiceTypeOther from ReportWO
-      JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
-      JOIN Contact C1 on C1.ContactID = ReportWO.ContactAckID
-      JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
-      JOIN PO ON PO.POID = WorkOrder.POID
-      JOIN Contact C2 on C2.ContactID = PO.ContactID
-      JOIN ReportImage on ReportImage.ReportWOID = ReportWO.ReportWOID
+        select DISTINCT ReportService.ServiceTypeOther from ReportWO
       JOIN ReportService ON ReportService.WorkOrderID = ReportWO.WorkOrderID
-      WHERE ReportWO.ReportWOID = ${req.query.WorkOrderID}
-   
-        `
+      WHERE ReportService.ServiceTypeOther IS NOT NULL AND ReportService.ServiceTypeOther != "" AND
+      ReportWO.WorkOrderID = ${req.query.WorkOrderID} `
         pool.query(query, function (err, results) {
             if (err) reject(err)
-            if(results.length == 0) {
-              reject({code:200, message:"There is no service data for selected values"});
+            if(results.length < 0) {
+              reject({code:200, message:"There is no service type data for selected values"});
             }
             resolve(results);
            
@@ -2656,7 +2649,7 @@ function getServiceTypeOther(req) {
     return new Promise((resolve, reject) => {
         
         let query = `
-        SELECT * from ReportImage 
+        SELECT ReportImage.ImageURL,ReportImage.ImageTypeID from ReportImage 
 
         JOIN ReportWO on ReportWO.ReportWOID = ReportImage.ReportWOID
 
@@ -2691,7 +2684,7 @@ function getServiceTypeOther(req) {
           pool.query(query, function (err, results) {
               if (err) reject(err)
               if(results.length == 0) {
-                reject({code:200, message:"There is no service data for selected values"});
+                reject({code:200, message:"There is no service name for selected values"});
               }
               allData = results;
               console.log("all results are --->"+ allData);
@@ -2710,9 +2703,7 @@ function getServiceTypeOther(req) {
          Staff.StaffName
          FROM WorkOrderStaff
          JOIN Staff on Staff.StaffID = WorkOrderStaff.StaffID
-         where WorkOrderID = ${req.query.WorkOrderID}
-         
-                     `;
+         where WorkOrderID = ${req.query.WorkOrderID} `;
          pool.query(workersQuery, function (err, workersResults) {
               if (err)
                   throw err
@@ -2735,7 +2726,7 @@ function getServiceTypeOther(req) {
           let query = `
           select DISTINCT ReportWO.WorkOrderID,ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
       ReportWO.ContactAckSignImageURL, C1.ContactName AS AckContact ,C2.ContactName AS Requestor, WorkOrder.POID ,ReportWO.ContactAckDateTime,
-      ReportWO.ContackAckOther, ReportWO.ContactAckID, PO.POnumber
+      ReportWO.ContackAckOther, ReportWO.ContactAckID, PO.POnumber, ReportWO.FogMachineNum
       from ReportWO
       JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
       JOIN Contact C1 on C1.ContactID = ReportWO.ContactAckID
@@ -2744,7 +2735,7 @@ function getServiceTypeOther(req) {
       JOIN Contact C2 on C2.ContactID = PO.ContactID
       JOIN ReportImage on ReportImage.ReportWOID = ReportWO.ReportWOID
       JOIN ReportService ON ReportService.WorkOrderID = ReportWO.WorkOrderID
-      WHERE ReportWO.ReportWOID = ${req.query.WorkOrderID}
+      WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID}
   
          
           `
