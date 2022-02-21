@@ -2502,36 +2502,104 @@ app.get("/getReportByPO", async (req, res) => {
     var allDataPromise = getAllData(req);
     var workersPromise = getWorkersData(req);
     var servicesPromise = getServices(req);
-    
-    Promise.all([allDataPromise, workersPromise, servicesPromise]).then((allData) => {
-      var returnData = [];
-      for (var i = 0; i < allData[0].length; i++) {
+    var checkWorkTypePromise = getWorkType(req);
+    var imagesPromise = getImages(req);
+
+
+    Promise.all([allDataPromise, workersPromise, servicesPromise, checkWorkTypePromise,imagesPromise])
+      .then((allData) => {
+        var returnData = [];
+        for (var i = 0; i < allData[0].length; i++) {
           var single = allData[0][i];
-          
-      
-      var allWorkersName = [];
-      for (var j = 0; j < allData[1].length; j++) {
-        var worker = allData[1][j];
-        allWorkersName.push(worker.StaffName);
-      }
-      single.actionBy = allWorkersName;
-      var allServices = [];
-      for (var k = 0; k < allData[2].length; k++) {
-          var service = allData[2][k];
-          allServices.push(service.ServiceName);
+
+          var allWorkersName = [];
+          for (var j = 0; j < allData[1].length; j++) {
+            var worker = allData[1][j];
+            allWorkersName.push(worker.StaffName);
+          }
+          single.actionBy = allWorkersName;
+          var allServices = [];
+          for (var k = 0; k < allData[2].length; k++) {
+            var service = allData[2][k];
+            allServices.push(service.ServiceName);
+          }
+          single.serviceTypes = allServices;
+
+
+          var allImages = [];
+          for (var k = 0; k < allData[4].length; k++) {
+            var singleImage = allData[4][k];
+            allImages.push(singleImage);
+          }
+          single.images = allImages;
+
+          returnData.push(single);
         }
-        single.serviceTypes = allServices;
-  
-      returnData.push(single)
-      
-  }
-  
-      return res.status(200).send(returnData);
-    }).catch(err => {
+
+        // if the workTypeId =3  meaning the mosquito fogging type then sending only the first data from the result
+        if (allData[3][0].WorkTypeID == 3) {
+          returnData = returnData[0];
+        }
+
+        return res.status(200).send(returnData);
+      })
+      .catch((err) => {
         return res.status(200).send(err);
-    });;
+      });;
   });
   
+  function getWorkType(req) {
+
+
+    return new Promise((resolve, reject) => {
+        var allData;
+        let query = `
+        SELECT WorkTypeID FROM WorkOrder WHERE WorkOrderID = ${req.query.WorkOrderID}
+   
+        `
+        pool.query(query, function (err, results) {
+            if (err) reject(err)
+            if(results.length == 0) {
+              reject({code:200, message:"There is no service data for selected values"});
+            }
+            resolve(results);
+           
+    
+        })
+
+    });
+
+  }
+
+  function getImages(req) {
+
+
+    return new Promise((resolve, reject) => {
+        
+        let query = `
+        SELECT * from ReportImage 
+
+        JOIN ReportWO on ReportWO.ReportWOID = ReportImage.ReportWOID
+
+        JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
+
+        where ReportWO.WorkOrderID = ${req.query.WorkOrderID}
+   
+        `;
+        pool.query(query, function (err, results) {
+            if (err) reject(err)
+
+            //return empty array even there is no images
+            resolve(results);
+           
+    
+        })
+
+    });
+
+  }
+
+
   function getServices(req) {
       return new Promise((resolve, reject) => {
           var allData;
@@ -2588,7 +2656,7 @@ app.get("/getReportByPO", async (req, res) => {
           let query = `
           select  ReportWO.WorkOrderID,ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
       ReportWO.ContactAckSignImageURL, C1.ContactName AS AckContact ,C2.ContactName AS Requestor, WorkOrder.POID, ReportService.ServiceTypeOther,ReportWO.ContactAckDateTime,
-      ReportWO.ContackAckOther, ReportWO.ContactAckID, ReportImage.ImageTypeID, ReportImage.ImageURL, PO.POnumber
+      ReportWO.ContackAckOther, ReportWO.ContactAckID, PO.POnumber
       from ReportWO
       JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
       JOIN Contact C1 on C1.ContactID = ReportWO.ContactAckID
