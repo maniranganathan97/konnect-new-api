@@ -2575,7 +2575,7 @@ app.get("/getReportByPO", async (req, res) => {
         pool.query(query, function (err, results) {
             if (err) reject(err)
             if(results.length == 0) {
-              reject({code:200, message:"There is no service data for selected values"});
+              reject({code:200, message:"There is no workk type data for selected values"});
             }
             resolve(results);
            
@@ -2592,19 +2592,13 @@ function getServiceTypeOther(req) {
         
         let query = `
         select DISTINCT ReportService.ServiceTypeOther from ReportWO
-      JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
-      JOIN Contact C1 on C1.ContactID = ReportWO.ContactAckID
-      JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
-      JOIN PO ON PO.POID = WorkOrder.POID
-      JOIN Contact C2 on C2.ContactID = PO.ContactID
-      JOIN ReportImage on ReportImage.ReportWOID = ReportWO.ReportWOID
       JOIN ReportService ON ReportService.WorkOrderID = ReportWO.WorkOrderID
       WHERE ReportService.ServiceTypeOther IS NOT NULL AND ReportService.ServiceTypeOther != "" AND
       ReportWO.WorkOrderID = ${req.query.WorkOrderID} `
         pool.query(query, function (err, results) {
             if (err) reject(err)
-            if(results.length == 0) {
-              reject({code:200, message:"There is no service data for selected values"});
+            if(results.length < 0) {
+              reject({code:200, message:"There is no service type data for selected values"});
             }
             resolve(results);
            
@@ -2656,7 +2650,7 @@ function getServiceTypeOther(req) {
           pool.query(query, function (err, results) {
               if (err) reject(err)
               if(results.length == 0) {
-                reject({code:200, message:"There is no service data for selected values"});
+                reject({code:200, message:"There is no service name for selected values"});
               }
               allData = results;
               console.log("all results are --->"+ allData);
