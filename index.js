@@ -2297,18 +2297,52 @@ app.get('/getReportWO', async (req, res) => {
 
 app.put('/updateReportPO', async (req, res) => {
 
-     let details = req.body;
-     let query = `Update ReportWO SET  ` + Object.keys(details).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
-     const parameters = [...Object.values(details), req.query.ReportWOID]
+     let detail = req.body;
 
-     pool.query(query, parameters, function (error, results) {
-        if (error) throw error
-        if (results.affectedRows > 0) {
-            return res.status(200).json({ code: 200, message: "Updated successfully." })
-        } else {
-            return res.status(401).json({ code: 401, "message": "Update Failed." })
-        }
-    })
+     if (detail['ContactAckSignImageURL']) {
+
+        const buffer = Buffer.from(detail["ContactAckSignImageURL"], 'base64')
+        // Create a new blob in the bucket and upload the file data.
+        const id = uuid.v4();
+        const blob = bucket.file("signature" + id + ".jpg");
+        const blobStream = blob.createWriteStream();
+
+        blobStream.on('error', err => {
+            next(err);
+        });
+        blobStream.on('finish', () => {
+            const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+            detail['ContactAckSignImageURL'] = publicUrl
+
+            let query = `Update ReportWO SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
+            const parameters = [...Object.values(detail), req.query.ReportWOID]
+   
+            pool.query(query, parameters, function (err, results, fields) {
+                if (err) throw err
+                if (results.affectedRows > 0) {
+                    return res.status(200).json({ code: 200, message: "success" })
+                } else {
+                    return res.status(401).json({ code: 401, "message": "data not update" })
+                }
+            })
+        })
+        blobStream.end(buffer);
+
+    }
+    else {
+        let query = `Update ReportWO SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
+        const parameters = [...Object.values(detail), req.query.ReportWOID]
+   
+        pool.query(query, parameters, function (error, results) {
+           if (error) throw error
+           if (results.affectedRows > 0) {
+               return res.status(200).json({ code: 200, message: "Updated successfully." })
+           } else {
+               return res.status(401).json({ code: 401, "message": "Update Failed." })
+           }
+       })
+    }
+     
 });
 
 app.post('/reportWOFogging', async (req, res) => {
