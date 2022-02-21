@@ -2504,13 +2504,14 @@ app.get("/getReportByPO", async (req, res) => {
     var servicesPromise = getServices(req);
     var checkWorkTypePromise = getWorkType(req);
     var imagesPromise = getImages(req);
+    var getServiceTypeOtherPromise = getServiceTypeOther(req);
 
 
-    Promise.all([allDataPromise, workersPromise, servicesPromise, checkWorkTypePromise,imagesPromise])
+    Promise.all([allDataPromise, workersPromise, servicesPromise, checkWorkTypePromise,imagesPromise, getServiceTypeOtherPromise])
       .then((allData) => {
         var returnData = [];
-        for (var i = 0; i < allData[0].length; i++) {
-          var single = allData[0][i];
+        
+          var single = allData[0][0];
 
           var allWorkersName = [];
           for (var j = 0; j < allData[1].length; j++) {
@@ -2526,20 +2527,34 @@ app.get("/getReportByPO", async (req, res) => {
           single.serviceTypes = allServices;
 
 
-          var allImages = [];
-          for (var k = 0; k < allData[4].length; k++) {
-            var singleImage = allData[4][k];
-            allImages.push(singleImage);
+            single.images = {};
+            var beforeImages = [];
+            var afterImages = [];
+            for(var i=0; i<allData[4].length ; i++) {
+                if(allData[4][i].ImageTypeID ==1) {
+                    beforeImages.push(allData[4][i]);
+                } else {
+                    afterImages.push(allData[4][i]);
+                }
+            }
+            single.images.beforeImages= beforeImages;
+            single.images.afterImages= afterImages;
+
+
+          var allServiceTypeOther = [];
+          for (var k = 0; k < allData[5].length; k++) {
+            var singleServiceTypeOther = allData[5][k];
+            allServiceTypeOther.push(singleServiceTypeOther.ServiceTypeOther);
           }
-          single.images = allImages;
-
+          single.serviceTypeOthers = allServiceTypeOther;
+            // if the workTypeId =3  meaning the mosquito fogging type then sending only the first data from the result
+            if (allData[3][0].WorkTypeID == 3) {
+                single.images.afterImages = [];
+            }
           returnData.push(single);
-        }
+        
 
-        // if the workTypeId =3  meaning the mosquito fogging type then sending only the first data from the result
-        if (allData[3][0].WorkTypeID == 3) {
-          returnData = returnData[0];
-        }
+        
 
         return res.status(200).send(returnData);
       })
@@ -2555,6 +2570,36 @@ app.get("/getReportByPO", async (req, res) => {
         var allData;
         let query = `
         SELECT WorkTypeID FROM WorkOrder WHERE WorkOrderID = ${req.query.WorkOrderID}
+   
+        `
+        pool.query(query, function (err, results) {
+            if (err) reject(err)
+            if(results.length == 0) {
+              reject({code:200, message:"There is no service data for selected values"});
+            }
+            resolve(results);
+           
+    
+        })
+
+    });
+
+  }
+function getServiceTypeOther(req) {
+
+
+    return new Promise((resolve, reject) => {
+        
+        let query = `
+        select ReportService.ServiceTypeOther from ReportWO
+      JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
+      JOIN Contact C1 on C1.ContactID = ReportWO.ContactAckID
+      JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
+      JOIN PO ON PO.POID = WorkOrder.POID
+      JOIN Contact C2 on C2.ContactID = PO.ContactID
+      JOIN ReportImage on ReportImage.ReportWOID = ReportWO.ReportWOID
+      JOIN ReportService ON ReportService.WorkOrderID = ReportWO.WorkOrderID
+      WHERE ReportWO.ReportWOID = ${req.query.WorkOrderID}
    
         `
         pool.query(query, function (err, results) {
@@ -2654,8 +2699,8 @@ app.get("/getReportByPO", async (req, res) => {
       return new Promise((resolve, reject) => {
           var allData;
           let query = `
-          select  ReportWO.WorkOrderID,ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
-      ReportWO.ContactAckSignImageURL, C1.ContactName AS AckContact ,C2.ContactName AS Requestor, WorkOrder.POID, ReportService.ServiceTypeOther,ReportWO.ContactAckDateTime,
+          select DISTINCT ReportWO.WorkOrderID,ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
+      ReportWO.ContactAckSignImageURL, C1.ContactName AS AckContact ,C2.ContactName AS Requestor, WorkOrder.POID ,ReportWO.ContactAckDateTime,
       ReportWO.ContackAckOther, ReportWO.ContactAckID, PO.POnumber
       from ReportWO
       JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
