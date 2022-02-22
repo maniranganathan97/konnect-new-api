@@ -2296,10 +2296,7 @@ app.get('/getReportWO', async (req, res) => {
 
                 newQuery = `
                 
-                select ReportWO.ReportWOID, ReportWO.WorkOrderID, ReportWO.WOstartDateTime, ReportWO.WOendDateTime,
-ReportWO.WorkNatureID, ReportWO.WorkNatureID, ReportWO.Findings, ReportWO.Location, ReportWO.ServiceMethodID, ReportWO.FogMachineNum,ReportWO.ContactAckMethodID, ReportWO.ContackAckOther, ReportWO.ContactAckSignImageURL, ReportWO.ContactAckDateTime, ReportWO.consolidateDateTime, ReportWO.UpdatedUserID, ReportWO.UpdatedDateTime, WorkOrder.WorkStatusID,
-WorkOrder.WorkTypeID, WorkType.WorkTypeName,
-
+                select 
 WorkOrder.SiteZoneID, WorkOrder.SiteID, Site.SiteTypeID
 
 from ReportWO 
