@@ -2790,7 +2790,7 @@ function getServiceTypeOther(req) {
           let query = `
           select DISTINCT ReportWO.WorkOrderID,ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
       ReportWO.ContactAckSignImageURL, C1.ContactName AS AckContact ,C2.ContactName AS Requestor, WorkOrder.POID ,ReportWO.ContactAckDateTime,
-      ReportWO.ContackAckOther, ReportWO.ContactAckID, PO.POnumber, ReportWO.FogMachineNum
+      ReportWO.ContackAckOther, ReportWO.ContactAckID, PO.POnumber, ReportWO.FogMachineNum, PO.PODate
       from ReportWO
       JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
       JOIN Contact C1 on C1.ContactID = ReportWO.ContactAckID
