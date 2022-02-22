@@ -2284,12 +2284,44 @@ app.delete("/deleteImageByDB", async (req, res) => {
 
 app.get('/getReportWO', async (req, res) => {
     let query = `
+     select * from WorkOrder where WorkOrderID = ${req.query.WorkOrderID} 
+    `;
+
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length > 0) {
+            var data = results[0];
+            let newQuery =``;
+            if(data.WorkTypeID == 1) {
+
+                newQuery = `
+                
+                select ReportWO.ReportWOID, ReportWO.WorkOrderID, ReportWO.WOstartDateTime, ReportWO.WOendDateTime,
+ReportWO.WorkNatureID, ReportWO.WorkNatureID, ReportWO.Findings, ReportWO.Location, ReportWO.ServiceMethodID, ReportWO.FogMachineNum,ReportWO.ContactAckMethodID, ReportWO.ContackAckOther, ReportWO.ContactAckSignImageURL, ReportWO.ContactAckDateTime, ReportWO.consolidateDateTime, ReportWO.UpdatedUserID, ReportWO.UpdatedDateTime, WorkOrder.WorkStatusID,
+WorkOrder.WorkTypeID, WorkType.WorkTypeName,
+
+WorkOrder.SiteZoneID, WorkOrder.SiteID, Site.SiteTypeID
+
+from ReportWO 
+JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
+JOIN WorkType on WorkType.WorkTypeID = WorkOrder.WorkTypeID
+JOIN Site on Site.SiteID = WorkOrder.SiteID
+WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} and ReportWO.UpdatedUserID = ${req.query.UpdatedUserID}
+
+`
+            } else {
+
+                newQuery = `
     select ReportWO.ReportWOID, ReportWO.WorkOrderID, ReportWO.WOstartDateTime, ReportWO.WOendDateTime,
 ReportWO.WorkNatureID, ReportWO.WorkNatureID, ReportWO.Findings, ReportWO.Location, ReportWO.ServiceMethodID, ReportWO.FogMachineNum,ReportWO.ContactAckMethodID, ReportWO.ContackAckOther, ReportWO.ContactAckSignImageURL, ReportWO.ContactAckDateTime, ReportWO.consolidateDateTime, ReportWO.UpdatedUserID, ReportWO.UpdatedDateTime, WorkOrder.WorkStatusID from ReportWO 
 JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
 WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} and ReportWO.UpdatedUserID = ${req.query.UpdatedUserID}
     `
-    pool.query(query, function (err, results) {
+
+            }
+
+            
+    pool.query(newQuery, function (err, results) {
         if (err) throw err
         if (results.length > 0) {
             return res.status(200).send(results[0])
@@ -2298,6 +2330,13 @@ WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} and ReportWO.UpdatedUserID
         }
 
     })
+            console.log("work order detail available");
+        } else {
+            console.log("there is no work order detail available");
+        }
+
+    })
+    
 })
 
 app.put('/updateReportPO', async (req, res) => {
