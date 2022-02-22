@@ -2140,7 +2140,7 @@ app.get('/assignedworker', async (req, res) => {
 })
 
 app.get('/findings', async (req, res) => {
-    let query = `select * from Findings where FindingsType = ${req.query.FindingsType} ORDER BY FindingsName`
+    let query = `select * from Findings where FindingsType = '${req.query.FindingsType}' ORDER BY FindingsName`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
@@ -2565,7 +2565,7 @@ where ConsolidatedReportWO.workOrderID = ${req.query.workOrderID}
 
 app.get("/getServices", async(req, res) => {
 
-    let query = `SELECT * from ServiceType WHERE ServiceType = ${req.query.ServiceType} ORDER BY ServiceName`
+    let query = `SELECT * from ServiceType WHERE ServiceType = '${req.query.ServiceType}' ORDER BY ServiceName`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
