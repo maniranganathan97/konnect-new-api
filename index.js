@@ -2287,10 +2287,9 @@ app.get('/getReportWO', async (req, res) => {
     select ReportWO.ReportWOID, ReportWO.WorkOrderID, ReportWO.WOstartDateTime, ReportWO.WOendDateTime,
     ReportWO.WorkNatureID, ReportWO.WorkNatureID, ReportWO.Findings, ReportWO.Location, ReportWO.ServiceMethodID, ReportWO.FogMachineNum,ReportWO.ContactAckMethodID, ReportWO.ContackAckOther, ReportWO.ContactAckSignImageURL, ReportWO.ContactAckDateTime, ReportWO.consolidateDateTime, ReportWO.UpdatedUserID, ReportWO.UpdatedDateTime, WorkOrder.WorkStatusID,
     ReportWO.ContactAckID, Contact.ContactName
-    
     from ReportWO 
     JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
-    JOIN Contact on Contact.ContactID = ReportWO.ContactAckID
+    LEFT JOIN Contact on Contact.ContactID = ReportWO.ContactAckID
     WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} and ReportWO.UpdatedUserID = ${req.query.UpdatedUserID}
 
     `
@@ -2400,7 +2399,7 @@ app.post('/reportWOFogging', async (req, res) => {
                 req.body.UpdatedUserID,
                 req.body.UpdatedDateTime,
                 req.body.WorkOrderID
-              ];
+               ];
               pool.query(insertCosolidatedReportQuery, newParameters, function (error, results, fields) {
                 if (error) throw error;
                 if (results.affectedRows > 0) {
