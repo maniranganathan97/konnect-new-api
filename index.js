@@ -2306,7 +2306,7 @@ from ReportWO
 JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
 JOIN WorkType on WorkType.WorkTypeID = WorkOrder.WorkTypeID
 JOIN Site on Site.SiteID = WorkOrder.SiteID
-WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} and ReportWO.UpdatedUserID = ${req.query.UpdatedUserID}
+WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} 
 
 `
             } else {
@@ -2315,7 +2315,7 @@ WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} and ReportWO.UpdatedUserID
     select ReportWO.ReportWOID, ReportWO.WorkOrderID, ReportWO.WOstartDateTime, ReportWO.WOendDateTime,
 ReportWO.WorkNatureID, ReportWO.WorkNatureID, ReportWO.Findings, ReportWO.Location, ReportWO.ServiceMethodID, ReportWO.FogMachineNum,ReportWO.ContactAckMethodID, ReportWO.ContackAckOther, ReportWO.ContactAckSignImageURL, ReportWO.ContactAckDateTime, ReportWO.consolidateDateTime, ReportWO.UpdatedUserID, ReportWO.UpdatedDateTime, WorkOrder.WorkStatusID from ReportWO 
 JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
-WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} and ReportWO.UpdatedUserID = ${req.query.UpdatedUserID}
+WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} 
     `
 
             }
