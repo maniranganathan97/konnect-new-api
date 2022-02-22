@@ -2558,6 +2558,20 @@ where ConsolidatedReportWO.workOrderID = ${req.query.workOrderID}
     
 }
 
+app.get("/getServices", async(req, res) => {
+
+    let query = `SELECT * from ServiceType WHERE ServiceType = ${req.query.ServiceType} ORDER BY ServiceName`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No service available for the type selected." })
+        }
+
+    })
+});
+
 app.get("/getReportByPO", async (req, res) => {
   let query = `
      select * from WorkOrder where WorkOrderID = ${req.query.WorkOrderID} 
