@@ -2284,52 +2284,17 @@ app.delete("/deleteImageByDB", async (req, res) => {
 
 app.get('/getReportWO', async (req, res) => {
     let query = `
-     select * from WorkOrder where WorkOrderID = ${req.query.WorkOrderID} 
-    `;
-
-    pool.query(query, function (err, results) {
-        if (err) throw err
-        if (results.length > 0) {
-            var data = results[0];
-            let newQuery =``;
-            if(data.WorkTypeID == 1) {
-
-                newQuery = `
-                
-                select 
-WorkOrder.SiteZoneID, WorkOrder.SiteID, Site.SiteTypeID
-
-from ReportWO 
-JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
-JOIN WorkType on WorkType.WorkTypeID = WorkOrder.WorkTypeID
-JOIN Site on Site.SiteID = WorkOrder.SiteID
-WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} 
-
-`
-            } else {
-
-                newQuery = `
     select ReportWO.ReportWOID, ReportWO.WorkOrderID, ReportWO.WOstartDateTime, ReportWO.WOendDateTime,
 ReportWO.WorkNatureID, ReportWO.WorkNatureID, ReportWO.Findings, ReportWO.Location, ReportWO.ServiceMethodID, ReportWO.FogMachineNum,ReportWO.ContactAckMethodID, ReportWO.ContackAckOther, ReportWO.ContactAckSignImageURL, ReportWO.ContactAckDateTime, ReportWO.consolidateDateTime, ReportWO.UpdatedUserID, ReportWO.UpdatedDateTime, WorkOrder.WorkStatusID from ReportWO 
 JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
-WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} 
+WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} and ReportWO.UpdatedUserID = ${req.query.UpdatedUserID}
     `
-
-            }
-
-            
-    pool.query(newQuery, function (err, results) {
+    pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length > 0) {
             return res.status(200).send(results[0])
         } else {
             return res.status(400).json({ code: 400, message: "No ReportWO available for the WorkOrder." })
-        }
-
-    })
-            console.log("work order detail available");
-        } else {
-            console.log("there is no work order detail available");
         }
 
     })
@@ -2594,69 +2559,106 @@ where ConsolidatedReportWO.workOrderID = ${req.query.workOrderID}
 }
 
 app.get("/getReportByPO", async (req, res) => {
-    var allDataPromise = getAllData(req);
-    var workersPromise = getWorkersData(req);
-    var servicesPromise = getServices(req);
-    var checkWorkTypePromise = getWorkType(req);
-    var imagesPromise = getImages(req);
-    var getServiceTypeOtherPromise = getServiceTypeOther(req);
+  let query = `
+     select * from WorkOrder where WorkOrderID = ${req.query.WorkOrderID} 
+    `;
 
+  pool.query(query, function (err, results) {
+    if (err) throw err;
+    if (results.length > 0) {
+      var data = results[0];
+      let newQuery = ``;
+      if (data.WorkTypeID == 1) {
+        newQuery = `
+                
+                select 
+WorkOrder.SiteZoneID, WorkOrder.SiteID, Site.SiteTypeID
+from ReportWO 
+JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
+JOIN WorkType on WorkType.WorkTypeID = WorkOrder.WorkTypeID
+JOIN Site on Site.SiteID = WorkOrder.SiteID
+WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} 
+`;
 
-    Promise.all([allDataPromise, workersPromise, servicesPromise, checkWorkTypePromise,imagesPromise, getServiceTypeOtherPromise])
-      .then((allData) => {
-        var returnData = [];
-        
-          var single = allData[0][0];
-
-          var allWorkersName = [];
-          for (var j = 0; j < allData[1].length; j++) {
-            var worker = allData[1][j];
-            allWorkersName.push(worker.StaffName);
+        pool.query(newQuery, function (err, results) {
+          if (err) throw err;
+          if (results.length > 0) {
+            return res.status(200).send(results[0]);
+          } else {
+            return res.status(400).json({
+              code: 400,
+              message: "No ReportWO available for the WorkOrder.",
+            });
           }
-          single.actionBy = allWorkersName;
-          var allServices = [];
-          for (var k = 0; k < allData[2].length; k++) {
-            var service = allData[2][k];
-            allServices.push(service.ServiceName);
-          }
-          single.serviceTypes = allServices;
+        });
+      } else {
+        var allDataPromise = getAllData(req);
+        var workersPromise = getWorkersData(req);
+        var servicesPromise = getServices(req);
+        var checkWorkTypePromise = getWorkType(req);
+        var imagesPromise = getImages(req);
+        var getServiceTypeOtherPromise = getServiceTypeOther(req);
 
+        Promise.all([
+          allDataPromise,
+          workersPromise,
+          servicesPromise,
+          checkWorkTypePromise,
+          imagesPromise,
+          getServiceTypeOtherPromise,
+        ])
+          .then((allData) => {
+            var returnData = [];
+
+            var single = allData[0][0];
+
+            var allWorkersName = [];
+            for (var j = 0; j < allData[1].length; j++) {
+              var worker = allData[1][j];
+              allWorkersName.push(worker.StaffName);
+            }
+            single.actionBy = allWorkersName;
+            var allServices = [];
+            for (var k = 0; k < allData[2].length; k++) {
+              var service = allData[2][k];
+              allServices.push(service.ServiceName);
+            }
+            single.serviceTypes = allServices;
 
             single.images = {};
             var beforeImages = [];
             var afterImages = [];
-            for(var i=0; i<allData[4].length ; i++) {
-                if(allData[4][i].ImageTypeID ==1) {
-                    beforeImages.push(allData[4][i]);
-                } else {
-                    afterImages.push(allData[4][i]);
-                }
+            for (var i = 0; i < allData[4].length; i++) {
+              if (allData[4][i].ImageTypeID == 1) {
+                beforeImages.push(allData[4][i]);
+              } else {
+                afterImages.push(allData[4][i]);
+              }
             }
-            single.images.beforeImages= beforeImages;
-            single.images.afterImages= afterImages;
+            single.images.beforeImages = beforeImages;
+            single.images.afterImages = afterImages;
 
-
-          var allServiceTypeOther = [];
-          for (var k = 0; k < allData[5].length; k++) {
-            var singleServiceTypeOther = allData[5][k];
-            allServiceTypeOther.push(singleServiceTypeOther.ServiceTypeOther);
-          }
-          single.serviceTypeOthers = allServiceTypeOther;
+            var allServiceTypeOther = [];
+            for (var k = 0; k < allData[5].length; k++) {
+              var singleServiceTypeOther = allData[5][k];
+              allServiceTypeOther.push(singleServiceTypeOther.ServiceTypeOther);
+            }
+            single.serviceTypeOthers = allServiceTypeOther;
             // if the workTypeId =3  meaning the mosquito fogging type then sending only the first data from the result
             if (allData[3][0].WorkTypeID == 3) {
-                single.images.afterImages = [];
+              single.images.afterImages = [];
             }
-          returnData.push(single);
-        
+            returnData.push(single);
 
-        
-
-        return res.status(200).send(single);
-      })
-      .catch((err) => {
-        return res.status(200).send(err);
-      });;
+            return res.status(200).send(single);
+          })
+          .catch((err) => {
+            return res.status(200).send(err);
+          });
+      }
+    }
   });
+});
   
   function getWorkType(req) {
 
