@@ -2285,9 +2285,14 @@ app.delete("/deleteImageByDB", async (req, res) => {
 app.get('/getReportWO', async (req, res) => {
     let query = `
     select ReportWO.ReportWOID, ReportWO.WorkOrderID, ReportWO.WOstartDateTime, ReportWO.WOendDateTime,
-ReportWO.WorkNatureID, ReportWO.WorkNatureID, ReportWO.Findings, ReportWO.Location, ReportWO.ServiceMethodID, ReportWO.FogMachineNum,ReportWO.ContactAckMethodID, ReportWO.ContackAckOther, ReportWO.ContactAckSignImageURL, ReportWO.ContactAckDateTime, ReportWO.consolidateDateTime, ReportWO.UpdatedUserID, ReportWO.UpdatedDateTime, WorkOrder.WorkStatusID from ReportWO 
-JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
-WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} and ReportWO.UpdatedUserID = ${req.query.UpdatedUserID}
+    ReportWO.WorkNatureID, ReportWO.WorkNatureID, ReportWO.Findings, ReportWO.Location, ReportWO.ServiceMethodID, ReportWO.FogMachineNum,ReportWO.ContactAckMethodID, ReportWO.ContackAckOther, ReportWO.ContactAckSignImageURL, ReportWO.ContactAckDateTime, ReportWO.consolidateDateTime, ReportWO.UpdatedUserID, ReportWO.UpdatedDateTime, WorkOrder.WorkStatusID,
+    ReportWO.ContactAckID, Contact.ContactName
+    
+    from ReportWO 
+    JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
+    JOIN Contact on Contact.ContactID = ReportWO.ContactAckID
+    WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} and ReportWO.UpdatedUserID = ${req.query.UpdatedUserID}
+
     `
     pool.query(query, function (err, results) {
         if (err) throw err
