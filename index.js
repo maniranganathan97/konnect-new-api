@@ -2807,11 +2807,12 @@ function getServiceTypeOther(req) {
           let query = `
           select DISTINCT ReportWO.WorkOrderID,ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
       ReportWO.ContactAckSignImageURL, C1.ContactName AS AckContact ,C2.ContactName AS Requestor, WorkOrder.POID ,ReportWO.ContactAckDateTime,
-      ReportWO.ContackAckOther, ReportWO.ContactAckID, PO.POnumber, ReportWO.FogMachineNum, PO.PODate
+      ReportWO.ContackAckOther, ReportWO.ContactAckID, PO.POnumber, ReportWO.FogMachineNum, PO.PODate, Site.SiteName
       from ReportWO
       JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
       JOIN Contact C1 on C1.ContactID = ReportWO.ContactAckID
       JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
+      JOIN Site ON Site.SiteID = WorkOrder.SiteID
       JOIN PO ON PO.POID = WorkOrder.POID
       JOIN Contact C2 on C2.ContactID = PO.ContactID
       JOIN ReportImage on ReportImage.ReportWOID = ReportWO.ReportWOID
