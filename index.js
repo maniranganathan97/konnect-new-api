@@ -2247,11 +2247,7 @@ app.post("/postImagesToReportImage", multer.single('file'), async (req, res) => 
 
 app.get("/getReportImages", async (req, res) => {
 
-    let query = `
-    
-    SELECT * FROM ReportImage where ReportImage.ReportWOID =  ${req.query.ReportWOID} & ImageTypeID = ${req.query.ImageTypeID}
-
-    `
+    let query = `SELECT * FROM ReportImage where ReportImage.ReportWOID =  ${req.query.ReportWOID} AND ImageTypeID = ${req.query.ImageTypeID}`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
