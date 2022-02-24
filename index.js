@@ -2317,14 +2317,15 @@ where ReportWO.WorkOrderID = ${req.query.WorkOrderID}
     `;
     pool.query(query, function (err, results) {
       if (err) throw err;
-      if (results.length > 0) {
-        return resolve(results);
-      } else {
-        return reject({
-          code: 400,
-          message: "No ReportWOFindings available for the WorkOrder.",
-        });
-      }
+    //   if (results.length > 0) {
+    //     return resolve(results);
+    //   } else {
+    //     return reject({
+    //       code: 400,
+    //       message: "No ReportWOFindings available for the WorkOrder.",
+    //     });
+    //   }
+    resolve(results)
     });
   });
 }
@@ -2345,14 +2346,15 @@ where ReportWO.WorkOrderID =  ${req.query.WorkOrderID}
     `;
     pool.query(query, function (err, results) {
       if (err) throw err;
-      if (results.length > 0) {
-        return resolve(results);
-      } else {
-        return reject({
-          code: 400,
-          message: "No ReportWOService available for the WorkOrder.",
-        });
-      }
+    //   if (results.length > 0) {
+    //     return resolve(results);
+    //   } else {
+    //     return reject({
+    //       code: 400,
+    //       message: "No ReportWOService available for the WorkOrder.",
+    //     });
+    //   }
+    resolve(results)
     });
   });
 }
