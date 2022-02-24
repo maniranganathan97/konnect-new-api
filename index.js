@@ -2248,7 +2248,8 @@ app.post("/postImagesToReportImage", multer.single('file'), async (req, res) => 
 app.get("/getReportImages", async (req, res) => {
 
     let query = `
-    SELECT * FROM ReportImage where ReportImage.ReportWOID =  ${req.query.ReportWOID}
+    
+    SELECT * FROM ReportImage where ReportImage.ReportWOID =  ${req.query.ReportWOID} & ImageTypeID = ${req.query.ImageTypeID}
 
     `
     pool.query(query, function (err, results) {
@@ -2364,7 +2365,7 @@ function getReportWOPromise(req) {
     let query = `
     select ReportWO.ReportWOID, ReportWO.WorkOrderID, ReportWO.WOstartDateTime, ReportWO.WOendDateTime,
     ReportWO.WorkNatureID, ReportWO.WorkNatureID, ReportWO.Findings, ReportWO.Location, ReportWO.ServiceMethodID, ReportWO.FogMachineNum,ReportWO.ContactAckMethodID, ReportWO.ContackAckOther, ReportWO.ContactAckSignImageURL, ReportWO.ContactAckDateTime, ReportWO.consolidateDateTime, ReportWO.UpdatedUserID, ReportWO.UpdatedDateTime, WorkOrder.WorkStatusID,
-    ReportWO.ContactAckID, Contact.ContactName
+    ReportWO.ContactAckID, Contact.ContactName, ReportWO.Notes
     from ReportWO 
     JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
     LEFT JOIN Contact on Contact.ContactID = ReportWO.ContactAckID
@@ -2389,6 +2390,10 @@ function getReportWOPromise(req) {
 app.put('/updateReportPO', async (req, res) => {
 
      let detail = req.body;
+     var services = detail['services'];
+     var findings = detail['findings'];
+     delete detail['services'];
+     delete detail['findings'];
      if(detail['ContactAckDateTime'] != null && 
      (detail['ContactAckID'] != null || detail['ContackAckOther'] != null)) {
         let query = `UPDATE WorkOrder 
@@ -2401,6 +2406,8 @@ app.put('/updateReportPO', async (req, res) => {
         pool.query(query, function (err, results) {
             if (err) throw err
             if (results.affectedRows > 0) {
+                updateReportWOFindings(findings, req);
+                updateReportWOService(services, req);
                 return res.status(200).send({ code: 400, message: "update success" })
             } else {
                 return res.status(400).json({ code: 400, message: "update failed" })
@@ -2431,6 +2438,8 @@ app.put('/updateReportPO', async (req, res) => {
             pool.query(query, parameters, function (err, results, fields) {
                 if (err) throw err
                 if (results.affectedRows > 0) {
+                    updateReportWOFindings(findings, req);
+                    updateReportWOService(services, req);
                     return res.status(200).json({ code: 200, message: "success" })
                 } else {
                     return res.status(401).json({ code: 401, "message": "data not update" })
@@ -2447,23 +2456,27 @@ app.put('/updateReportPO', async (req, res) => {
         pool.query(query, parameters, function (error, results) {
            if (error) throw error
            if (results.affectedRows > 0) {
+                updateReportWOFindings(findings, req);
+                updateReportWOService(services, req);
                return res.status(200).json({ code: 200, message: "Updated successfully." })
            } else {
                return res.status(401).json({ code: 401, "message": "Update Failed." })
            }
        })
     }
+
+
      
 });
 
-app.post('/reportWOFogging', async (req, res) => {
+app.post('/reportWOCreate', async (req, res) => {
     let query = "INSERT INTO `ReportWO`(`ReportWOID`, `WorkOrderID`, `WorkNatureID`, `WOstartDateTime`,`ServiceMethodID`,`ContactAckMethodID`,`UpdatedUserID`,`UpdatedDateTime`) VALUES (?,?,?,?,?,?,?,?)"
     let parameters = ["", req.body.WorkOrderID, req.body.WorkNatureID, req.body.WOstartDateTime,req.body.ServiceMethodID, req.body.ContactAckMethodID ,req.body.UpdatedUserID, req.body.UpdatedDateTime]
     pool.query(query, parameters, function (error, results) {
         if (error) throw error
         if (results.affectedRows > 0) {
-            insertAndUpdateReportWOService(results.insertId, req.body);
-            insertAndUpdateReportWOFindings(results.insertId, req.body);
+            // insertAndUpdateReportWOService(results.insertId, req.body);
+            // insertAndUpdateReportWOFindings(results.insertId, req.body);
             let insertCosolidatedReportQuery = `
             INSERT INTO ConsolidatedReportWO ( ReportWOID, StaffID, StartedDateTime, 
                 LocationPoint, FindingsImages, ServicesProvided, 
@@ -2647,20 +2660,70 @@ function updateReportWOFindings(findings, req) {
     let updatedDetails = {
       IsChecked: singleData.IsChecked,
     };
+    if (!!!singleData["ReportWOFindingsID"]) {
+      console.log("inside insert report findings");
+      var sql =
+        "INSERT INTO ReportWOFindings(ReportWOID, FindingsID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?)";
+      let parameters = [
+        req.query.ReportWOID,
+        singleData["FindingsID"],
+        singleData["Value"],
+        singleData["IsChecked"],
+        singleData["UpdatedByUserID"],
+        singleData["UpdatedDateTime"],
+      ];
+      pool.query(sql, parameters, function (err, result, fields) {
+        if (err) throw err;
+        if (result.affectedRows > 0) {
+          //console.log(result)
+        } else {
+          return res
+            .status(401)
+            .json({ code: 401, message: "Failed to create work order." });
+        }
+      });
+    } else {
+      console.log("in else");
+      let sql = `SELECT 1 FROM ReportWOFindings WHERE ReportWOID = ${req.query.ReportWOID}`;
+      pool.query(sql, function (err, result, fields) {
+        if (err) throw err;
+        if (result.length > 0) {
+          let query =
+            `Update ReportWOFindings SET  ` +
+            Object.keys(singleData)
+              .map((key) => `${key}=?`)
+              .join(",") +
+            " where ReportWOID = ?";
+          const parameters = [
+            ...Object.values(singleData),
+            req.query.ReportWOID,
+          ];
+          pool.query(query, parameters, function (err, results, fields) {
+            if (err) throw err;
+            if (results.affectedRows > 0) {
+              console.log(results);
+            }
+          });
+        }
+      });
+    }
+
+    //it will run always to delete not in the list
+    var findingsIdList =[];
+    for(var i=0; i< findings.length ; i++) {
+        findingsIdList.push(findings[i].FindingsID);
+    }
+
     let query =
-      `Update ReportWOFindings SET  ` +
-      Object.keys(updatedDetails)
-        .map((key) => `${key}=?`)
-        .join(",") +
-      " where ReportWOID = ? AND FindingsID = ?";
-    const parameters = [...Object.values(updatedDetails), req.query.ReportWOID, singleData.FindingsID];
+      `
+      DELETE  from ReportWOFindings where ReportWOID = ${req.query.ReportWOID} and FindingsID not in (${findingsIdList.join()})
+    
+      `;
+    const parameters = [...Object.values(singleData), req.query.ReportWOID];
     pool.query(query, parameters, function (err, results, fields) {
       if (err) throw err;
-
       if (results.affectedRows > 0) {
-        console.log("updated");
-      } else {
-        console.log("updated failed");
+        console.log("deleted unwanted data");
       }
     });
   }
@@ -2672,23 +2735,66 @@ function updateReportWOService(services, req) {
     let updatedDetails = {
       IsChecked: singleData.IsChecked,
     };
-    let query =
-      `Update ReportWOService SET  ` +
-      Object.keys(updatedDetails)
-        .map((key) => `${key}=?`)
-        .join(",") +
-      " where ReportWOID = ? AND ServiceID = ?";
-    const parameters = [...Object.values(updatedDetails), req.query.ReportWOID, singleData.ServiceID];
-    pool.query(query, parameters, function (err, results) {
-      if (err) throw err;
-
-      if (results.affectedRows > 0) {
-        console.log("updated ReportWOService");
+    if (!!!singleData["ReportWOServiceID"]) {
+        console.log("inside insert report findings");
+        var sql =
+          "INSERT INTO ReportWOService(ReportWOID, ServiceID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?)";
+        let parameters = [
+          req.query.ReportWOID,
+          singleData["ServiceID"],
+          singleData["Value"],
+          singleData["IsChecked"],
+          singleData["UpdatedByUserID"],
+          singleData["UpdatedDateTime"]
+        ];
+        pool.query(sql, parameters, function (err, result, fields) {
+          if (err) throw err;
+          if (result.affectedRows > 0) {
+            //console.log(result)
+          } else {
+            return res
+              .status(401)
+              .json({ code: 401, message: "Failed to create work order." });
+          }
+        });
       } else {
-        console.log("updated failed ReportWOService");
+          console.log("in else")
+          let sql = `SELECT 1 FROM ReportWOService WHERE ReportWOID = ${req.query.ReportWOID}`
+          pool.query(sql, function (err, result, fields) {
+              if (err) throw err;
+              if (result.length > 0) {
+                  let query = `Update ReportWOService SET  ` + Object.keys(singleData).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
+                  const parameters = [...Object.values(singleData), req.query.ReportWOID]
+                  pool.query(query, parameters, function (err, results, fields) {
+                    if (err) throw err;
+                      if (results.affectedRows > 0) {
+                          console.log(results)
+                      }
+                  })
+              }
+          });
       }
-    });
   }
+
+  //it will run always to delete not in the list
+  var servicesIdList =[];
+  for(var i=0; i< services.length ; i++) {
+      servicesIdList.push(services[i].ServiceID);
+  }
+
+  let query =
+    `
+    DELETE  from ReportWOService where ReportWOID = ${req.query.ReportWOID} and ServiceID not in (${servicesIdList.join()})
+  
+    `;
+  const parameters = [...Object.values(singleData), req.query.ReportWOID];
+  pool.query(query, parameters, function (err, results, fields) {
+    if (err) throw err;
+    if (results.affectedRows > 0) {
+      console.log("deleted unwanted data");
+    }
+  });
+
 }
 
 app.get("/getConsolidation", async (req, res) => {
