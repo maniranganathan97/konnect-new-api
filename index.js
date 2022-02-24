@@ -2603,8 +2603,14 @@ app.put('/reportWOFogging', async (req, res) => {
             if (err) throw err
 
             if (results.affectedRows > 0) {
-                updateReportWOFindings(findings, req);
-                updateReportWOService(services, req);
+                if(findings != undefined && findings.length > 0){
+                    updateReportWOFindings(findings, req);
+                }
+                if(services != undefined && services.length > 0) {
+                    updateReportWOService(services, req);
+                }
+                
+                
                 let updatedDetails = {
                     "WorkOrderID": detail.WorkOrderID,
                     "StartedDateTime": detail.WOstartDateTime,
