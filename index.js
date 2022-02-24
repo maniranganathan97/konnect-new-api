@@ -2294,7 +2294,7 @@ app.get('/getReportWO', async (req, res) => {
       single.services = allData[2];
       returnData.push(single);
 
-      return res.status(200).send(returnData);
+      return res.status(200).send(returnData[0]);
     })
     .catch((err) => {
       return res.status(200).send(err);
