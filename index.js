@@ -2438,7 +2438,7 @@ app.put('/updateReportPO', async (req, res) => {
                     updateReportWOService(services, req);
                     return res.status(200).json({ code: 200, message: "success" })
                 } else {
-                    return res.status(401).json({ code: 401, "message": "data not update" })
+                    return res.status(400).json({ code: 400, "message": "data not update" })
                 }
             })
         })
@@ -2456,7 +2456,7 @@ app.put('/updateReportPO', async (req, res) => {
                 updateReportWOService(services, req);
                return res.status(200).json({ code: 200, message: "Updated successfully." })
            } else {
-               return res.status(401).json({ code: 401, "message": "Update Failed." })
+               return res.status(400).json({ code: 400, "message": "Update Failed." })
            }
        })
     }
