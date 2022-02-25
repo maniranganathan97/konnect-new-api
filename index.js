@@ -2404,7 +2404,7 @@ app.put('/updateReportPO', async (req, res) => {
             if (results.affectedRows > 0) {
                 updateReportWOFindings(findings, req);
                 updateReportWOService(services, req);
-                return res.status(200).send({ code: 400, message: "update success" })
+                return res.status(200).send({ code: 200, message: "update success" })
             } else {
                 return res.status(400).json({ code: 400, message: "update failed" })
             }
