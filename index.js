@@ -2512,8 +2512,8 @@ app.put('/updateReportPO', async (req, res) => {
             const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
             detail['ContactAckSignImageURL'] = publicUrl
 
-            let query = `Update ReportWO SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
-            const parameters = [...Object.values(detail), req.query.ReportWOID]
+            let query = `Update ReportWO SET  ` + Object.keys(reportWoDetails).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
+            const parameters = [...Object.values(reportWoDetails), req.query.ReportWOID]
    
             pool.query(query, parameters, function (err, results, fields) {
                 if (err) throw err
@@ -2533,7 +2533,7 @@ app.put('/updateReportPO', async (req, res) => {
                     .catch((err) => {
                       return res.status(200).send(err);
                     });
-                    return res.status(200).json({ code: 200, message: "success" })
+                    // return res.status(200).json({ code: 200, message: "success" })
                 } else {
                     return res.status(400).json({ code: 400, "message": "data not update" })
                 }
