@@ -2287,8 +2287,8 @@ app.get('/getReportWO', async (req, res) => {
     .then((allData) => {
       var returnData = [];
       var single = allData[0];
-      single.findings = allData[1];
-      single.services = allData[2];
+      single.services = allData[1];
+      single.findings = allData[2];
       returnData.push(single);
 
       return res.status(200).send(returnData[0]);
