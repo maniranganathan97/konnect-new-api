@@ -2799,7 +2799,7 @@ function updateReportWOFindings(findings, req) {
               " where ReportWOID = ?";
             const parameters = [
               ...Object.values(singleData),
-              req.query.ReportWOID,
+              parseInt(req.query.ReportWOID),
             ];
             pool.query(query, parameters, function (err, results, fields) {
               if (err) throw err;
