@@ -1710,7 +1710,7 @@ app.put('/po', async (req, res) => {
                         //console.log(woValues)
                         if (!!!woValues['WorkOrderID']) {
                             var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID,WorkNatureID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?)";
-                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'],woValues['WorkNatureID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
+                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['WorkNatureID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                             pool.query(sql, parameters, function (err, result, fields) {
                                 if (err) throw err;
                                 if (result.affectedRows > 0) {
@@ -1865,7 +1865,7 @@ app.put('/workorder', async (req, res) => {
     pool.query(query, parameters, function (err, results, fields) {
         if (err) throw err
         if (workOrderWorkers.length > 0) {
-            
+
             let sql = `DELETE FROM WorkOrderStaff WHERE WorkOrderID = ${req.query.WorkOrderID} AND StaffID NOT IN (${workOrderWorkers})`
             pool.query(sql, function (err, result, fields) {
                 if (err) throw err;
@@ -2210,39 +2210,39 @@ app.post("/postImagesToReportImage", multer.single('file'), async (req, res) => 
     const blobStream = blob.createWriteStream();
 
     blobStream.on("error", (err) => {
-        res.status(401).json({code:401, message: "Failed to upload Image"});
+        res.status(401).json({ code: 401, message: "Failed to upload Image" });
     });
 
     blobStream.on("finish", () => {
-      // The public URL can be used to directly access the file via HTTP.
-      const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-       
-      let query = `
+        // The public URL can be used to directly access the file via HTTP.
+        const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+
+        let query = `
     INSERT INTO ReportImage (ReportWOID, ImageTypeID, ImageRemarks, ImageURL, AddedByUserID, AddedDateTime) 
     VALUES(?,?,?,?,?,?)
     `;
-      let parameters = [
-        req.body.ReportWOID,
-        req.body.ImageTypeID,
-        req.body.ImageRemarks,
-        publicUrl,
-        req.body.AddedByUserID,
-        req.body.AddedDateTime
-      ];
-      pool.query(query, parameters, function (error, results, fields) {
-        if (error) throw error;
-        if (results.affectedRows > 0) {
-          return res
-            .status(200)
-            .json({ code: 200, message: "Inserted successfully." });
-        } else {
-          return res.status(401).json({ code: 401, message: "Not inserted." });
-        }
-      });
+        let parameters = [
+            req.body.ReportWOID,
+            req.body.ImageTypeID,
+            req.body.ImageRemarks,
+            publicUrl,
+            req.body.AddedByUserID,
+            req.body.AddedDateTime
+        ];
+        pool.query(query, parameters, function (error, results, fields) {
+            if (error) throw error;
+            if (results.affectedRows > 0) {
+                return res
+                    .status(200)
+                    .json({ code: 200, message: "Inserted successfully." });
+            } else {
+                return res.status(401).json({ code: 401, message: "Not inserted." });
+            }
+        });
     });
     blobStream.end(buffer);
 
-    
+
 });
 
 app.get("/getReportImages", async (req, res) => {
@@ -2280,28 +2280,28 @@ app.delete("/deleteImageByDB", async (req, res) => {
 
 
 app.get('/getReportWO', async (req, res) => {
-  var reportPromise = getReportWOPromise(req);
-  var servicesPromise = getServicesPrmoise(req);
-  var findingsPromise = getFindingsPromise(req);
-  Promise.all([reportPromise, servicesPromise, findingsPromise])
-    .then((allData) => {
-      var returnData = [];
-      var single = allData[0];
-      single.services = allData[1];
-      single.findings = allData[2];
-      returnData.push(single);
+    var reportPromise = getReportWOPromise(req);
+    var servicesPromise = getServicesPrmoise(req);
+    var findingsPromise = getFindingsPromise(req);
+    Promise.all([reportPromise, servicesPromise, findingsPromise])
+        .then((allData) => {
+            var returnData = [];
+            var single = allData[0];
+            single.services = allData[1];
+            single.findings = allData[2];
+            returnData.push(single);
 
-      return res.status(200).send(returnData[0]);
-    })
-    .catch((err) => {
-      return res.status(403).send(err);
-    });
-  
+            return res.status(200).send(returnData[0]);
+        })
+        .catch((err) => {
+            return res.status(403).send(err);
+        });
+
 });;
 
 function getFindingsPromise(req) {
-  return new Promise((resolve, reject) => {
-    let query = `
+    return new Promise((resolve, reject) => {
+        let query = `
     select 
 ReportWOFindings.ReportWOFindingsID, ReportWOFindings.ReportWOID, ReportWOFindings.FindingsID,
 ReportWOFindings.Value, ReportWOFindings.IsChecked, ReportWOFindings.UpdatedByUserID, ReportWOFindings.UpdatedDateTime
@@ -2312,24 +2312,24 @@ JOIN  ReportWO on ReportWO.ReportWOID = ReportWOFindings.ReportWOID
 where ReportWO.WorkOrderID = ${req.query.WorkOrderID}
 
     `;
-    pool.query(query, function (err, results) {
-      if (err) throw err;
-    //   if (results.length > 0) {
-    //     return resolve(results);
-    //   } else {
-    //     return reject({
-    //       code: 400,
-    //       message: "No ReportWOFindings available for the WorkOrder.",
-    //     });
-    //   }
-    resolve(results)
+        pool.query(query, function (err, results) {
+            if (err) throw err;
+            //   if (results.length > 0) {
+            //     return resolve(results);
+            //   } else {
+            //     return reject({
+            //       code: 400,
+            //       message: "No ReportWOFindings available for the WorkOrder.",
+            //     });
+            //   }
+            resolve(results)
+        });
     });
-  });
 }
 
 function getServicesPrmoise(req) {
-  return new Promise((resolve, reject) => {
-    let query = `
+    return new Promise((resolve, reject) => {
+        let query = `
     select 
 ReportWOService.ReportWOServiceID, ReportWOService.ReportWOID, ReportWOService.ServiceID,
 ReportWOService.Value, ReportWOService.IsChecked, ReportWOService.UpdatedByUserID, ReportWOService.UpdatedDateTime
@@ -2341,24 +2341,24 @@ where ReportWO.WorkOrderID =  ${req.query.WorkOrderID}
     
 
     `;
-    pool.query(query, function (err, results) {
-      if (err) throw err;
-    //   if (results.length > 0) {
-    //     return resolve(results);
-    //   } else {
-    //     return reject({
-    //       code: 400,
-    //       message: "No ReportWOService available for the WorkOrder.",
-    //     });
-    //   }
-    resolve(results)
+        pool.query(query, function (err, results) {
+            if (err) throw err;
+            //   if (results.length > 0) {
+            //     return resolve(results);
+            //   } else {
+            //     return reject({
+            //       code: 400,
+            //       message: "No ReportWOService available for the WorkOrder.",
+            //     });
+            //   }
+            resolve(results)
+        });
     });
-  });
 }
 
 function getReportWOPromise(req) {
-  return new Promise((resolve, reject) => {
-    let query = `
+    return new Promise((resolve, reject) => {
+        let query = `
     select ReportWO.ReportWOID, ReportWO.WorkOrderID, ReportWO.WOstartDateTime, ReportWO.WOendDateTime,
     ReportWO.WorkNatureID, ReportWO.WorkNatureID, ReportWO.Findings, ReportWO.Location, ReportWO.ServiceMethodID, ReportWO.FogMachineNum,ReportWO.ContactAckMethodID, ReportWO.ContackAckOther, ReportWO.ContactAckSignImageURL, ReportWO.ContactAckDateTime, ReportWO.consolidateDateTime, ReportWO.UpdatedUserID, ReportWO.UpdatedDateTime, WorkOrder.WorkStatusID,
     ReportWO.ContactAckID, Contact.ContactName, ReportWO.Notes
@@ -2368,101 +2368,101 @@ function getReportWOPromise(req) {
     WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} and ReportWO.UpdatedUserID = ${req.query.UpdatedUserID}
 
     `;
-    pool.query(query, function (err, results) {
-      if (err) throw err;
-      if (results.length > 0) {
-        return resolve(results[0]);
-      } else {
-        return reject({
-          code: 403,
-          message: "Yet to start the Work order.",
+        pool.query(query, function (err, results) {
+            if (err) throw err;
+            if (results.length > 0) {
+                return resolve(results[0]);
+            } else {
+                return reject({
+                    code: 403,
+                    message: "Yet to start the Work order.",
+                });
+            }
         });
-      }
     });
-  });
 }
 
 function getReportWoDetails(detail) {
     var reportWoDetails = {};
-    if(detail.hasOwnProperty("ReportWOID")) {
+    if (detail.hasOwnProperty("ReportWOID")) {
         reportWoDetails.ReportWOID = detail["ReportWOID"];
     }
-    
-    if(detail.hasOwnProperty("WorkOrderID")) {
+
+    if (detail.hasOwnProperty("WorkOrderID")) {
         reportWoDetails.WorkOrderID = detail["WorkOrderID"];
     }
-    
-    if(detail.hasOwnProperty("WOstartDateTime")) {
+
+    if (detail.hasOwnProperty("WOstartDateTime")) {
         reportWoDetails.WOstartDateTime = detail["WOstartDateTime"];
     }
-    
-    if(detail.hasOwnProperty("WOendDateTime")) {
+
+    if (detail.hasOwnProperty("WOendDateTime")) {
         reportWoDetails.WOendDateTime = detail["WOendDateTime"];
     }
-    
-    if(detail.hasOwnProperty("WorkNatureID")) {
+
+    if (detail.hasOwnProperty("WorkNatureID")) {
         reportWoDetails.WorkNatureID = detail["WorkNatureID"];
     }
-    
-    if(detail.hasOwnProperty("Findings")) {
+
+    if (detail.hasOwnProperty("Findings")) {
         reportWoDetails.Findings = detail["Findings"];
     }
-    
-    if(detail.hasOwnProperty("Location")) {
+
+    if (detail.hasOwnProperty("Location")) {
         reportWoDetails.Location = detail["Location"];
     }
-    
-    if(detail.hasOwnProperty("ServiceMethodID")) {
+
+    if (detail.hasOwnProperty("ServiceMethodID")) {
         reportWoDetails.ServiceMethodID = detail["ServiceMethodID"];
     }
-    
-    if(detail.hasOwnProperty("FogMachineNum")) {
+
+    if (detail.hasOwnProperty("FogMachineNum")) {
         reportWoDetails.FogMachineNum = detail["FogMachineNum"];
     }
-    
-    if(detail.hasOwnProperty("ContactAckMethodID")) {
+
+    if (detail.hasOwnProperty("ContactAckMethodID")) {
         reportWoDetails.ContactAckMethodID = detail["ContactAckMethodID"];
     }
-    if(detail.hasOwnProperty("ContactAckID")) {
+    if (detail.hasOwnProperty("ContactAckID")) {
         reportWoDetails.ContactAckID = detail["ContactAckID"];
     }
-    if(detail.hasOwnProperty("ContackAckOther")) {
+    if (detail.hasOwnProperty("ContackAckOther")) {
         reportWoDetails.ContackAckOther = detail["ContackAckOther"];
     }
-    if(detail.hasOwnProperty("ContactAckSignImageURL")) {
+    if (detail.hasOwnProperty("ContactAckSignImageURL")) {
         reportWoDetails.ContactAckSignImageURL = detail["ContactAckSignImageURL"];
     }
-    if(detail.hasOwnProperty("ContactAckDateTime")) {
+    if (detail.hasOwnProperty("ContactAckDateTime")) {
         reportWoDetails.ContactAckDateTime = detail["ContactAckDateTime"];
     }
-    if(detail.hasOwnProperty("consolidateDateTime")) {
+    if (detail.hasOwnProperty("consolidateDateTime")) {
         reportWoDetails.consolidateDateTime = detail["consolidateDateTime"];
     }
-    if(detail.hasOwnProperty("Notes")) {
+    if (detail.hasOwnProperty("Notes")) {
         reportWoDetails.Notes = detail["Notes"];
     }
-    if(detail.hasOwnProperty("UpdatedUserID")) {
+    if (detail.hasOwnProperty("UpdatedUserID")) {
         reportWoDetails.UpdatedUserID = detail["UpdatedUserID"];
     }
-    if(detail.hasOwnProperty("UpdatedDateTime")) {
+    if (detail.hasOwnProperty("UpdatedDateTime")) {
         reportWoDetails.UpdatedDateTime = detail["UpdatedDateTime"];
     }
 
     return reportWoDetails;
-    
+
 }
 
 app.put('/updateReportPO', async (req, res) => {
 
-     let detail = req.body;
-     var reportWoDetails = getReportWoDetails(detail);
-     var services = detail['services'];
-     var findings = detail['findings'];
-     delete detail['services'];
-     delete detail['findings'];
-     if(detail['ContactAckDateTime'] != null && 
-     (detail['ContactAckID'] != null || detail['ContackAckOther'] != null)) {
-         console.log("input data has ContactAckID or  ContackAckOther ");
+    let detail = req.body;
+    var reportWoDetails = getReportWoDetails(detail);
+    var services = detail['services'];
+    var findings = detail['findings'];
+    delete detail['services'];
+    delete detail['findings'];
+    if (detail['ContactAckDateTime'] != null &&
+        (detail['ContactAckID'] != null || detail['ContackAckOther'] != null)) {
+        console.log("input data has ContactAckID or  ContackAckOther ");
         let query = `UPDATE WorkOrder 
         JOIN ReportWO
         on ReportWO.WorkOrderID = WorkOrder.WorkOrderID
@@ -2478,13 +2478,13 @@ app.put('/updateReportPO', async (req, res) => {
                 Promise.all([
                     reportPromise,
                     servicePromise
-                  ])
+                ])
                     .then((allData) => {
-                      
-                      return res.status(200).send({ code: 200, "message": "updated ReportPO successfully." });
+
+                        return res.status(200).send({ code: 200, "message": "updated ReportPO successfully." });
                     })
                     .catch((err) => {
-                      return res.status(400).send(err);
+                        return res.status(400).send(err);
                     });
                 //updateReportWOFindings(findings, req);
                 //updateReportWOService(services, req);
@@ -2492,12 +2492,12 @@ app.put('/updateReportPO', async (req, res) => {
             } else {
                 return res.status(400).json({ code: 400, message: "update failed" })
             }
-    
+
         })
 
-     }
+    }
 
-     if (reportWoDetails['ContactAckSignImageURL']) {
+    if (reportWoDetails['ContactAckSignImageURL']) {
 
         const buffer = Buffer.from(detail["ContactAckSignImageURL"], 'base64')
         // Create a new blob in the bucket and upload the file data.
@@ -2514,25 +2514,25 @@ app.put('/updateReportPO', async (req, res) => {
 
             let query = `Update ReportWO SET  ` + Object.keys(reportWoDetails).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
             const parameters = [...Object.values(reportWoDetails), req.query.ReportWOID]
-   
+
             pool.query(query, parameters, function (err, results, fields) {
                 if (err) throw err
                 if (results.affectedRows > 0) {
                     //updateReportWOFindings(findings, req);
-                   // updateReportWOService(services, req);
-                   var reportPromise = updateReportWOFindings(findings, req);
-                var servicePromise = updateReportWOService(services, req);
-                Promise.all([
-                    reportPromise,
-                    servicePromise
-                  ])
-                    .then((allData) => {
-                      
-                      return res.status(200).send({ code: 200, "message": "updated ReportPO successfully." });
-                    })
-                    .catch((err) => {
-                      return res.status(200).send(err);
-                    });
+                    // updateReportWOService(services, req);
+                    var reportPromise = updateReportWOFindings(findings, req);
+                    var servicePromise = updateReportWOService(services, req);
+                    Promise.all([
+                        reportPromise,
+                        servicePromise
+                    ])
+                        .then((allData) => {
+
+                            return res.status(200).send({ code: 200, "message": "updated ReportPO successfully." });
+                        })
+                        .catch((err) => {
+                            return res.status(200).send(err);
+                        });
                     // return res.status(200).json({ code: 200, message: "success" })
                 } else {
                     return res.status(400).json({ code: 400, "message": "data not update" })
@@ -2545,38 +2545,38 @@ app.put('/updateReportPO', async (req, res) => {
     else {
         let query = `Update ReportWO SET  ` + Object.keys(reportWoDetails).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
         const parameters = [...Object.values(reportWoDetails), parseInt(req.query.ReportWOID)]
-   
+
         pool.query(query, parameters, function (error, results) {
-           if (error) throw error
-           console.log(results.affectedRows)
-           //if (results.affectedRows > 0) {
-                var reportPromise = updateReportWOFindings(findings, req);
-                var servicePromise = updateReportWOService(services, req);
-                Promise.all([
-                    reportPromise,
-                    servicePromise
-                  ])
-                    .then((allData) => {
-                      
-                      return res.status(200).send({ code: 200, "message": "updated ReportPO successfully." });
-                    })
-                    .catch((err) => {
-                      return res.status(200).send(err);
-                    });
-               // return res.status(200).json({ code: 200, message: "Updated successfully." })
-           /*} else {
-               return res.status(400).json({ code: 400, "message": "Update Failed." })
-           }*/
-       })
+            if (error) throw error
+            console.log(results.affectedRows)
+            //if (results.affectedRows > 0) {
+            var reportPromise = updateReportWOFindings(findings, req);
+            var servicePromise = updateReportWOService(services, req);
+            Promise.all([
+                reportPromise,
+                servicePromise
+            ])
+                .then((allData) => {
+
+                    return res.status(200).send({ code: 200, "message": "updated ReportPO successfully." });
+                })
+                .catch((err) => {
+                    return res.status(200).send(err);
+                });
+            // return res.status(200).json({ code: 200, message: "Updated successfully." })
+            /*} else {
+                return res.status(400).json({ code: 400, "message": "Update Failed." })
+            }*/
+        })
     }
 
 
-     
+
 });
 
 app.post('/reportWOCreate', async (req, res) => {
     let query = "INSERT INTO `ReportWO`(`ReportWOID`, `WorkOrderID`, `WorkNatureID`, `WOstartDateTime`,`ServiceMethodID`,`ContactAckMethodID`,`UpdatedUserID`,`UpdatedDateTime`) VALUES (?,?,?,?,?,?,?,?)"
-    let parameters = ["", req.body.WorkOrderID, req.body.WorkNatureID, req.body.WOstartDateTime,req.body.ServiceMethodID, req.body.ContactAckMethodID ,req.body.UpdatedUserID, req.body.UpdatedDateTime]
+    let parameters = ["", req.body.WorkOrderID, req.body.WorkNatureID, req.body.WOstartDateTime, req.body.ServiceMethodID, req.body.ContactAckMethodID, req.body.UpdatedUserID, req.body.UpdatedDateTime]
     pool.query(query, parameters, function (error, results) {
         if (error) throw error
         if (results.affectedRows > 0) {
@@ -2589,7 +2589,7 @@ app.post('/reportWOCreate', async (req, res) => {
             VALUES(?,?,?,?,?,?,?,?,?,?)
             `;
             let newParameters = [
-           
+
                 results.insertId,
                 req.body.UpdatedUserID,
                 req.body.WOstartDateTime,
@@ -2600,14 +2600,14 @@ app.post('/reportWOCreate', async (req, res) => {
                 req.body.UpdatedUserID,
                 req.body.UpdatedDateTime,
                 req.body.WorkOrderID
-               ];
-              pool.query(insertCosolidatedReportQuery, newParameters, function (error, results, fields) {
+            ];
+            pool.query(insertCosolidatedReportQuery, newParameters, function (error, results, fields) {
                 if (error) throw error;
                 if (results.affectedRows > 0) {
-                  console.log("data inserted");
+                    console.log("data inserted");
                 } else {
-                 // return res.status(401).json({ code: 401, message: "Not inserted." });
-                 console.log("failed to insert");
+                    // return res.status(401).json({ code: 401, message: "Not inserted." });
+                    console.log("failed to insert");
                 }
             });
             return res.status(200).json({ code: 200, message: "ReportWO inserted successfully." })
@@ -2618,7 +2618,7 @@ app.post('/reportWOCreate', async (req, res) => {
 })
 
 function insertAndUpdateReportWOService(insertId, body) {
-    for(var i=0; i<body.services.length; i++) {
+    for (var i = 0; i < body.services.length; i++) {
         var singleData = body.services[i];
         let insertCosolidatedReportQuery = `
         INSERT INTO ReportWOService ( ReportWOID, ServiceID, Value, 
@@ -2626,29 +2626,29 @@ function insertAndUpdateReportWOService(insertId, body) {
         VALUES(?,?,?,?,?,?)
         `;
         let newParameters = [
-       
+
             insertId,
             singleData.ServiceID,
             singleData.Value,
             false,
             singleData.UpdatedUserID,
             singleData.UpdatedDateTime
-          ];
-          pool.query(insertCosolidatedReportQuery, newParameters, function (error, results) {
+        ];
+        pool.query(insertCosolidatedReportQuery, newParameters, function (error, results) {
             if (error) throw error;
             if (results.affectedRows > 0) {
-              console.log("data inserted for ReportWOService");
+                console.log("data inserted for ReportWOService");
             } else {
-             // return res.status(401).json({ code: 401, message: "Not inserted." });
-             console.log("failed to insert for ReportWOService");
+                // return res.status(401).json({ code: 401, message: "Not inserted." });
+                console.log("failed to insert for ReportWOService");
             }
         });
     }
-    
+
 }
 
 function insertAndUpdateReportWOFindings(insertId, body) {
-    for(var i=0; i<body.findings.length; i++) {
+    for (var i = 0; i < body.findings.length; i++) {
         var singleData = body.findings[i];
         let insertCosolidatedReportQuery = `
         INSERT INTO ReportWOFindings ( ReportWOID, FindingsID, Value, 
@@ -2656,25 +2656,25 @@ function insertAndUpdateReportWOFindings(insertId, body) {
         VALUES(?,?,?,?,?,?)
         `;
         let newParameters = [
-       
+
             insertId,
             singleData.FindingsID,
             singleData.Value,
             false,
             singleData.UpdatedUserID,
             singleData.UpdatedDateTime
-          ];
-          pool.query(insertCosolidatedReportQuery, newParameters, function (error, results, fields) {
+        ];
+        pool.query(insertCosolidatedReportQuery, newParameters, function (error, results, fields) {
             if (error) throw error;
             if (results.affectedRows > 0) {
-              console.log("data inserted for ReportWOFindings");
+                console.log("data inserted for ReportWOFindings");
             } else {
-             // return res.status(401).json({ code: 401, message: "Not inserted." });
-             console.log("failed to insert for ReportWOFindings");
+                // return res.status(401).json({ code: 401, message: "Not inserted." });
+                console.log("failed to insert for ReportWOFindings");
             }
         });
     }
-    
+
 }
 
 app.put('/reportWOFogging', async (req, res) => {
@@ -2721,14 +2721,14 @@ app.put('/reportWOFogging', async (req, res) => {
             if (err) throw err
 
             if (results.affectedRows > 0) {
-                if(findings != undefined && findings.length > 0){
+                if (findings != undefined && findings.length > 0) {
                     updateReportWOFindings(findings, req);
                 }
-                if(services != undefined && services.length > 0) {
+                if (services != undefined && services.length > 0) {
                     updateReportWOService(services, req);
                 }
-                
-                
+
+
                 let updatedDetails = {
                     "WorkOrderID": detail.WorkOrderID,
                     "StartedDateTime": detail.WOstartDateTime,
@@ -2737,19 +2737,19 @@ app.put('/reportWOFogging', async (req, res) => {
                 let query = `Update ConsolidatedReportWO SET  ` + Object.keys(updatedDetails).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
                 const parameters = [...Object.values(updatedDetails), req.query.ReportWOID]
                 pool.query(query, parameters, function (err, results, fields) {
-                if (err)
-                    throw err
+                    if (err)
+                        throw err
 
                     if (results.affectedRows > 0) {
-                        
+
                         console.log("updated");
 
                     } else {
-                        
+
                         console.log("updated failed");
                     }
 
-});
+                });
                 return res.status(200).json({ code: 200, message: "ReportWO data updated successfully." })
             } else {
                 return res.status(401).json({ code: 401, "message": "ReportWO data not updated." })
@@ -2760,192 +2760,197 @@ app.put('/reportWOFogging', async (req, res) => {
 })
 
 function updateReportWOFindings(findings, req) {
-  return new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
 
-    for (var j = 0; j < findings.length; j++) {
-      var singleData = findings[j];
-      let updatedDetails = {
-        IsChecked: singleData.IsChecked,
-      };
-      if (!!!singleData["ReportWOFindingsID"]) {
-        console.log("inside insert report findings");
-        var sql =
-          "INSERT INTO ReportWOFindings(ReportWOFindingsID,ReportWOID, FindingsID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?,?)";
-        let parameters = [
-          "",
-          parseInt(req.query.ReportWOID),
-          singleData["FindingsID"],
-          singleData["Value"],
-          singleData["IsChecked"],
-          singleData["UpdatedByUserID"],
-          singleData["UpdatedDateTime"],
-        ];
-        pool.query(sql, parameters, function (err, result, fields) {
-          if (err) throw err;
-          if (result.affectedRows > 0) {
-            resolve("updated findings")
-          } else {
-            resolve("update failed findings")
-          }
-        });
-      } else {
-        console.log("in else report findings");
-        let sql = `SELECT 1 FROM ReportWOFindings WHERE ReportWOID = ${req.query.ReportWOID}`;
-        pool.query(sql, function (err, result, fields) {
-          if (err) throw err;
-          if (result.length > 0) {
-            let query =
-              `Update ReportWOFindings SET  ` +
-              Object.keys(singleData)
-                .map((key) => `${key}=?`)
-                .join(",") +
-              " where ReportWOID = ?";
-            const parameters = [
-              ...Object.values(singleData),
-              parseInt(req.query.ReportWOID),
-            ];
-            pool.query(query, parameters, function (err, results, fields) {
-              if (err) throw err;
-              if (results.affectedRows > 0) {
-                resolve("updated findings")
-              }
-            });
-          } else {
-            resolve("no update required for findings");
-          }
-        });
-      }
+        for (var j = 0; j < findings.length; j++) {
+            var singleData = findings[j];
+            let updatedDetails = {
+                IsChecked: singleData.IsChecked,
+            };
+            if (!!!singleData["ReportWOFindingsID"]) {
+                let sql = `SELECT 1 FROM ReportWOFindings WHERE ReportWOID = ${req.query.ReportWOID} AND FindingsID = ${singleData["FindingsID"]}`;
+                console.log(sql)
+                pool.query(sql, function (err, result, fields) {
+                    if (err) throw err;
+                    if (result.length == 0) {
 
-      //it will run always to delete not in the list
-      var findingsIdList = [];
-      for (var i = 0; i < findings.length; i++) {
-        findingsIdList.push(findings[i].FindingsID);
-      }
+                        console.log("inside insert report findings");
+                        var sql =
+                            "INSERT INTO ReportWOFindings(ReportWOID, FindingsID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?)";
+                        let parameters = [
+                            parseInt(req.query.ReportWOID),
+                            singleData["FindingsID"],
+                            singleData["Value"],
+                            singleData["IsChecked"],
+                            singleData["UpdatedByUserID"],
+                            singleData["UpdatedDateTime"],
+                        ];
+                        pool.query(sql, parameters, function (err, result, fields) {
+                            if (err) throw err;
+                            if (result.affectedRows > 0) {
+                                resolve("updated findings")
+                            } else {
+                                resolve("update failed findings")
+                            }
+                        });
+                    }
+                });
+            } else {
+                console.log("in else report findings");
+                let sql = `SELECT 1 FROM ReportWOFindings WHERE ReportWOID = ${req.query.ReportWOID}`;
+                pool.query(sql, function (err, result, fields) {
+                    if (err) throw err;
+                    if (result.length > 0) {
+                        let query =
+                            `Update ReportWOFindings SET  ` +
+                            Object.keys(singleData)
+                                .map((key) => `${key}=?`)
+                                .join(",") +
+                            " where ReportWOID = ?";
+                        const parameters = [
+                            ...Object.values(singleData),
+                            parseInt(req.query.ReportWOID),
+                        ];
+                        pool.query(query, parameters, function (err, results, fields) {
+                            if (err) throw err;
+                            if (results.affectedRows > 0) {
+                                resolve("updated findings")
+                            }
+                        });
+                    } else {
+                        resolve("no update required for findings");
+                    }
+                });
+            }
 
-      let query = `
-      DELETE  from ReportWOFindings where ReportWOID = ${
-        req.query.ReportWOID
-      } and FindingsID not in (${findingsIdList.join()})
+            //it will run always to delete not in the list
+            var findingsIdList = [];
+            for (var i = 0; i < findings.length; i++) {
+                findingsIdList.push(findings[i].FindingsID);
+            }
+
+            let query = `
+      DELETE  from ReportWOFindings where ReportWOID = ${req.query.ReportWOID
+                } and FindingsID not in (${findingsIdList.join()})
     
       `;
-      const parameters = [...Object.values(singleData), parseInt(req.query.ReportWOID)];
-      pool.query(query, parameters, function (err, results, fields) {
-        if (err) throw err;
-        if (results.affectedRows > 0) {
-            resolve("updated findings")
+            const parameters = [...Object.values(singleData), parseInt(req.query.ReportWOID)];
+            pool.query(query, parameters, function (err, results, fields) {
+                if (err) throw err;
+                if (results.affectedRows > 0) {
+                    resolve("updated findings")
+                }
+            });
         }
-      });
-    }
-  });
+    });
 }
 
 function updateReportWOService(services, req) {
-  return new Promise((resolve, reject) => {
-    for (var k = 0; k < services.length; k++) {
-      var singleData = services[k];
-      let updatedDetails = {
-        IsChecked: singleData.IsChecked,
-      };
-      if (!!!singleData["ReportWOServiceID"]) {
-        console.log("inside insert report findings");
-        var sql =
-          "INSERT INTO ReportWOService(ReportWOID, ServiceID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?)";
-        let parameters = [
-          parseInt(req.query.ReportWOID),
-          singleData["ServiceID"],
-          singleData["Value"],
-          singleData["IsChecked"],
-          singleData["UpdatedByUserID"],
-          singleData["UpdatedDateTime"],
-        ];
-        pool.query(sql, parameters, function (err, result, fields) {
-          if (err) throw err;
-          if (result.affectedRows > 0) {
-            resolve("updated services")
-          } else {
-            reject("update failed in report ReportWOService");
-          }
-        });
-      } else {
-        console.log("in else report service");
-        let sql = `SELECT 1 FROM ReportWOService WHERE ReportWOID = ${req.query.ReportWOID}`;
-        pool.query(sql, function (err, result, fields) {
-          if (err) throw err;
-          if (result.length > 0) {
-            let query =
-              `Update ReportWOService SET  ` +
-              Object.keys(singleData)
-                .map((key) => `${key}=?`)
-                .join(",") +
-              " where ReportWOID = ?";
-            const parameters = [
-              ...Object.values(singleData),
-              parseInt(req.query.ReportWOID),
-            ];
-            pool.query(query, parameters, function (err, results, fields) {
-              if (err) throw err;
-              if (results.affectedRows > 0) {
-                resolve("updated service")
-              }
-            });
-          } else {
-            resolve("no update required for services")
-          }
-        });
-      }
-    }
+    return new Promise((resolve, reject) => {
+        for (var k = 0; k < services.length; k++) {
+            var singleData = services[k];
+            let updatedDetails = {
+                IsChecked: singleData.IsChecked,
+            };
+            if (!!!singleData["ReportWOServiceID"]) {
+                console.log("inside insert report findings");
+                var sql =
+                    "INSERT INTO ReportWOService(ReportWOID, ServiceID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?)";
+                let parameters = [
+                    parseInt(req.query.ReportWOID),
+                    singleData["ServiceID"],
+                    singleData["Value"],
+                    singleData["IsChecked"],
+                    singleData["UpdatedByUserID"],
+                    singleData["UpdatedDateTime"],
+                ];
+                pool.query(sql, parameters, function (err, result, fields) {
+                    if (err) throw err;
+                    if (result.affectedRows > 0) {
+                        resolve("updated services")
+                    } else {
+                        reject("update failed in report ReportWOService");
+                    }
+                });
+            } else {
+                console.log("in else report service");
+                let sql = `SELECT 1 FROM ReportWOService WHERE ReportWOID = ${req.query.ReportWOID}`;
+                pool.query(sql, function (err, result, fields) {
+                    if (err) throw err;
+                    if (result.length > 0) {
+                        let query =
+                            `Update ReportWOService SET  ` +
+                            Object.keys(singleData)
+                                .map((key) => `${key}=?`)
+                                .join(",") +
+                            " where ReportWOID = ?";
+                        const parameters = [
+                            ...Object.values(singleData),
+                            parseInt(req.query.ReportWOID),
+                        ];
+                        pool.query(query, parameters, function (err, results, fields) {
+                            if (err) throw err;
+                            if (results.affectedRows > 0) {
+                                resolve("updated service")
+                            }
+                        });
+                    } else {
+                        resolve("no update required for services")
+                    }
+                });
+            }
+        }
 
-    //it will run always to delete not in the list
-    var servicesIdList = [];
-    for (var i = 0; i < services.length; i++) {
-      servicesIdList.push(services[i].ServiceID);
-    }
+        //it will run always to delete not in the list
+        var servicesIdList = [];
+        for (var i = 0; i < services.length; i++) {
+            servicesIdList.push(services[i].ServiceID);
+        }
 
-    let query = `
-    DELETE  from ReportWOService where ReportWOID = ${
-      req.query.ReportWOID
-    } and ServiceID not in (${servicesIdList.join()})
+        let query = `
+    DELETE  from ReportWOService where ReportWOID = ${req.query.ReportWOID
+            } and ServiceID not in (${servicesIdList.join()})
   
     `;
-    const parameters = [...Object.values(singleData), parseInt(req.query.ReportWOID)];
-    pool.query(query, parameters, function (err, results, fields) {
-      if (err) throw err;
-      if (results.affectedRows > 0) {
-        resolve("updated");
-      }
+        const parameters = [...Object.values(singleData), parseInt(req.query.ReportWOID)];
+        pool.query(query, parameters, function (err, results, fields) {
+            if (err) throw err;
+            if (results.affectedRows > 0) {
+                resolve("updated");
+            }
+        });
     });
-  });
 }
 
 app.get("/getConsolidation", async (req, res) => {
-  var consolidatedPromise = getConsolidationReports(req);
-  var getImagesPromise = getImagesForConsolidation(req);
-  Promise.all([consolidatedPromise, getImagesPromise]).then((allData) => {
-    var returnData = [];
-    for (var i = 0; i < allData[0].length; i++) {
-        var single = allData[0][i];
-        
-        var images = [];
-        for (var j = 0; j < allData[1].length; j++) {
-          var image = allData[1][j];
-          images.push(image);
+    var consolidatedPromise = getConsolidationReports(req);
+    var getImagesPromise = getImagesForConsolidation(req);
+    Promise.all([consolidatedPromise, getImagesPromise]).then((allData) => {
+        var returnData = [];
+        for (var i = 0; i < allData[0].length; i++) {
+            var single = allData[0][i];
+
+            var images = [];
+            for (var j = 0; j < allData[1].length; j++) {
+                var image = allData[1][j];
+                images.push(image);
+            }
+
+            single.imagesList = images;
+            returnData.push(single)
+
+
         }
 
-        single.imagesList = images;
-        returnData.push(single)
-
-        
-    }
-    
-    return res.status(200).send(returnData);
-}).catch(err => {
-    return res.status(200).send(err);
-});;
+        return res.status(200).send(returnData);
+    }).catch(err => {
+        return res.status(200).send(err);
+    });;
 });
 
 function getImagesForConsolidation(req) {
     return new Promise((resolve, reject) => {
-        
+
         let query = `
         SELECT * FROM ReportImage 
 JOIN ReportWO on ReportWO.ReportWOID = ReportImage.ReportWOID
@@ -2953,47 +2958,47 @@ JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
 
 where WorkOrder.WorkOrderID = ${req.query.workOrderID}
         `;
-    
-        
+
+
         pool.query(query, function (err, results) {
             if (err) throw err
-            
+
             resolve(results);
-            
-    
+
+
         });
-              
-        });
+
+    });
 }
 
 function getConsolidationReports(req) {
 
     return new Promise((resolve, reject) => {
-        
-    let query = `
+
+        let query = `
     select ConsolidatedReportWO.ConsWOID, ConsolidatedReportWO.ReportWOID, ConsolidatedReportWO.StaffID, ConsolidatedReportWO.StartedDateTime, ConsolidatedReportWO.LocationPoint, ConsolidatedReportWO.FindingsImages, ConsolidatedReportWO.ServicesProvided, ConsolidatedReportWO.ServiceImage, ConsolidatedReportWO.UpdatedByUserID, ConsolidatedReportWO.UpdatedDateTime, ConsolidatedReportWO.workOrderID, Staff.StaffName, ReportWO.FogMachineNum from ConsolidatedReportWO 
 Join Staff on Staff.StaffID = ConsolidatedReportWO.StaffID
 JOIN ReportWO on ReportWO.ReportWOID = ConsolidatedReportWO.ReportWOID
 where ConsolidatedReportWO.workOrderID = ${req.query.workOrderID}
     `;
 
-    
-    pool.query(query, function (err, results) {
-        if (err) throw err
-        if (results.length == 0) {
-            reject({code:400, message:"There is no data for selected values"});
-        } else {
-            resolve(results);
-        }
+
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.length == 0) {
+                reject({ code: 400, message: "There is no data for selected values" });
+            } else {
+                resolve(results);
+            }
+
+        });
 
     });
-          
-    });
 
-    
+
 }
 
-app.get("/getServices", async(req, res) => {
+app.get("/getServices", async (req, res) => {
 
     let query = `SELECT * from ServiceType WHERE ServiceType = '${req.query.ServiceType}' ORDER BY ServiceName`
     pool.query(query, function (err, results) {
@@ -3007,7 +3012,7 @@ app.get("/getServices", async(req, res) => {
     })
 });
 
-app.get("/getServiceMethods", async(req, res) => {
+app.get("/getServiceMethods", async (req, res) => {
 
     let query = `SELECT * FROM ServiceMethod`
     pool.query(query, function (err, results) {
@@ -3022,17 +3027,17 @@ app.get("/getServiceMethods", async(req, res) => {
 });
 
 app.get("/getReportByPO", async (req, res) => {
-  let query = `
+    let query = `
      select * from WorkOrder where WorkOrderID = ${req.query.WorkOrderID} 
     `;
 
-  pool.query(query, function (err, results) {
-    if (err) throw err;
-    if (results.length > 0) {
-      var data = results[0];
-      let newQuery = ``;
-      if (data.WorkTypeID == 1) {
-        newQuery = `
+    pool.query(query, function (err, results) {
+        if (err) throw err;
+        if (results.length > 0) {
+            var data = results[0];
+            let newQuery = ``;
+            if (data.WorkTypeID == 1) {
+                newQuery = `
                 
                 select 
 WorkOrder.SiteZoneID, WorkOrder.SiteID, Site.SiteTypeID
@@ -3043,87 +3048,87 @@ JOIN Site on Site.SiteID = WorkOrder.SiteID
 WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID} 
 `;
 
-        pool.query(newQuery, function (err, results) {
-          if (err) throw err;
-          if (results.length > 0) {
-            return res.status(200).send(results[0]);
-          } else {
-            return res.status(200).json({
-                "code": 200,
-                "message": "No Report Available"
-            });
-          }
-        });
-      } else {
-        var allDataPromise = getAllData(req);
-        var workersPromise = getWorkersData(req);
-        var servicesPromise = getServices(req);
-        var checkWorkTypePromise = getWorkType(req);
-        var imagesPromise = getImages(req);
-        var getServiceTypeOtherPromise = getServiceTypeOther(req);
+                pool.query(newQuery, function (err, results) {
+                    if (err) throw err;
+                    if (results.length > 0) {
+                        return res.status(200).send(results[0]);
+                    } else {
+                        return res.status(200).json({
+                            "code": 200,
+                            "message": "No Report Available"
+                        });
+                    }
+                });
+            } else {
+                var allDataPromise = getAllData(req);
+                var workersPromise = getWorkersData(req);
+                var servicesPromise = getServices(req);
+                var checkWorkTypePromise = getWorkType(req);
+                var imagesPromise = getImages(req);
+                var getServiceTypeOtherPromise = getServiceTypeOther(req);
 
-        Promise.all([
-          allDataPromise,
-          workersPromise,
-          servicesPromise,
-          checkWorkTypePromise,
-          imagesPromise,
-          getServiceTypeOtherPromise,
-        ])
-          .then((allData) => {
-            var returnData = [];
+                Promise.all([
+                    allDataPromise,
+                    workersPromise,
+                    servicesPromise,
+                    checkWorkTypePromise,
+                    imagesPromise,
+                    getServiceTypeOtherPromise,
+                ])
+                    .then((allData) => {
+                        var returnData = [];
 
-            var single = allData[0][0];
+                        var single = allData[0][0];
 
-            var allWorkersName = [];
-            for (var j = 0; j < allData[1].length; j++) {
-              var worker = allData[1][j];
-              allWorkersName.push(worker.StaffName);
+                        var allWorkersName = [];
+                        for (var j = 0; j < allData[1].length; j++) {
+                            var worker = allData[1][j];
+                            allWorkersName.push(worker.StaffName);
+                        }
+                        single.actionBy = allWorkersName;
+                        var allServices = [];
+                        for (var k = 0; k < allData[2].length; k++) {
+                            var service = allData[2][k];
+                            allServices.push(service.ServiceName);
+                        }
+                        single.serviceTypes = allServices;
+
+                        single.images = {};
+                        var beforeImages = [];
+                        var afterImages = [];
+                        for (var i = 0; i < allData[4].length; i++) {
+                            if (allData[4][i].ImageTypeID == 1) {
+                                beforeImages.push(allData[4][i]);
+                            } else {
+                                afterImages.push(allData[4][i]);
+                            }
+                        }
+                        single.images.beforeImages = beforeImages;
+                        single.images.afterImages = afterImages;
+
+                        var allServiceTypeOther = [];
+                        for (var k = 0; k < allData[5].length; k++) {
+                            var singleServiceTypeOther = allData[5][k];
+                            allServiceTypeOther.push(singleServiceTypeOther.ServiceTypeOther);
+                        }
+                        single.serviceTypeOthers = allServiceTypeOther;
+                        // if the workTypeId =3  meaning the mosquito fogging type then sending only the first data from the result
+                        if (allData[3][0].WorkTypeID == 3) {
+                            single.images.afterImages = [];
+                        }
+                        returnData.push(single);
+
+                        return res.status(200).send(single);
+                    })
+                    .catch((err) => {
+                        return res.status(200).send(err);
+                    });
             }
-            single.actionBy = allWorkersName;
-            var allServices = [];
-            for (var k = 0; k < allData[2].length; k++) {
-              var service = allData[2][k];
-              allServices.push(service.ServiceName);
-            }
-            single.serviceTypes = allServices;
-
-            single.images = {};
-            var beforeImages = [];
-            var afterImages = [];
-            for (var i = 0; i < allData[4].length; i++) {
-              if (allData[4][i].ImageTypeID == 1) {
-                beforeImages.push(allData[4][i]);
-              } else {
-                afterImages.push(allData[4][i]);
-              }
-            }
-            single.images.beforeImages = beforeImages;
-            single.images.afterImages = afterImages;
-
-            var allServiceTypeOther = [];
-            for (var k = 0; k < allData[5].length; k++) {
-              var singleServiceTypeOther = allData[5][k];
-              allServiceTypeOther.push(singleServiceTypeOther.ServiceTypeOther);
-            }
-            single.serviceTypeOthers = allServiceTypeOther;
-            // if the workTypeId =3  meaning the mosquito fogging type then sending only the first data from the result
-            if (allData[3][0].WorkTypeID == 3) {
-              single.images.afterImages = [];
-            }
-            returnData.push(single);
-
-            return res.status(200).send(single);
-          })
-          .catch((err) => {
-            return res.status(200).send(err);
-          });
-      }
-    }
-  });
+        }
+    });
 });
-  
-  function getWorkType(req) {
+
+function getWorkType(req) {
 
 
     return new Promise((resolve, reject) => {
@@ -3134,22 +3139,22 @@ WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID}
         `
         pool.query(query, function (err, results) {
             if (err) reject(err)
-            if(results.length == 0) {
-              reject({code:200, message:"There is no workk type data for selected values"});
+            if (results.length == 0) {
+                reject({ code: 200, message: "There is no workk type data for selected values" });
             }
             resolve(results);
-           
-    
+
+
         })
 
     });
 
-  }
+}
 function getServiceTypeOther(req) {
 
 
     return new Promise((resolve, reject) => {
-        
+
         let query = `
         select DISTINCT ReportService.ServiceTypeOther from ReportWO
       JOIN ReportService ON ReportService.WorkOrderID = ReportWO.WorkOrderID
@@ -3157,23 +3162,23 @@ function getServiceTypeOther(req) {
       ReportWO.WorkOrderID = ${req.query.WorkOrderID} `
         pool.query(query, function (err, results) {
             if (err) reject(err)
-            if(results.length < 0) {
-              reject({code:200, message:"There is no service type data for selected values"});
+            if (results.length < 0) {
+                reject({ code: 200, message: "There is no service type data for selected values" });
             }
             resolve(results);
-           
-    
+
+
         })
 
     });
 
-  }
+}
 
-  function getImages(req) {
+function getImages(req) {
 
 
     return new Promise((resolve, reject) => {
-        
+
         let query = `
         SELECT ReportImage.ImageURL,ReportImage.ImageTypeID from ReportImage 
 
@@ -3189,67 +3194,67 @@ function getServiceTypeOther(req) {
 
             //return empty array even there is no images
             resolve(results);
-           
-    
+
+
         })
 
     });
 
-  }
+}
 
 
-  function getServices(req) {
-      return new Promise((resolve, reject) => {
-          var allData;
-          let query = `
+function getServices(req) {
+    return new Promise((resolve, reject) => {
+        var allData;
+        let query = `
           select ServiceType.ServiceName from ReportService
           JOIN ServiceType ON ServiceType.ServiceID = ReportService.ServiceTypeID
            where WorkOrderID = ${req.query.WorkOrderID}
      
           `
-          pool.query(query, function (err, results) {
-              if (err) reject(err)
-              if(results.length == 0) {
-                reject({code:200, message:"There is no service name for selected values"});
-              }
-              allData = results;
-              console.log("all results are --->"+ allData);
-              resolve(results);
-             
-      
-          })
-  
-      });
-  }
-  
-  function getWorkersData(req) {
-      return new Promise((resolve, reject) => {
-         let workersQuery = `
+        pool.query(query, function (err, results) {
+            if (err) reject(err)
+            if (results.length == 0) {
+                reject({ code: 200, message: "There is no service name for selected values" });
+            }
+            allData = results;
+            console.log("all results are --->" + allData);
+            resolve(results);
+
+
+        })
+
+    });
+}
+
+function getWorkersData(req) {
+    return new Promise((resolve, reject) => {
+        let workersQuery = `
          SELECT 
          Staff.StaffName
          FROM WorkOrderStaff
          JOIN Staff on Staff.StaffID = WorkOrderStaff.StaffID
          where WorkOrderID = ${req.query.WorkOrderID} `;
-         pool.query(workersQuery, function (err, workersResults) {
-              if (err)
-                  throw err
-              if (workersResults.length >= 0) {
-     
-                  resolve(workersResults);
-              } else {
-                reject({code:200, message:"There is no workers data for selected values"});
-              }
-     
-          });
-      })
-     
-  };
-  
-  
-  function getAllData(req)  {
-      return new Promise((resolve, reject) => {
-          var allData;
-          let query = `
+        pool.query(workersQuery, function (err, workersResults) {
+            if (err)
+                throw err
+            if (workersResults.length >= 0) {
+
+                resolve(workersResults);
+            } else {
+                reject({ code: 200, message: "There is no workers data for selected values" });
+            }
+
+        });
+    })
+
+};
+
+
+function getAllData(req) {
+    return new Promise((resolve, reject) => {
+        var allData;
+        let query = `
           select DISTINCT ReportWO.WorkOrderID,ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
       ReportWO.ContactAckSignImageURL, C1.ContactName AS AckContact ,C2.ContactName AS Requestor, WorkOrder.POID ,ReportWO.ContactAckDateTime,
       ReportWO.ContackAckOther, ReportWO.ContactAckID, PO.POnumber, ReportWO.FogMachineNum, PO.PODate, Site.SiteName
@@ -3266,21 +3271,21 @@ function getServiceTypeOther(req) {
   
          
           `
-          pool.query(query, function (err, results) {
-              if (err) reject(err)
-              if(results.length == 0) {
-                reject({code:200, message:"There is no report data for selected values"});
-              }
-              allData = results;
-              resolve(results);
-             
-      
-          })
-  
-        
-      });
-      
-  }
+        pool.query(query, function (err, results) {
+            if (err) reject(err)
+            if (results.length == 0) {
+                reject({ code: 200, message: "There is no report data for selected values" });
+            }
+            allData = results;
+            resolve(results);
+
+
+        })
+
+
+    });
+
+}
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
