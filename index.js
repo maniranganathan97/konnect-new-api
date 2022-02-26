@@ -2544,7 +2544,7 @@ app.put('/updateReportPO', async (req, res) => {
     }
     else {
         let query = `Update ReportWO SET  ` + Object.keys(reportWoDetails).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
-        const parameters = [...Object.values(reportWoDetails), req.query.ReportWOID]
+        const parameters = [...Object.values(reportWoDetails), parseInt(req.query.ReportWOID)]
    
         pool.query(query, parameters, function (error, results) {
            if (error) throw error
