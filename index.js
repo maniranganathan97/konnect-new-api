@@ -2770,7 +2770,7 @@ function updateReportWOFindings(findings, req) {
         var sql =
           "INSERT INTO ReportWOFindings(ReportWOID, FindingsID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?)";
         let parameters = [
-          req.query.ReportWOID,
+          parseInt(req.query.ReportWOID),
           singleData["FindingsID"],
           singleData["Value"],
           singleData["IsChecked"],
@@ -2825,7 +2825,7 @@ function updateReportWOFindings(findings, req) {
       } and FindingsID not in (${findingsIdList.join()})
     
       `;
-      const parameters = [...Object.values(singleData), req.query.ReportWOID];
+      const parameters = [...Object.values(singleData), parseInt(req.query.ReportWOID)];
       pool.query(query, parameters, function (err, results, fields) {
         if (err) throw err;
         if (results.affectedRows > 0) {
@@ -2848,7 +2848,7 @@ function updateReportWOService(services, req) {
         var sql =
           "INSERT INTO ReportWOService(ReportWOID, ServiceID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?)";
         let parameters = [
-          req.query.ReportWOID,
+          parseInt(req.query.ReportWOID),
           singleData["ServiceID"],
           singleData["Value"],
           singleData["IsChecked"],
@@ -2877,7 +2877,7 @@ function updateReportWOService(services, req) {
               " where ReportWOID = ?";
             const parameters = [
               ...Object.values(singleData),
-              req.query.ReportWOID,
+              parseInt(req.query.ReportWOID),
             ];
             pool.query(query, parameters, function (err, results, fields) {
               if (err) throw err;
@@ -2904,7 +2904,7 @@ function updateReportWOService(services, req) {
     } and ServiceID not in (${servicesIdList.join()})
   
     `;
-    const parameters = [...Object.values(singleData), req.query.ReportWOID];
+    const parameters = [...Object.values(singleData), parseInt(req.query.ReportWOID)];
     pool.query(query, parameters, function (err, results, fields) {
       if (err) throw err;
       if (results.affectedRows > 0) {
