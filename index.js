@@ -3368,6 +3368,20 @@ app.post('/rescheduledReportWO', multer.single('file'), async (req, res) => {
     
 })
 
+app.get("/getRescheduledReason", async (req, res) => {
+
+    let query = `SELECT * from RescheduledReason ORDER BY ReasonName`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(403).json({ code: 403, message: "No data available." })
+        }
+
+    })
+});
+
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
