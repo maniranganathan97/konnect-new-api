@@ -3322,6 +3322,52 @@ function getAllData(req) {
     });
 
 }
+
+app.post('/rescheduledReportWO', multer.single('file'), async (req, res) => {
+
+    if (req.body["ContactAckSignImageURL"]){
+        const buffer = Buffer.from(req.body["ContactAckSignImageURL"], 'base64')
+    // Create a new blob in the bucket and upload the file data.
+    const id = uuid.v4();
+    const blob = bucket.file("konnect" + id + ".jpg");
+    const blobStream = blob.createWriteStream();
+
+    blobStream.on('error', err => {
+        next(err);
+    });
+
+    blobStream.on('finish', () => {
+        // The public URL can be used to directly access the file via HTTP.
+        const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+        let query = 'INSERT INTO Site(`RescheduledReportWOID`,`ReportWOID`,`WorkOrderID`,`WOstartDateTime`,`WOendDateTime`,`WorkNatureID`,`Findings`,`Location`,`ServiceMethodID`,`FogMachineNum`,`ContactAckMethodID`,`ContactAckID`,`ContackAckOther`,`ContactAckSignImageURL`,`ContactAckDateTime`,`consolidateDateTime`,`Notes`,`Reason`,`UpdatedUserID`,`UpdatedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+        let parameters = ["", req.body.ReportWOID, req.body.WorkOrderID, req.body.WOstartDateTime, req.body.WOendDateTime, req.body.WorkNatureID, req.body.Findings, req.body.Location, req.body.ServiceMethodID, req.body.FogMachineNum, req.body.ContactAckMethodID, req.body.ContactAckID, req.body.ContackAckOther,publicUrl,req.body.ContactAckDateTime,req.body.consolidateDateTime,req.body.Notes,req.body.Reason,req.body.UpdatedUserID,req.body.UpdatedDateTime]
+        pool.query(query, parameters, function (err, results, fields) {
+            if (err) throw err
+            if (results.affectedRows > 0) {
+                return res.status(200).json({ code: 200, message: "success" })
+            } else {
+                return res.status(401).json({ code: 401, "message": "data not inserted." })
+            }
+        })
+    })
+    blobStream.end(buffer);
+    }
+    else
+    {
+        let query = 'INSERT INTO Site(`RescheduledReportWOID`,`ReportWOID`,`WorkOrderID`,`WOstartDateTime`,`WOendDateTime`,`WorkNatureID`,`Findings`,`Location`,`ServiceMethodID`,`FogMachineNum`,`ContactAckMethodID`,`ContactAckID`,`ContackAckOther`,`ContactAckSignImageURL`,`ContactAckDateTime`,`consolidateDateTime`,`Notes`,`Reason`,`UpdatedUserID`,`UpdatedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+        let parameters = ["", req.body.ReportWOID, req.body.WorkOrderID, req.body.WOstartDateTime, req.body.WOendDateTime, req.body.WorkNatureID, req.body.Findings, req.body.Location, req.body.ServiceMethodID, req.body.FogMachineNum, req.body.ContactAckMethodID, req.body.ContactAckID, req.body.ContackAckOther,req.body.ContactAckSignImageURL,req.body.ContactAckDateTime,req.body.consolidateDateTime,req.body.Notes,req.body.Reason,req.body.UpdatedUserID,req.body.UpdatedDateTime]
+        pool.query(query, parameters, function (err, results, fields) {
+            if (err) throw err
+            if (results.affectedRows > 0) {
+                return res.status(200).json({ code: 200, message: "success" })
+            } else {
+                return res.status(401).json({ code: 401, "message": "data not inserted." })
+            }
+        })
+    }
+    
+})
+
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
