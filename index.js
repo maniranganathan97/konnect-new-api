@@ -2548,7 +2548,8 @@ app.put('/updateReportPO', async (req, res) => {
    
         pool.query(query, parameters, function (error, results) {
            if (error) throw error
-           if (results.affectedRows > 0) {
+           console.log(results.affectedRows)
+           //if (results.affectedRows > 0) {
                 var reportPromise = updateReportWOFindings(findings, req);
                 var servicePromise = updateReportWOService(services, req);
                 Promise.all([
@@ -2563,9 +2564,9 @@ app.put('/updateReportPO', async (req, res) => {
                       return res.status(200).send(err);
                     });
                // return res.status(200).json({ code: 200, message: "Updated successfully." })
-           } else {
+           /*} else {
                return res.status(400).json({ code: 400, "message": "Update Failed." })
-           }
+           }*/
        })
     }
 
@@ -2760,16 +2761,18 @@ app.put('/reportWOFogging', async (req, res) => {
 
 function updateReportWOFindings(findings, req) {
   return new Promise((resolve, reject) => {
-    for (var i = 0; i < findings.length; i++) {
-      var singleData = findings[i];
+
+    for (var j = 0; j < findings.length; j++) {
+      var singleData = findings[j];
       let updatedDetails = {
         IsChecked: singleData.IsChecked,
       };
       if (!!!singleData["ReportWOFindingsID"]) {
         console.log("inside insert report findings");
         var sql =
-          "INSERT INTO ReportWOFindings(ReportWOID, FindingsID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?)";
+          "INSERT INTO ReportWOFindings(ReportWOFindingsID,ReportWOID, FindingsID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?,?)";
         let parameters = [
+          "",
           parseInt(req.query.ReportWOID),
           singleData["FindingsID"],
           singleData["Value"],
@@ -2838,8 +2841,8 @@ function updateReportWOFindings(findings, req) {
 
 function updateReportWOService(services, req) {
   return new Promise((resolve, reject) => {
-    for (var i = 0; i < services.length; i++) {
-      var singleData = services[i];
+    for (var k = 0; k < services.length; k++) {
+      var singleData = services[k];
       let updatedDetails = {
         IsChecked: singleData.IsChecked,
       };
