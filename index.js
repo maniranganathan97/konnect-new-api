@@ -2303,32 +2303,15 @@ app.get('/getReportWO', async (req, res) => {
 function getFindingsPromise(req) {
     return new Promise((resolve, reject) => {
         let query = `
-        select * from Findings WHERE FindingsType = '${req.query.type}'
+        SELECT ReportWOFindings.ReportWOFindingsID, ReportWOFindings.ReportWOID,
+ReportWOFindings.FindingsID, ReportWOFindings.Value, ReportWOFindings.IsChecked,
+ReportWOFindings.UpdatedByUserID, ReportWOFindings.UpdatedDateTime
 
-    `;
-        pool.query(query, function (err, results) {
-            if (err) throw err;
-            //   if (results.length > 0) {
-            //     return resolve(results);
-            //   } else {
-            //     return reject({
-            //       code: 400,
-            //       message: "No ReportWOFindings available for the WorkOrder.",
-            //     });
-            //   }
-            if(results.length > 0) {
-                resolve(results)
-            } else {
-                resolve(results)
-            }
-        });
-    });
-}
-
-function getServicesPrmoise(req) {
-    return new Promise((resolve, reject) => {
-        let query = `
-        select * FROM ServiceType WHERE ServiceType = '${req.query.type}'
+from ReportWOFindings
+JOIN ReportWO on ReportWO.ReportWOID = ReportWOFindings.ReportWOID
+ JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
+ 
+ WHERE WorkOrder.WorkOrderID = ${req.query.WorkOrderID}
     
 
     `;
@@ -2345,7 +2328,85 @@ function getServicesPrmoise(req) {
             if(results.length > 0) {
                 resolve(results)
             } else {
+                let findingsQuery = `
+                select * FROM Findings WHERE  FindingsType = '${req.query.type}'
+            
+        
+            `;
+                pool.query(findingsQuery, function (err, data) {
+                    if (err) throw err;
+                    //   if (results.length > 0) {
+                    //     return resolve(results);
+                    //   } else {
+                    //     return reject({
+                    //       code: 400,
+                    //       message: "No ReportWOService available for the WorkOrder.",
+                    //     });
+                    //   }
+                    if(data.length > 0) {
+                        resolve(data)
+                    } else {
+                        resolve(data)
+                    }
+                    
+                });
+            }
+            
+        });
+    });
+  
+}
+
+function getServicesPrmoise(req) {
+    return new Promise((resolve, reject) => {
+        let query = `
+        SELECT ReportWOService.ReportWOServiceID, ReportWOService.ReportWOID,
+ReportWOService.ServiceID, ReportWOService.Value, ReportWOService.IsChecked,
+ReportWOService.UpdatedByUserID, ReportWOService.UpdatedDateTime
+
+from ReportWOService
+JOIN ReportWO on ReportWO.ReportWOID = ReportWOService.ReportWOID
+ JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
+ 
+ WHERE WorkOrder.WorkOrderID =${req.query.WorkOrderID}
+    
+
+    `;
+        pool.query(query, function (err, results) {
+            if (err) throw err;
+            //   if (results.length > 0) {
+            //     return resolve(results);
+            //   } else {
+            //     return reject({
+            //       code: 400,
+            //       message: "No ReportWOService available for the WorkOrder.",
+            //     });
+            //   }
+            if(results.length > 0) {
                 resolve(results)
+            } else {
+                let updateQuery = `
+                select * FROM ServiceType WHERE ServiceType = '${req.query.type}'
+            
+        
+            `;
+                pool.query(updateQuery, function (err, results) {
+                    if (err) throw err;
+                    //   if (results.length > 0) {
+                    //     return resolve(results);
+                    //   } else {
+                    //     return reject({
+                    //       code: 400,
+                    //       message: "No ReportWOService available for the WorkOrder.",
+                    //     });
+                    //   }
+                    if(results.length > 0) {
+                        resolve(results)
+                    } else {
+                        resolve(results)
+                    }
+                    
+                });
             }
             
         });
