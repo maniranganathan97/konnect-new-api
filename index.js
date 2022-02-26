@@ -2834,29 +2834,36 @@ function updateReportWOFindings(findings, req) {
 }
 
 function insertNewServiceData(singleData, req) {
-    return new Promise((resolve, reject) => {
-      
+  return new Promise((resolve, reject) => {
+    let sql = `SELECT 1 FROM ReportWOService WHERE ReportWOID = ${req.query.ReportWOID} AND ServiceID = ${singleData["ServiceID"]}`;
+    console.log(sql);
+    pool.query(sql, function (err, result, fields) {
+      if (err) throw err;
+      if (result.length == 0) {
         var sql =
-        "INSERT INTO ReportWOService(ReportWOID, ServiceID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?)";
-    let parameters = [
-        parseInt(req.query.ReportWOID),
-        singleData["ServiceID"],
-        singleData["Value"],
-        singleData["IsChecked"],
-        singleData["UpdatedByUserID"],
-        singleData["UpdatedDateTime"],
-    ];
-    pool.query(sql, parameters, function (err, result, fields) {
-        if (err) throw err;
-        if (result.affectedRows > 0) {
-            resolve("updated services")
-        } else {
+          "INSERT INTO ReportWOService(ReportWOID, ServiceID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?)";
+        let parameters = [
+          parseInt(req.query.ReportWOID),
+          singleData["ServiceID"],
+          singleData["Value"],
+          singleData["IsChecked"],
+          singleData["UpdatedByUserID"],
+          singleData["UpdatedDateTime"],
+        ];
+        pool.query(sql, parameters, function (err, result, fields) {
+          if (err) throw err;
+          if (result.affectedRows > 0) {
+            resolve("updated services");
+          } else {
             reject("update failed in report ReportWOService");
-        }
+          }
+        });
+      } else {
+        resolve("no insert");
+      }
     });
-
-    });
-  }
+  });
+}
   
   function updateServicesData(singleData, req) {
     return new Promise((resolve, reject) => {
