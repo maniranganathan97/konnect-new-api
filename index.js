@@ -2294,7 +2294,7 @@ app.get('/getReportWO', async (req, res) => {
       return res.status(200).send(returnData[0]);
     })
     .catch((err) => {
-      return res.status(200).send(err);
+      return res.status(403).send(err);
     });
   
 });;
@@ -2374,8 +2374,8 @@ function getReportWOPromise(req) {
         return resolve(results[0]);
       } else {
         return reject({
-          code: 400,
-          message: "No ReportWO available for the WorkOrder.",
+          code: 403,
+          message: "Yet to start the Work order.",
         });
       }
     });
