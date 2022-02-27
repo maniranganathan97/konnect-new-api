@@ -3419,7 +3419,7 @@ function getAllData(req) {
       JOIN PO ON PO.POID = WorkOrder.POID
       JOIN Contact C2 on C2.ContactID = PO.ContactID
       JOIN ReportImage on ReportImage.ReportWOID = ReportWO.ReportWOID
-      JOIN ReportService ON ReportService.WorkOrderID = ReportWO.WorkOrderID
+      LEFT JOIN ReportService ON ReportService.WorkOrderID = ReportWO.WorkOrderID
       WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID}
   
          
