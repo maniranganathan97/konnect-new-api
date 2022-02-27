@@ -2281,6 +2281,10 @@ app.delete("/deleteImageByDB", async (req, res) => {
 
 function getAllFindingsPromise(req) {
     return new Promise((resolve, reject) => {
+        if(req.query.type == "Fogging") {
+            resolve([]);
+            return;
+        }
         let query = `
         select * from Findings where FindingsType = '${req.query.type}'
     
@@ -2303,6 +2307,10 @@ function getAllFindingsPromise(req) {
 
 function getAllServicesPromise(req) {
     return new Promise((resolve, reject) => {
+        if(req.query.type == "Fogging") {
+            resolve([]);
+            return;
+        }
         let query = `
         select * from ServiceType where ServiceType = '${req.query.type}'
     
@@ -2668,8 +2676,6 @@ app.post('/reportWOCreate', async (req, res) => {
     pool.query(query, parameters, function (error, results) {
         if (error) throw error
         if (results.affectedRows > 0) {
-            // insertAndUpdateReportWOService(results.insertId, req.body);
-            // insertAndUpdateReportWOFindings(results.insertId, req.body);
             let insertCosolidatedReportQuery = `
             INSERT INTO ConsolidatedReportWO ( ReportWOID, StaffID, StartedDateTime, 
                 LocationPoint, FindingsImages, ServicesProvided, 
