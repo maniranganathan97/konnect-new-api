@@ -2586,7 +2586,7 @@ app.put('/updateReportPO', async (req, res) => {
         });
         blobStream.on('finish', () => {
             const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-            detail['ContactAckSignImageURL'] = publicUrl
+            reportWoDetails['ContactAckSignImageURL'] = publicUrl
 
             let query = `Update ReportWO SET  ` + Object.keys(reportWoDetails).map(key => `${key}=?`).join(",") + " where ReportWOID = ?"
             const parameters = [...Object.values(reportWoDetails), req.query.ReportWOID]
@@ -2875,6 +2875,7 @@ function updateReportWOFindings(findings, req) {
     return new Promise((resolve, reject) => {
         if(!findings || (findings && findings.length == 0)) {
             resolve("no findings to update");
+            return;
         }
     let sql = `Delete FROM ReportWOFindings WHERE ReportWOID = ${req.query.ReportWOID} AND UpdatedByUserID = ${req.body.UpdatedUserID}`;
     console.log(sql);
@@ -3003,6 +3004,7 @@ function updateReportWOService(services, req) {
        
         if(!services || (services && services.length == 0)) {
             resolve("no services to update");
+            return;
         }
         let sql = `Delete FROM ReportWOService WHERE ReportWOID = ${req.query.ReportWOID} AND UpdatedByUserID = ${req.body.UpdatedUserID}`;
     console.log(sql);
