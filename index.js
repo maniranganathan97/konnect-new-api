@@ -3345,7 +3345,7 @@ function getServices(req) {
         pool.query(query, function (err, results) {
             if (err) reject(err)
             if (results.length == 0) {
-                reject({ code: 200, message: "There is no service name for selected values" });
+                resolve({ code: 200, message: "There is no service name for selected values" });
             }
             allData = results;
             console.log("all results are --->" + allData);
