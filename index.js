@@ -2174,7 +2174,8 @@ app.get('/reportsbyPO', async (req, res) => {
     JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
     JOIN Site ON WorkOrder.SiteID = Site.SiteID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
-    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID`
+    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+    Order By WorkOrder.WorkOrderID`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
@@ -3343,9 +3344,10 @@ function getServices(req) {
         JOIN ReportWO ON ReportWO.ReportWOID = ReportWOService.ReportWOID
         JOIN WorkOrder ON WorkOrder.WorkOrderID = ReportWO.WorkOrderID
         JOIN ServiceType ON ServiceType.ServiceID = ReportWOService.ServiceID
-           where WorkOrderID = ${req.query.WorkOrderID}`
+           where WorkOrder.WorkOrderID = ${req.query.WorkOrderID}`
         pool.query(query, function (err, results) {
             if (err) reject(err)
+            console.log(results)
             if (results.length == 0) {
                 resolve({ code: 200, message: "There is no service name for selected values" });
             }
