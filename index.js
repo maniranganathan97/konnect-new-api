@@ -3286,9 +3286,11 @@ function getServiceTypeOther(req) {
     return new Promise((resolve, reject) => {
 
         let query = `
-        select DISTINCT ReportService.ServiceTypeOther from ReportWO
-      JOIN ReportService ON ReportService.WorkOrderID = ReportWO.WorkOrderID
-      WHERE ReportService.ServiceTypeOther IS NOT NULL AND ReportService.ServiceTypeOther != "" AND
+        select DISTINCT ReportWOService.Value AS ServiceTypeOther from ReportWOService
+      JOIN ReportWO ON ReportWOService.ReportWOID = ReportWO.ReportWOID
+      JOIN WorkOrder ON ReportWO.WorkOrderID = WorkOrder.WorkOrderID
+      JOIN ServiceType ON ServiceType.ServiceID = ReportWOService.ServiceID
+      WHERE ReportWOService.Value IS NOT NULL AND ReportWOService.Value != "" AND ServiceType.ServiceName = "Others" AND
       ReportWO.WorkOrderID = ${req.query.WorkOrderID} `
         pool.query(query, function (err, results) {
             if (err) reject(err)
@@ -3337,11 +3339,11 @@ function getServices(req) {
     return new Promise((resolve, reject) => {
         var allData;
         let query = `
-          select ServiceType.ServiceName from ReportService
-          JOIN ServiceType ON ServiceType.ServiceID = ReportService.ServiceTypeID
-           where WorkOrderID = ${req.query.WorkOrderID}
-     
-          `
+        select DISTINCT ServiceType.ServiceName from ReportWOService
+        JOIN ReportWO ON ReportWO.ReportWOID = ReportWOService.ReportWOID
+        JOIN WorkOrder ON WorkOrder.WorkOrderID = ReportWO.WorkOrderID
+        JOIN ServiceType ON ServiceType.ServiceID = ReportWOService.ServiceID
+           where WorkOrderID = ${req.query.WorkOrderID}`
         pool.query(query, function (err, results) {
             if (err) reject(err)
             if (results.length == 0) {
@@ -3395,8 +3397,6 @@ function getAllData(req) {
       JOIN Site ON Site.SiteID = WorkOrder.SiteID
       JOIN PO ON PO.POID = WorkOrder.POID
       JOIN Contact C2 on C2.ContactID = PO.ContactID
-      JOIN ReportImage on ReportImage.ReportWOID = ReportWO.ReportWOID
-      LEFT JOIN ReportService ON ReportService.WorkOrderID = ReportWO.WorkOrderID
       WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID}
   
          
