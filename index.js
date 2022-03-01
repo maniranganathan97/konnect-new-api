@@ -2282,7 +2282,7 @@ app.delete("/deleteImageByDB", async (req, res) => {
 
 function getAllFindingsPromise(req) {
     return new Promise((resolve, reject) => {
-        if(req.query.type == "Fogging") {
+        if (req.query.type == "Fogging") {
             resolve([]);
             return;
         }
@@ -2293,22 +2293,22 @@ function getAllFindingsPromise(req) {
     `;
         pool.query(query, function (err, results) {
             if (err) throw err;
-        
-            if(results.length > 0) {
+
+            if (results.length > 0) {
                 resolve(results)
             } else {
                 reject(results)
             }
-            
+
         });
     });
-  
+
 }
 
 
 function getAllServicesPromise(req) {
     return new Promise((resolve, reject) => {
-        if(req.query.type == "Fogging") {
+        if (req.query.type == "Fogging") {
             resolve([]);
             return;
         }
@@ -2319,16 +2319,16 @@ function getAllServicesPromise(req) {
     `;
         pool.query(query, function (err, results) {
             if (err) throw err;
-            
-            if(results.length > 0) {
+
+            if (results.length > 0) {
                 resolve(results)
             } else {
                 reject(results)
             }
-            
+
         });
     });
-  
+
 }
 
 
@@ -2342,7 +2342,7 @@ app.get('/getReportWO', async (req, res) => {
         .then((allData) => {
             var returnData = [];
             var single = allData[0];
-         
+
             for (let i of allData[4]) {
                 for (let a of allData[1]) {
                     if (a.FindingsName == i.Value) {
@@ -2361,7 +2361,7 @@ app.get('/getReportWO', async (req, res) => {
                 }
             }
             single.services = allData[2];
-            
+
             returnData.push(single);
 
             return res.status(200).send(returnData[0]);
@@ -2389,16 +2389,16 @@ JOIN ReportWO on ReportWO.ReportWOID = ReportWOFindings.ReportWOID
     `;
         pool.query(query, function (err, results) {
             if (err) throw err;
-            
-            if(results.length > 0) {
+
+            if (results.length > 0) {
                 resolve(results)
             } else {
                 resolve(results)
             }
-            
+
         });
     });
-  
+
 }
 
 function getServicesPrmoise(req) {
@@ -2418,13 +2418,13 @@ JOIN ReportWO on ReportWO.ReportWOID = ReportWOService.ReportWOID
     `;
         pool.query(query, function (err, results) {
             if (err) throw err;
-            
-            if(results.length > 0) {
+
+            if (results.length > 0) {
                 resolve(results)
             } else {
                 resolve(results)
             }
-            
+
         });
     });
 }
@@ -2549,10 +2549,10 @@ app.put('/updateReportPO', async (req, res) => {
                 var reportPromise = updateReportWOFindings(findings, req);
                 var servicePromise = updateReportWOService(services, req);
                 var list = [];
-                if(findings && findings.length > 0) {
+                if (findings && findings.length > 0) {
                     list.push(reportPromise);
                 }
-                if(services && services.length > 0) {
+                if (services && services.length > 0) {
                     list.push(servicePromise);
                 }
                 Promise.all(list)
@@ -2560,12 +2560,12 @@ app.put('/updateReportPO', async (req, res) => {
                         return res.status(200).send({ code: 200, "message": "updated ReportPO successfully." });
                     })
                     .catch((err) => {
-                        console.log("erroe *********"+err);
+                        console.log("erroe *********" + err);
                         return res.status(400).send(err);
                     });
                 //updateReportWOFindings(findings, req);
                 //updateReportWOService(services, req);
-               // return res.status(200).send({ code: 200, message: "update success" })
+                // return res.status(200).send({ code: 200, message: "update success" })
             } else {
                 return res.status(400).json({ code: 400, message: "update failed" })
             }
@@ -2600,16 +2600,16 @@ app.put('/updateReportPO', async (req, res) => {
                     var reportPromise = updateReportWOFindings(findings, req);
                     var servicePromise = updateReportWOService(services, req);
                     var list = [];
-                    if(findings && findings.length > 0) {
+                    if (findings && findings.length > 0) {
                         list.push(reportPromise);
                     }
-                    if(services && services.length > 0) {
+                    if (services && services.length > 0) {
                         list.push(servicePromise);
                     }
                     Promise.all(list)
                         .then((allData) => {
 
-                            
+
                             return res.status(200).send({ code: 200, "message": "updated ReportPO successfully." });
                         })
                         .catch((err) => {
@@ -2632,38 +2632,38 @@ app.put('/updateReportPO', async (req, res) => {
             if (error) throw error
             console.log(results.affectedRows)
             if (results.affectedRows > 0) {
-            var reportPromise = updateReportWOFindings(findings, req);
-            var servicePromise = updateReportWOService(services, req);
-            var list = [];
-            if (findings && findings.length > 0) {
-              list.push(reportPromise);
+                var reportPromise = updateReportWOFindings(findings, req);
+                var servicePromise = updateReportWOService(services, req);
+                var list = [];
+                if (findings && findings.length > 0) {
+                    list.push(reportPromise);
+                }
+                if (services && services.length > 0) {
+                    list.push(servicePromise);
+                }
+                Promise.all(list)
+                    .then((allData) => {
+                        return res
+                            .status(200)
+                            .send({
+                                code: 200,
+                                message: "updated ReportPO successfully.",
+                            });
+                    })
+                    .catch((err) => {
+                        console.log("error7777777777_" + err);
+                        return res
+                            .status(400)
+                            .send({
+                                code: 400,
+                                message: "updated ReportPO with errors." + err,
+                            });
+                    });
+                // return res.status(200).json({ code: 200, message: "Updated successfully." })
             }
-            if (services && services.length > 0) {
-              list.push(servicePromise);
-            }
-            Promise.all(list)
-              .then((allData) => {
-                return res
-                  .status(200)
-                  .send({
-                    code: 200,
-                    message: "updated ReportPO successfully.",
-                  });
-              })
-              .catch((err) => {
-                console.log("error7777777777_" + err);
-                return res
-                  .status(400)
-                  .send({
-                    code: 400,
-                    message: "updated ReportPO with errors." + err,
-                  });
-              });
-            // return res.status(200).json({ code: 200, message: "Updated successfully." })
-            }
-             /*else {
-                return res.status(400).json({ code: 400, "message": "Update Failed." })
-            }*/
+            /*else {
+               return res.status(400).json({ code: 400, "message": "Update Failed." })
+           }*/
         })
     }
 
@@ -2796,30 +2796,30 @@ app.put('/reportWOFogging', async (req, res) => {
 })
 
 function insertNewFindingsData(singleData, req) {
-  return new Promise((resolve, reject) => {
-    console.log("before---------> "+singleData.FindingsID)
-    
+    return new Promise((resolve, reject) => {
+        console.log("before---------> " + singleData.FindingsID)
+
         console.log("inside insert report findings");
         var sql =
-          "INSERT INTO ReportWOFindings(ReportWOID, FindingsID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?)";
+            "INSERT INTO ReportWOFindings(ReportWOID, FindingsID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?)";
         let parameters = [
-          parseInt(req.query.ReportWOID),
-          singleData["FindingsID"],
-          singleData["Value"],
-          singleData["IsChecked"],
-          singleData["UpdatedByUserID"],
-          singleData["UpdatedDateTime"],
+            parseInt(req.query.ReportWOID),
+            singleData["FindingsID"],
+            singleData["Value"],
+            singleData["IsChecked"],
+            singleData["UpdatedByUserID"],
+            singleData["UpdatedDateTime"],
         ];
         pool.query(sql, parameters, function (err, result, fields) {
-          if (err) throw err;
-          if (result.affectedRows > 0) {
-            resolve("updated findings");
-          } else {
-            resolve("update failed findings");
-          }
+            if (err) throw err;
+            if (result.affectedRows > 0) {
+                resolve("updated findings");
+            } else {
+                resolve("update failed findings");
+            }
         });
-     
-  });
+
+    });
 }
 
 /* function updateFindingsData(singleData, req) {
@@ -2874,183 +2874,183 @@ function insertNewFindingsData(singleData, req) {
 
 function updateReportWOFindings(findings, req) {
     return new Promise((resolve, reject) => {
-        if(!findings || (findings && findings.length == 0)) {
+        if (!findings || (findings && findings.length == 0)) {
             resolve("no findings to update");
             return;
         }
-    let sql = `Delete FROM ReportWOFindings WHERE ReportWOID = ${req.query.ReportWOID} AND UpdatedByUserID = ${req.body.UpdatedUserID}`;
-    console.log(sql);
-    pool.query(sql, function (err, result, fields) {
-      if (err) throw err;
-      if (result) {
-      
-      for (var j = 0; j < findings.length; j++) {
-        var singleData = findings[j];
-
-        var insertFindingsPromise = insertNewFindingsData(singleData, req);
-       
-
-        //it will run always to delete not in the list
-        var findingsIdList = [];
-        for (var i = 0; i < findings.length; i++) {
-          findingsIdList.push(findings[i].FindingsID);
-        }
-
-        console.log("deleting existing findings are ----->"+findingsIdList);
-        // var deleteFindigsPromise = deleteFindingsData(
-        //   singleData,
-        //   findingsIdList,
-        //   req
-        // );
-        Promise.all([
-          insertFindingsPromise,
-         // updateFindingsPromise,
-          //deleteFindigsPromise,
-        ])
-          .then((allData) => {
-              
-            resolve({ code: 200, message: "updated successfully." });
-          })
-          .catch((err) => {
-            console.log("error is ====" + err);
-            reject(err);
-          });
-      }
-    }
-    });
-});
-    
-}
-
-function insertNewServiceData(singleData, req) {
-  return new Promise((resolve, reject) => {
-    
-        var sql =
-          "INSERT INTO ReportWOService(ReportWOID, ServiceID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?)";
-        let parameters = [
-          parseInt(req.query.ReportWOID),
-          singleData["ServiceID"],
-          singleData["Value"],
-          singleData["IsChecked"],
-          singleData["UpdatedByUserID"],
-          singleData["UpdatedDateTime"],
-        ];
-        pool.query(sql, parameters, function (err, result, fields) {
-          if (err) throw err;
-          if (result.affectedRows > 0) {
-            resolve("updated services");
-          } else {
-            reject("update failed in report ReportWOService");
-          }
-        });
-      
-  });
-}
-  
-  /* function updateServicesData(singleData, req) {
-    return new Promise((resolve, reject) => {
-        let sql = `SELECT 1 FROM ReportWOService WHERE ReportWOID = ${req.query.ReportWOID}`;
+        let sql = `Delete FROM ReportWOFindings WHERE ReportWOID = ${req.query.ReportWOID} AND UpdatedByUserID = ${req.body.UpdatedUserID}`;
+        console.log(sql);
         pool.query(sql, function (err, result, fields) {
             if (err) throw err;
-            if (result.length > 0) {
-                delete singleData["ReportWOServiceID"]
-                let query =
-                    `Update ReportWOService SET  ` +
-                    Object.keys(singleData)
-                        .map((key) => `${key}=?`)
-                        .join(",") +
-                    " where ReportWOID = ?";
-                const parameters = [
-                    ...Object.values(singleData),
-                    parseInt(req.query.ReportWOID),
-                ];
-                pool.query(query, parameters, function (err, results, fields) {
-                    if (err) throw err;
-                    if (results.affectedRows > 0) {
-                        console.log("service updated");
-                        resolve("updated service")
-                    } else {
-                        console.log("service not updated");
-                        resolve("no update")
+            if (result) {
+
+                for (var j = 0; j < findings.length; j++) {
+                    var singleData = findings[j];
+
+                    var insertFindingsPromise = insertNewFindingsData(singleData, req);
+
+
+                    //it will run always to delete not in the list
+                    var findingsIdList = [];
+                    for (var i = 0; i < findings.length; i++) {
+                        findingsIdList.push(findings[i].FindingsID);
                     }
-                });
-            } else {
-                resolve("no update required for services")
+
+                    console.log("deleting existing findings are ----->" + findingsIdList);
+                    // var deleteFindigsPromise = deleteFindingsData(
+                    //   singleData,
+                    //   findingsIdList,
+                    //   req
+                    // );
+                    Promise.all([
+                        insertFindingsPromise,
+                        // updateFindingsPromise,
+                        //deleteFindigsPromise,
+                    ])
+                        .then((allData) => {
+
+                            resolve({ code: 200, message: "updated successfully." });
+                        })
+                        .catch((err) => {
+                            console.log("error is ====" + err);
+                            reject(err);
+                        });
+                }
             }
         });
     });
-  }
-  
-  function deleteServicesData(singleData, servicesIdList, req) {
+
+}
+
+function insertNewServiceData(singleData, req) {
     return new Promise((resolve, reject) => {
-        let query = `
-        DELETE  from ReportWOService where ReportWOID = ${req.query.ReportWOID
-                } and ServiceID not in (${servicesIdList.join()})
-      
-        `;
-           
-            pool.query(query, function (err, results, fields) {
-                if (err) throw err;
-                if (results.affectedRows > 0) {
-                    resolve("updated");
-                } else {
-                    resolve("no delete service")
-                }
-            });
+
+        var sql =
+            "INSERT INTO ReportWOService(ReportWOID, ServiceID, Value,IsChecked,UpdatedByUserID,UpdatedDateTime) VALUES (?,?,?,?,?,?)";
+        let parameters = [
+            parseInt(req.query.ReportWOID),
+            singleData["ServiceID"],
+            singleData["Value"],
+            singleData["IsChecked"],
+            singleData["UpdatedByUserID"],
+            singleData["UpdatedDateTime"],
+        ];
+        pool.query(sql, parameters, function (err, result, fields) {
+            if (err) throw err;
+            if (result.affectedRows > 0) {
+                resolve("updated services");
+            } else {
+                reject("update failed in report ReportWOService");
+            }
+        });
+
     });
-  } */
+}
+
+/* function updateServicesData(singleData, req) {
+  return new Promise((resolve, reject) => {
+      let sql = `SELECT 1 FROM ReportWOService WHERE ReportWOID = ${req.query.ReportWOID}`;
+      pool.query(sql, function (err, result, fields) {
+          if (err) throw err;
+          if (result.length > 0) {
+              delete singleData["ReportWOServiceID"]
+              let query =
+                  `Update ReportWOService SET  ` +
+                  Object.keys(singleData)
+                      .map((key) => `${key}=?`)
+                      .join(",") +
+                  " where ReportWOID = ?";
+              const parameters = [
+                  ...Object.values(singleData),
+                  parseInt(req.query.ReportWOID),
+              ];
+              pool.query(query, parameters, function (err, results, fields) {
+                  if (err) throw err;
+                  if (results.affectedRows > 0) {
+                      console.log("service updated");
+                      resolve("updated service")
+                  } else {
+                      console.log("service not updated");
+                      resolve("no update")
+                  }
+              });
+          } else {
+              resolve("no update required for services")
+          }
+      });
+  });
+}
+ 
+function deleteServicesData(singleData, servicesIdList, req) {
+  return new Promise((resolve, reject) => {
+      let query = `
+      DELETE  from ReportWOService where ReportWOID = ${req.query.ReportWOID
+              } and ServiceID not in (${servicesIdList.join()})
+    
+      `;
+         
+          pool.query(query, function (err, results, fields) {
+              if (err) throw err;
+              if (results.affectedRows > 0) {
+                  resolve("updated");
+              } else {
+                  resolve("no delete service")
+              }
+          });
+  });
+} */
 
 function updateReportWOService(services, req) {
     return new Promise((resolve, reject) => {
-       
-        if(!services || (services && services.length == 0)) {
+
+        if (!services || (services && services.length == 0)) {
             resolve("no services to update");
             return;
         }
         let sql = `Delete FROM ReportWOService WHERE ReportWOID = ${req.query.ReportWOID} AND UpdatedByUserID = ${req.body.UpdatedUserID}`;
-    console.log(sql);
-    pool.query(sql, function (err, result, fields) {
-      if (err) throw err;
-      if (result) {
-      
-        for (var k = 0; k < services.length; k++) {
-          var singleData = services[k];
-          //if (!!!singleData["ReportWOServiceID"]) {
-           // console.log("inside insert report services");
-            var insertNewServicePromise = insertNewServiceData(singleData, req);
-         // } else {
-          //  console.log("in else report service");
-          //  var updateServicesPromise = updateServicesData(singleData, req);
-         // }
-        }
+        console.log(sql);
+        pool.query(sql, function (err, result, fields) {
+            if (err) throw err;
+            if (result) {
 
-        //it will run always to delete not in the list
-        var servicesIdList = [];
-        for (var i = 0; i < services.length; i++) {
-          servicesIdList.push(services[i].ServiceID);
-        }
-        // var deleteServicesDataPromise = deleteServicesData(
-        //   singleData,
-        //   servicesIdList,
-        //   req
-        // );
+                for (var k = 0; k < services.length; k++) {
+                    var singleData = services[k];
+                    //if (!!!singleData["ReportWOServiceID"]) {
+                    // console.log("inside insert report services");
+                    var insertNewServicePromise = insertNewServiceData(singleData, req);
+                    // } else {
+                    //  console.log("in else report service");
+                    //  var updateServicesPromise = updateServicesData(singleData, req);
+                    // }
+                }
 
-        Promise.all([
-          insertNewServicePromise,
-         // updateServicesPromise,
-         // deleteServicesDataPromise,
-        ])
-          .then((allData) => {
-            resolve({ code: 200, message: "updated successfully." });
-          })
-          .catch((err) => {
-            console.log("error is ====" + err);
-            reject(err);
-          });
-       
-        }
+                //it will run always to delete not in the list
+                var servicesIdList = [];
+                for (var i = 0; i < services.length; i++) {
+                    servicesIdList.push(services[i].ServiceID);
+                }
+                // var deleteServicesDataPromise = deleteServicesData(
+                //   singleData,
+                //   servicesIdList,
+                //   req
+                // );
+
+                Promise.all([
+                    insertNewServicePromise,
+                    // updateServicesPromise,
+                    // deleteServicesDataPromise,
+                ])
+                    .then((allData) => {
+                        resolve({ code: 200, message: "updated successfully." });
+                    })
+                    .catch((err) => {
+                        console.log("error is ====" + err);
+                        reject(err);
+                    });
+
+            }
+        });
     });
-});
 }
 
 app.get("/getConsolidation", async (req, res) => {
@@ -3421,22 +3421,36 @@ function getAllData(req) {
 
 app.post('/rescheduledReportWO', multer.single('file'), async (req, res) => {
 
-    if (req.body["ContactAckSignImageURL"]){
+    if (req.body["ContactAckSignImageURL"]) {
         const buffer = Buffer.from(req.body["ContactAckSignImageURL"], 'base64')
-    // Create a new blob in the bucket and upload the file data.
-    const id = uuid.v4();
-    const blob = bucket.file("konnect" + id + ".jpg");
-    const blobStream = blob.createWriteStream();
+        // Create a new blob in the bucket and upload the file data.
+        const id = uuid.v4();
+        const blob = bucket.file("konnect" + id + ".jpg");
+        const blobStream = blob.createWriteStream();
 
-    blobStream.on('error', err => {
-        next(err);
-    });
+        blobStream.on('error', err => {
+            next(err);
+        });
 
-    blobStream.on('finish', () => {
-        // The public URL can be used to directly access the file via HTTP.
-        const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+        blobStream.on('finish', () => {
+            // The public URL can be used to directly access the file via HTTP.
+            const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+            let query = 'INSERT INTO Site(`RescheduledReportWOID`,`ReportWOID`,`WorkOrderID`,`WOstartDateTime`,`WOendDateTime`,`WorkNatureID`,`Findings`,`Location`,`ServiceMethodID`,`FogMachineNum`,`ContactAckMethodID`,`ContactAckID`,`ContackAckOther`,`ContactAckSignImageURL`,`ContactAckDateTime`,`consolidateDateTime`,`Notes`,`Reason`,`UpdatedUserID`,`UpdatedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+            let parameters = ["", req.body.ReportWOID, req.body.WorkOrderID, req.body.WOstartDateTime, req.body.WOendDateTime, req.body.WorkNatureID, req.body.Findings, req.body.Location, req.body.ServiceMethodID, req.body.FogMachineNum, req.body.ContactAckMethodID, req.body.ContactAckID, req.body.ContackAckOther, publicUrl, req.body.ContactAckDateTime, req.body.consolidateDateTime, req.body.Notes, req.body.Reason, req.body.UpdatedUserID, req.body.UpdatedDateTime]
+            pool.query(query, parameters, function (err, results, fields) {
+                if (err) throw err
+                if (results.affectedRows > 0) {
+                    return res.status(200).json({ code: 200, message: "success" })
+                } else {
+                    return res.status(401).json({ code: 401, "message": "data not inserted." })
+                }
+            })
+        })
+        blobStream.end(buffer);
+    }
+    else {
         let query = 'INSERT INTO Site(`RescheduledReportWOID`,`ReportWOID`,`WorkOrderID`,`WOstartDateTime`,`WOendDateTime`,`WorkNatureID`,`Findings`,`Location`,`ServiceMethodID`,`FogMachineNum`,`ContactAckMethodID`,`ContactAckID`,`ContackAckOther`,`ContactAckSignImageURL`,`ContactAckDateTime`,`consolidateDateTime`,`Notes`,`Reason`,`UpdatedUserID`,`UpdatedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-        let parameters = ["", req.body.ReportWOID, req.body.WorkOrderID, req.body.WOstartDateTime, req.body.WOendDateTime, req.body.WorkNatureID, req.body.Findings, req.body.Location, req.body.ServiceMethodID, req.body.FogMachineNum, req.body.ContactAckMethodID, req.body.ContactAckID, req.body.ContackAckOther,publicUrl,req.body.ContactAckDateTime,req.body.consolidateDateTime,req.body.Notes,req.body.Reason,req.body.UpdatedUserID,req.body.UpdatedDateTime]
+        let parameters = ["", req.body.ReportWOID, req.body.WorkOrderID, req.body.WOstartDateTime, req.body.WOendDateTime, req.body.WorkNatureID, req.body.Findings, req.body.Location, req.body.ServiceMethodID, req.body.FogMachineNum, req.body.ContactAckMethodID, req.body.ContactAckID, req.body.ContackAckOther, req.body.ContactAckSignImageURL, req.body.ContactAckDateTime, req.body.consolidateDateTime, req.body.Notes, req.body.Reason, req.body.UpdatedUserID, req.body.UpdatedDateTime]
         pool.query(query, parameters, function (err, results, fields) {
             if (err) throw err
             if (results.affectedRows > 0) {
@@ -3445,23 +3459,8 @@ app.post('/rescheduledReportWO', multer.single('file'), async (req, res) => {
                 return res.status(401).json({ code: 401, "message": "data not inserted." })
             }
         })
-    })
-    blobStream.end(buffer);
     }
-    else
-    {
-        let query = 'INSERT INTO Site(`RescheduledReportWOID`,`ReportWOID`,`WorkOrderID`,`WOstartDateTime`,`WOendDateTime`,`WorkNatureID`,`Findings`,`Location`,`ServiceMethodID`,`FogMachineNum`,`ContactAckMethodID`,`ContactAckID`,`ContackAckOther`,`ContactAckSignImageURL`,`ContactAckDateTime`,`consolidateDateTime`,`Notes`,`Reason`,`UpdatedUserID`,`UpdatedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-        let parameters = ["", req.body.ReportWOID, req.body.WorkOrderID, req.body.WOstartDateTime, req.body.WOendDateTime, req.body.WorkNatureID, req.body.Findings, req.body.Location, req.body.ServiceMethodID, req.body.FogMachineNum, req.body.ContactAckMethodID, req.body.ContactAckID, req.body.ContackAckOther,req.body.ContactAckSignImageURL,req.body.ContactAckDateTime,req.body.consolidateDateTime,req.body.Notes,req.body.Reason,req.body.UpdatedUserID,req.body.UpdatedDateTime]
-        pool.query(query, parameters, function (err, results, fields) {
-            if (err) throw err
-            if (results.affectedRows > 0) {
-                return res.status(200).json({ code: 200, message: "success" })
-            } else {
-                return res.status(401).json({ code: 401, "message": "data not inserted." })
-            }
-        })
-    }
-    
+
 })
 
 app.get("/getRescheduledReason", async (req, res) => {
@@ -3478,61 +3477,128 @@ app.get("/getRescheduledReason", async (req, res) => {
     })
 });
 
-app.get("/getTotalWorkOrders", async (req, res) => {
 
-    let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate})`
-    pool.query(query, function (err, results) {
-        if (err) throw err
-        if (results.length > 0) {
-            return res.status(200).send(results)
-        } else {
-            return res.status(200).json(results)
-        }
+app.get("/getHomeData", async (req, res) => {
 
-    })
+    var totalWorkOrders = getTotalWorkOrders(req);
+                var newWorkOrders = getNewWorkOrders(req);
+                var inProgressWorkOrders = getInProgressWorkOrders(req);
+                var closedWorkOrders = getClosedWorkOrders(req);
+
+                Promise.all([
+                    totalWorkOrders,
+                    newWorkOrders,
+                    inProgressWorkOrders,
+                    closedWorkOrders
+                ]) .then((allData) => {
+                    var returnData = [];
+
+                    var single = allData[0][0];
+
+                    var allWorkOrders = [];
+                    for (var j = 0; j < allData[1].length; j++) {
+                        var worker = allData[1][j];
+                        allWorkersName.push(worker.StaffName);
+                    }
+                    single.actionBy = allWorkersName;
+                    var allServices = [];
+                    for (var k = 0; k < allData[2].length; k++) {
+                        var service = allData[2][k];
+                        allServices.push(service.ServiceName);
+                    }
+                    single.serviceTypes = allServices;
+
+                    single.images = {};
+                    var beforeImages = [];
+                    var afterImages = [];
+                    for (var i = 0; i < allData[4].length; i++) {
+                        if (allData[4][i].ImageTypeID == 1) {
+                            beforeImages.push(allData[4][i]);
+                        } else {
+                            afterImages.push(allData[4][i]);
+                        }
+                    }
+                    single.images.beforeImages = beforeImages;
+                    single.images.afterImages = afterImages;
+
+                    var allServiceTypeOther = [];
+                    for (var k = 0; k < allData[5].length; k++) {
+                        var singleServiceTypeOther = allData[5][k];
+                        allServiceTypeOther.push(singleServiceTypeOther.ServiceTypeOther);
+                    }
+                    single.serviceTypeOthers = allServiceTypeOther;
+                    // if the workTypeId =3  meaning the mosquito fogging type then sending only the first data from the result
+                    if (allData[3][0].WorkTypeID == 3) {
+                        single.images.afterImages = [];
+                    }
+                    returnData.push(single);
+
+                    return res.status(200).send(single);
+                })
+                .catch((err) => {
+                    return res.status(200).send(err);
+                });
 });
 
-app.get("/getNewWorkOrders", async (req, res) => {
+function getTotalWorkOrders(req) {
+    return new Promise((resolve, reject) => {
+        let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate})`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.length > 0) {
+                resolve(results)
+            } else {
+                resolve(results)
+            }
 
-    let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 1`
-    pool.query(query, function (err, results) {
-        if (err) throw err
-        if (results.length > 0) {
-            return res.status(200).send(results)
-        } else {
-            return res.status(200).json(results)
-        }
-
+        })
     })
-});
+};
 
-app.get("/getInProgressWorkOrders", async (req, res) => {
+function getNewWorkOrders(req) {
+    return new Promise((resolve, reject) => {
+        let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 1`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.length > 0) {
+                resolve(results)
+            } else {
+                resolve(results)
+            }
 
-    let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 3`
-    pool.query(query, function (err, results) {
-        if (err) throw err
-        if (results.length > 0) {
-            return res.status(200).send(results)
-        } else {
-            return res.status(200).json(results)
-        }
-
+        })
     })
-});
+};
 
-app.get("/getClosedWorkOrders", async (req, res) => {
+function getInProgressWorkOrders(req) {
+    return new Promise((resolve, reject) => {
+        let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 3`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.length > 0) {
+                resolve(results)
+            } else {
+                resolve(results)
+            }
 
-    let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 5`
-    pool.query(query, function (err, results) {
-        if (err) throw err
-        if (results.length > 0) {
-            return res.status(200).send(results)
-        } else {
-            return res.status(200).json(results)
-        }
-
+        })
     })
-});
+};
+
+function getClosedWorkOrders(req) {
+    return new Promise((resolve, reject) => {
+        let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 5`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.length > 0) {
+                return res.status(200).send(results)
+            } else {
+                return res.status(200).json(results)
+            }
+
+        })
+    })
+};
 
 app.listen(port, function () {
     console.log(`${port} is running`)
