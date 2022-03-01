@@ -3478,6 +3478,62 @@ app.get("/getRescheduledReason", async (req, res) => {
     })
 });
 
+app.get("/getTotalWorkOrders", async (req, res) => {
+
+    let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate})`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json(results)
+        }
+
+    })
+});
+
+app.get("/getNewWorkOrders", async (req, res) => {
+
+    let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 1`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json(results)
+        }
+
+    })
+});
+
+app.get("/getInProgressWorkOrders", async (req, res) => {
+
+    let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 3`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json(results)
+        }
+
+    })
+});
+
+app.get("/getClosedWorkOrders", async (req, res) => {
+
+    let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 5`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json(results)
+        }
+
+    })
+});
+
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
