@@ -2287,8 +2287,7 @@ function getAllFindingsPromise(req) {
             return;
         }
         let query = `
-        SELECT FindingsID, FindingsType, FindingsName as Value, 
-IsChecked, AddedByUserID as UpdatedByUserID, AddedDateTime as UpdatedDateTime FROM Findings where FindingsType = '${req.query.type}'
+        select * from Findings where FindingsType = '${req.query.type}'
     
 
     `;
@@ -2314,8 +2313,7 @@ function getAllServicesPromise(req) {
             return;
         }
         let query = `
-        SELECT ServiceID, ServiceType, ServiceName as Value, IsChecked, 
-AddedByUserID as UpdatedByUserID, AddedDateTime as UpdatedDateTime from ServiceType  where ServiceType = '${req.query.type}'
+        select * from ServiceType where ServiceType = '${req.query.type}'
     
 
     `;
