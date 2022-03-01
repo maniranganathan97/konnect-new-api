@@ -3479,70 +3479,37 @@ app.get("/getRescheduledReason", async (req, res) => {
 
 
 app.get("/getHomeData", async (req, res) => {
+  var totalWorkOrders = getTotalWorkOrders(req);
+  var newWorkOrders = getNewWorkOrders(req);
+  var inProgressWorkOrders = getInProgressWorkOrders(req);
+  var closedWorkOrders = getClosedWorkOrders(req);
 
-    var totalWorkOrders = getTotalWorkOrders(req);
-                var newWorkOrders = getNewWorkOrders(req);
-                var inProgressWorkOrders = getInProgressWorkOrders(req);
-                var closedWorkOrders = getClosedWorkOrders(req);
+  Promise.all([
+    totalWorkOrders,
+    newWorkOrders,
+    inProgressWorkOrders,
+    closedWorkOrders,
+  ])
+    .then((allData) => {
+      var returnObject = [];
+      console.log(allData[0][0]);
+      console.log(allData[1][0]);
+      console.log(allData[2][0]);
+     for(var i=0; i<4; i++) {
+         var singleData = allData[i][0];
+         returnObject.push(singleData);
+     }
 
-                Promise.all([
-                    totalWorkOrders,
-                    newWorkOrders,
-                    inProgressWorkOrders,
-                    closedWorkOrders
-                ]) .then((allData) => {
-                    var returnData = [];
-
-                    var single = allData[0][0];
-
-                    var allWorkOrders = [];
-                    for (var j = 0; j < allData[1].length; j++) {
-                        var worker = allData[1][j];
-                        allWorkersName.push(worker.StaffName);
-                    }
-                    single.actionBy = allWorkersName;
-                    var allServices = [];
-                    for (var k = 0; k < allData[2].length; k++) {
-                        var service = allData[2][k];
-                        allServices.push(service.ServiceName);
-                    }
-                    single.serviceTypes = allServices;
-
-                    single.images = {};
-                    var beforeImages = [];
-                    var afterImages = [];
-                    for (var i = 0; i < allData[4].length; i++) {
-                        if (allData[4][i].ImageTypeID == 1) {
-                            beforeImages.push(allData[4][i]);
-                        } else {
-                            afterImages.push(allData[4][i]);
-                        }
-                    }
-                    single.images.beforeImages = beforeImages;
-                    single.images.afterImages = afterImages;
-
-                    var allServiceTypeOther = [];
-                    for (var k = 0; k < allData[5].length; k++) {
-                        var singleServiceTypeOther = allData[5][k];
-                        allServiceTypeOther.push(singleServiceTypeOther.ServiceTypeOther);
-                    }
-                    single.serviceTypeOthers = allServiceTypeOther;
-                    // if the workTypeId =3  meaning the mosquito fogging type then sending only the first data from the result
-                    if (allData[3][0].WorkTypeID == 3) {
-                        single.images.afterImages = [];
-                    }
-                    returnData.push(single);
-
-                    return res.status(200).send(single);
-                })
-                .catch((err) => {
-                    return res.status(200).send(err);
-                });
+      return res.status(200).send(returnObject);
+    })
+    .catch((err) => {
+      return res.status(200).send(err);
+    });
 });
 
 function getTotalWorkOrders(req) {
     return new Promise((resolve, reject) => {
-        let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate})`
+        let query = `SELECT  "totalWorkOrders" as title,COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate})`
         pool.query(query, function (err, results) {
             if (err) throw err
             if (results.length > 0) {
@@ -3557,7 +3524,7 @@ function getTotalWorkOrders(req) {
 
 function getNewWorkOrders(req) {
     return new Promise((resolve, reject) => {
-        let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 1`
+        let query = `SELECT  "newWorkOrders" as title,COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 1`
         pool.query(query, function (err, results) {
             if (err) throw err
             if (results.length > 0) {
@@ -3572,7 +3539,7 @@ function getNewWorkOrders(req) {
 
 function getInProgressWorkOrders(req) {
     return new Promise((resolve, reject) => {
-        let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 3`
+        let query = `SELECT  "inProgressWorkOrders" as title,COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 3`
         pool.query(query, function (err, results) {
             if (err) throw err
             if (results.length > 0) {
@@ -3587,13 +3554,13 @@ function getInProgressWorkOrders(req) {
 
 function getClosedWorkOrders(req) {
     return new Promise((resolve, reject) => {
-        let query = `SELECT COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 5`
+        let query = `SELECT  "closedWorkOrders" as title,COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 5`
         pool.query(query, function (err, results) {
             if (err) throw err
             if (results.length > 0) {
-                return res.status(200).send(results)
+                return resolve(results)
             } else {
-                return res.status(200).json(results)
+                return resolve(results)
             }
 
         })
