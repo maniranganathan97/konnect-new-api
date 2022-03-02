@@ -2347,8 +2347,9 @@ app.get('/getReportWO', async (req, res) => {
 
             for (let i of allData[4]) {
                 for (let a of allData[1]) {
-                    if (a.FindingsName == i.Value) {
+                    if (a.FindingsID == i.FindingsID) {
                         a.IsChecked = i.IsChecked
+                        a.Value = i.Value
                     }
                 }
             }
@@ -2357,8 +2358,9 @@ app.get('/getReportWO', async (req, res) => {
 
             for (let i of allData[3]) {
                 for (let a of allData[2]) {
-                    if (a.ServiceName == i.Value) {
+                    if (a.ServiceID == i.ServiceID) {
                         a.IsChecked = i.IsChecked
+                        a.Value = i.Value
                     }
                 }
             }
