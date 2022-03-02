@@ -2332,13 +2332,15 @@ function getAllServicesPromise(req) {
 }
 
 
+
 app.get('/getReportWO', async (req, res) => {
     var reportPromise = getReportWOPromise(req);
     var allFindings = getAllFindingsPromise(req);
     var allServices = getAllServicesPromise(req);
     var servicesPromise = getServicesPrmoise(req);
     var findingsPromise = getFindingsPromise(req);
-    Promise.all([reportPromise, allFindings, allServices, servicesPromise, findingsPromise])
+    var serviceMethodsPromise = getServiceMethods();
+    Promise.all([reportPromise, allFindings, allServices, servicesPromise, findingsPromise, serviceMethodsPromise])
         .then((allData) => {
             var returnData = [];
             var single = allData[0];
@@ -2362,6 +2364,15 @@ app.get('/getReportWO', async (req, res) => {
             }
             single.services = allData[2];
 
+            var serviceMethods = [];
+            for(var k=0; k< allData[5].length; k++) {
+                var serviceMethod = allData[5][k];
+                if(allData[5][k].ServiceMethodID == single.ServiceMethodID) {
+                    serviceMethod.IsChecked = 1;
+                }
+                serviceMethods.push(serviceMethod);
+            }
+            single.serviceMethods = serviceMethods;
             returnData.push(single);
 
             return res.status(200).send(returnData[0]);
@@ -2371,6 +2382,26 @@ app.get('/getReportWO', async (req, res) => {
         });
 
 });;
+
+function getServiceMethods() {
+    return new Promise((resolve, reject) => {
+        let query = `
+        select * from ServiceMethod    
+
+    `;
+        pool.query(query, function (err, results) {
+            if (err) throw err;
+
+            if (results.length > 0) {
+                resolve(results)
+            } else {
+                resolve(results)
+            }
+
+        });
+    });
+
+}
 
 function getFindingsPromise(req) {
     return new Promise((resolve, reject) => {
