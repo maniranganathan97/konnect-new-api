@@ -3514,19 +3514,23 @@ app.get("/getHomeData", async (req, res) => {
   var newWorkOrders = getNewWorkOrders(req);
   var inProgressWorkOrders = getInProgressWorkOrders(req);
   var closedWorkOrders = getClosedWorkOrders(req);
+  var completedWorkOrders = getCompletedWorkOrders(req);
+  var assignedWorkOrders = getAssignedWorkOrders(req);
 
   Promise.all([
     totalWorkOrders,
     newWorkOrders,
     inProgressWorkOrders,
     closedWorkOrders,
+    completedWorkOrders,
+    assignedWorkOrders
   ])
     .then((allData) => {
       var returnObject = [];
       console.log(allData[0][0]);
       console.log(allData[1][0]);
       console.log(allData[2][0]);
-     for(var i=0; i<4; i++) {
+     for(var i=0; i<6; i++) {
          var singleData = allData[i][0];
          returnObject.push(singleData);
      }
@@ -3597,6 +3601,56 @@ function getClosedWorkOrders(req) {
         })
     })
 };
+
+function getCompletedWorkOrders(req) {
+    return new Promise((resolve, reject) => {
+        let query = `SELECT  "Completed" as title,COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 4`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.length > 0) {
+                return resolve(results)
+            } else {
+                return resolve(results)
+            }
+
+        })
+    })
+};
+
+function getAssignedWorkOrders(req) {
+    return new Promise((resolve, reject) => {
+        let query = `SELECT  "Assigned" as title,COUNT(*) AS Value FROM WorkOrder WHERE DATE(AssignedDateTime) = DATE(${req.query.CurrentDate}) AND WorkStatusID = 2`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.length > 0) {
+                return resolve(results)
+            } else {
+                return resolve(results)
+            }
+
+        })
+    })
+};
+
+app.get('/getHomeWorkOrder', async (req, res) => {
+    let query = `Select WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus,SiteZone.Description,Staff.StaffName,Staff.StaffID from WorkOrder
+    JOIN PO ON PO.POID = WorkOrder.POID
+    JOIN Staff ON Staff.StaffID = PO.StaffID
+    JOIN Site ON Site.SiteID = WorkOrder.SiteID
+    JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
+    JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+    WHERE DATE(WorkOrder.AssignedDateTime) = DATE(${req.query.CurrentDate})
+    ORDER BY WorkOrder.WorkOrderID`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).json(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No data found for today." })
+        }
+    })
+})
 
 app.listen(port, function () {
     console.log(`${port} is running`)
