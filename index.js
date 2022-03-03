@@ -1656,10 +1656,11 @@ app.post('/po', async (req, res) => {
                         value.push(data.UpdatedByUserID)
                         value.push(data.UpdatedDateTime)
                         value.push(data.SiteZoneID)
+                        value.push(data.WorkNatureID)
                         values.push(value)
                     }
 
-                    var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES ?";
+                    var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID,WorkNatureID) VALUES ?";
 
                     pool.query(sql, [values], function (err, result) {
                         if (err) throw err;
