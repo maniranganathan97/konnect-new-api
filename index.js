@@ -8,6 +8,8 @@ const Multer = require('multer')
 const path = require('path')
 const bodyParser = require('body-parser')
 const app = express()
+const mailOperations = require("./mailOperations")
+const jwt = require('jsonwebtoken')
 
 app.use(express.json({ limit: '50mb' }))
 app.use(cors());
@@ -45,6 +47,7 @@ app.use('/uploads', express.static('uploads'))
 const mysql = require('mysql');
 const { Console } = require('console')
 const { resolve } = require('path')
+const e = require('express')
 
 const pool = mysql.createPool({
     host: '184.168.117.92',
@@ -3541,6 +3544,157 @@ app.get("/getHomeData", async (req, res) => {
       return res.status(200).send(err);
     });
 });
+
+app.post('/testVerify', async(req, res) => {
+
+    var token = jwt.sign({email_id:'123@gmail.com'}, "Stack", {
+
+        expiresIn: '2d' // expires in 2 days
+
+   });
+
+   jwt.verify(token, 'Stack', function(err, decoded) {
+    if (err) {
+      console.log(err);
+    } else {
+        console.log(decoded);
+    }
+  });
+
+});
+
+app.post('/forgotPassword', async(req, res) => {
+
+    var checkInContactPromise = contactCheckPromise(req);
+    var checkInStaffPromise = staffCheckPromise(req);
+    Promise.all([checkInContactPromise, checkInStaffPromise])
+      .then((allData) => {
+       
+        var contact = allData[0];
+        var staff = allData[1];
+        if (contact && contact.length > 0) {
+          console.log("Inside contact forgot password");
+          var updateContactTokenPromise = updateContactToken(contact[0]);
+        } else if(staff && staff.length > 0) {
+          console.log("Inside staff forgot password");
+          var updateStaffTokenPromise = updateStaffToken(staff[0]);
+        }
+        if (updateContactTokenPromise) {
+          updateContactTokenPromise
+            .then((data) => {
+              console.log("inside return promise contact" + contact[0].Email1);
+              var sendEmailForContact = mailOperations.sendEmail(contact[0].Email1, data.token);
+              sendEmailForContact.then((data) => {
+                return res
+                .status(200)
+                .send({ code: 200, message: "Mail has been delivered successfully to "+ contact[0].Email1});
+              }).catch((err) => {
+                return res
+                .status(400)
+                .send({ code: 400, message: "Failed to send mail to "+ contact[0].Email1 +" "+ err});
+              });
+            })
+            .catch((err) => {
+              console.log("error ********* contact update" + err);
+            });
+        }
+        if (updateStaffTokenPromise) {
+          updateStaffTokenPromise
+            .then((data) => {
+              console.log("inside return promise staff");
+            })
+            .catch((err) => {
+              console.log("error ********* staff update" + err);
+            });
+        }
+        
+        if(updateContactTokenPromise == undefined && updateStaffTokenPromise == undefined) {
+            return res
+                .status(400)
+                .send({ code: 400, message: "Email is not registered with us "+ req.body.email});
+              
+        }
+        
+      })
+      .catch((err) => {
+        console.log("error ********* outside" + err);
+        return res.status(400).send(err);
+      });
+   
+});
+
+function updateContactToken(contactInfo) {
+    
+    var token = jwt.sign({email_id: contactInfo.Email1}, contactInfo.ContactName, {
+
+        expiresIn: '2d' // expires in 2 days
+
+   });
+    return new Promise((resolve, reject) => {
+        let query = `update Contact
+
+        set PassToken = '${token}'
+        
+        where Email1 = '${contactInfo.Email1}'`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            resolve({token: token})
+        })
+    })
+    
+}
+
+
+function updateStaffToken(staffInfo) {
+    var token = jwt.sign({email_id: staffInfo.Email}, staffInfo.StaffName, {
+
+        expiresIn: '2d' // expires in 2 days
+
+   });
+    return new Promise((resolve, reject) => {
+        let query = `update Staff
+
+        set PassToken = '${token}'
+        
+        where Email = '${staffInfo.Email}'`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            resolve({token: token})
+
+        })
+    })
+}
+
+
+function contactCheckPromise(req) {
+    return new Promise((resolve, reject) => {
+        let query = `select * from Contact WHERE Contact.Email1 = '${req.body.email}'`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.length > 0) {
+                resolve(results)
+            } else {
+                resolve(results)
+            }
+
+        })
+    })
+}
+function staffCheckPromise(req) {
+    return new Promise((resolve, reject) => {
+        let query = `select * from Staff WHERE Staff.Email = '${req.body.email}'`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.length > 0) {
+                resolve(results)
+            } else {
+                resolve(results)
+            }
+
+        })
+    })
+}
+
 
 function getTotalWorkOrders(req) {
     return new Promise((resolve, reject) => {
