@@ -2281,7 +2281,7 @@ app.delete("/deleteImageByDB", async (req, res) => {
 
 function getAllFindingsPromise(req) {
     return new Promise((resolve, reject) => {
-        if (req.query.type == "Fogging") {
+        if (req.query.type == "Fogging" || req.query.type == "Mosquito Control") {
             resolve([]);
             return;
         }
@@ -2296,7 +2296,7 @@ function getAllFindingsPromise(req) {
             if (results.length > 0) {
                 resolve(results)
             } else {
-                reject(results)
+                resolve(results)
             }
 
         });
@@ -2322,7 +2322,7 @@ function getAllServicesPromise(req) {
             if (results.length > 0) {
                 resolve(results)
             } else {
-                reject(results)
+                resolve(results)
             }
 
         });
