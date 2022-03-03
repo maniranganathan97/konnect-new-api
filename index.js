@@ -2367,9 +2367,9 @@ app.get('/getReportWO', async (req, res) => {
             single.services = allData[2];
 
             var serviceMethods = [];
-            for(var k=0; k< allData[5].length; k++) {
+            for (var k = 0; k < allData[5].length; k++) {
                 var serviceMethod = allData[5][k];
-                if(allData[5][k].ServiceMethodID == single.ServiceMethodID) {
+                if (allData[5][k].ServiceMethodID == single.ServiceMethodID) {
                     serviceMethod.IsChecked = 1;
                 }
                 serviceMethods.push(serviceMethod);
@@ -3422,16 +3422,17 @@ function getAllData(req) {
     return new Promise((resolve, reject) => {
         var allData;
         let query = `
-          select DISTINCT ReportWO.WorkOrderID,ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
-      ReportWO.ContactAckSignImageURL, C1.ContactName AS AckContact ,C2.ContactName AS Requestor, WorkOrder.POID ,ReportWO.ContactAckDateTime,
-      ReportWO.ContackAckOther, ReportWO.ContactAckID, PO.POnumber, ReportWO.FogMachineNum, PO.PODate, Site.SiteName
-      from ReportWO
-      JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
-      JOIN Contact C1 on C1.ContactID = ReportWO.ContactAckID
-      JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
-      JOIN Site ON Site.SiteID = WorkOrder.SiteID
-      JOIN PO ON PO.POID = WorkOrder.POID
-      JOIN Contact C2 on C2.ContactID = PO.ContactID
+        select DISTINCT ReportWO.WorkOrderID,ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
+        ReportWO.ContactAckSignImageURL,C2.ContactName AS Requestor, WorkOrder.POID ,ReportWO.ContactAckDateTime,
+              ReportWO.ContackAckOther, ReportWO.ContactAckID, PO.POnumber, ReportWO.FogMachineNum, PO.PODate, Site.SiteName,
+              (CASE WHEN (C1.ContactName != "" OR C1.ContactName != 0) THEN C1.ContactName ELSE ReportWO.ContackAckOther END) AS AckContact 
+              from ReportWO
+              JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
+              LEFT JOIN Contact C1 on C1.ContactID = ReportWO.ContactAckID
+              JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
+              JOIN Site ON Site.SiteID = WorkOrder.SiteID
+              JOIN PO ON PO.POID = WorkOrder.POID
+              JOIN Contact C2 on C2.ContactID = PO.ContactID
       WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID}
   
          
@@ -3512,36 +3513,36 @@ app.get("/getRescheduledReason", async (req, res) => {
 
 
 app.get("/getHomeData", async (req, res) => {
-  var totalWorkOrders = getTotalWorkOrders(req);
-  var newWorkOrders = getNewWorkOrders(req);
-  var inProgressWorkOrders = getInProgressWorkOrders(req);
-  var closedWorkOrders = getClosedWorkOrders(req);
-  var completedWorkOrders = getCompletedWorkOrders(req);
-  var assignedWorkOrders = getAssignedWorkOrders(req);
+    var totalWorkOrders = getTotalWorkOrders(req);
+    var newWorkOrders = getNewWorkOrders(req);
+    var inProgressWorkOrders = getInProgressWorkOrders(req);
+    var closedWorkOrders = getClosedWorkOrders(req);
+    var completedWorkOrders = getCompletedWorkOrders(req);
+    var assignedWorkOrders = getAssignedWorkOrders(req);
 
-  Promise.all([
-    totalWorkOrders,
-    newWorkOrders,
-    inProgressWorkOrders,
-    closedWorkOrders,
-    completedWorkOrders,
-    assignedWorkOrders
-  ])
-    .then((allData) => {
-      var returnObject = [];
-      console.log(allData[0][0]);
-      console.log(allData[1][0]);
-      console.log(allData[2][0]);
-     for(var i=0; i<6; i++) {
-         var singleData = allData[i][0];
-         returnObject.push(singleData);
-     }
+    Promise.all([
+        totalWorkOrders,
+        newWorkOrders,
+        inProgressWorkOrders,
+        closedWorkOrders,
+        completedWorkOrders,
+        assignedWorkOrders
+    ])
+        .then((allData) => {
+            var returnObject = [];
+            console.log(allData[0][0]);
+            console.log(allData[1][0]);
+            console.log(allData[2][0]);
+            for (var i = 0; i < 6; i++) {
+                var singleData = allData[i][0];
+                returnObject.push(singleData);
+            }
 
-      return res.status(200).send(returnObject);
-    })
-    .catch((err) => {
-      return res.status(200).send(err);
-    });
+            return res.status(200).send(returnObject);
+        })
+        .catch((err) => {
+            return res.status(200).send(err);
+        });
 });
 
 function getTotalWorkOrders(req) {
