@@ -488,8 +488,8 @@ app.post('/contact', async (req, res) => {
                 pool.query(sql, [values], function (err, result) {
                     if (err) throw err;
                     if (result.affectedRows > 0) {
-                        //return res.status(200).json({ code: 200, message: "success" })
-                        console.log(result)
+                        return res.status(200).json({ code: 200, message: "success" })
+                        
                     }
                     else {
                         return res.status(401).json({ code: 401, "message": "data not update" })
@@ -497,9 +497,7 @@ app.post('/contact', async (req, res) => {
                 });
 
 
-            }
-
-            return res.status(200).json({ code: 200, message: "success" })
+            }    
 
         } else {
             return res.status(400).json({ code: 400, message: "data is missing" })
@@ -1666,7 +1664,7 @@ app.post('/po', async (req, res) => {
                     pool.query(sql, [values], function (err, result) {
                         if (err) throw err;
                         if (result.affectedRows > 0) {
-                            console.log(result)
+                            return res.status(200).send({ message: "Data uploaded successfUlly." })
                         }
                         else {
                             return res.status(401).json({ code: 401, "message": "Failed to create work order." })
@@ -1675,9 +1673,7 @@ app.post('/po', async (req, res) => {
 
 
                 }
-                return res.status(200).send({ message: "Data uploaded successfUlly." })
-
-            } else {
+             } else {
                 return res.status(400).json({ code: 400, "message": "Data is not inserted." })
             }
         })
