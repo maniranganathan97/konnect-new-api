@@ -3588,7 +3588,7 @@ app.post('/testVerify', async(req, res) => {
 
    });
 
-   jwt.verify(token, 'Stack', function(err, decoded) {
+   jwt.verify(token, 'publicKey', function(err, decoded) {
     if (err) {
       console.log(err);
     } else {
@@ -3597,6 +3597,72 @@ app.post('/testVerify', async(req, res) => {
   });
 
 });
+
+app.get('/resetPassword', async(req, res) => {
+
+    jwt.verify(req.query.token, "publicKey", function (err, decoded) {
+      if (err) {
+        return res.status(200).send({
+            code: 200,
+            status:false
+          });
+      }
+
+      var contactCheck = contactTokenCheckPromise(req);
+      var staffCheck = staffTokenCheckPromise(req);
+      Promise.all([contactCheck, staffCheck]).then((allData) => {
+        var contact = allData[0];
+        var staff = allData[1];
+        if (contact && contact.length > 0) {
+          console.log("Inside contact forgot password token verify.");
+          return res.status(200).send({
+            code: 200,
+            status:true
+          });
+        } else if (staff && staff.length > 0) {
+          console.log("Inside staff forgot password token verify.");
+          return res.status(200).send({
+            code: 200,
+            status:true
+          });
+        } else {
+            return res.status(200).send({
+                code: 200,
+                status:false
+              });
+        }
+      });
+    });
+});
+
+function contactTokenCheckPromise(req) {
+    return new Promise((resolve, reject) => {
+        let query = `select * from Contact WHERE Contact.PassToken = '${req.query.token}'`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.length > 0) {
+                resolve(results)
+            } else {
+                resolve(results)
+            }
+
+        })
+    })
+}
+function staffTokenCheckPromise(req) {
+    return new Promise((resolve, reject) => {
+        let query = `select * from Staff WHERE Staff.PassToken = '${req.query.token}'`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.length > 0) {
+                resolve(results)
+            } else {
+                resolve(results)
+            }
+
+        })
+    })
+}
 
 app.post('/forgotPassword', async(req, res) => {
 
@@ -3637,6 +3703,16 @@ app.post('/forgotPassword', async(req, res) => {
           updateStaffTokenPromise
             .then((data) => {
               console.log("inside return promise staff");
+              var sendEmailForContact = mailOperations.sendEmail(staff[0].Email, data.token);
+              sendEmailForContact.then((data) => {
+                return res
+                .status(200)
+                .send({ code: 200, message: "Mail has been delivered successfully to "+ staff[0].Email});
+              }).catch((err) => {
+                return res
+                .status(400)
+                .send({ code: 400, message: "Failed to send mail to "+ contact[0].Email1 +" "+ err});
+              });
             })
             .catch((err) => {
               console.log("error ********* staff update" + err);
@@ -3660,7 +3736,7 @@ app.post('/forgotPassword', async(req, res) => {
 
 function updateContactToken(contactInfo) {
     
-    var token = jwt.sign({email_id: contactInfo.Email1}, contactInfo.ContactName, {
+    var token = jwt.sign({email_id: contactInfo.Email1, data: contactInfo}, "publicKey", {
 
         expiresIn: '2d' // expires in 2 days
 
@@ -3681,7 +3757,7 @@ function updateContactToken(contactInfo) {
 
 
 function updateStaffToken(staffInfo) {
-    var token = jwt.sign({email_id: staffInfo.Email}, staffInfo.StaffName, {
+    var token = jwt.sign({email_id: staffInfo.Email, data: staffInfo}, "publicKey", {
 
         expiresIn: '2d' // expires in 2 days
 
