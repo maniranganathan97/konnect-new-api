@@ -130,7 +130,7 @@ app.post('/site', multer.single('file'), async (req, res) => {
             if (results.affectedRows > 0) {
                 return res.status(200).json({ code: 200, message: "success" })
             } else {
-                return res.status(401).json({ code: 401, "message": "data not update" })
+                return res.status(401).json({ code: 401, "message": "site data not update" })
             }
         })
     })
@@ -163,7 +163,7 @@ app.put('/site', async (req, res) => {
                 if (results.affectedRows > 0) {
                     return res.status(200).json({ code: 200, message: "success" })
                 } else {
-                    return res.status(401).json({ code: 401, "message": "data not update" })
+                    return res.status(401).json({ code: 401, "message": "site with images data not update" })
                 }
             })
         })
@@ -179,7 +179,7 @@ app.put('/site', async (req, res) => {
             if (results.affectedRows > 0) {
                 return res.status(200).json({ code: 200, message: "success" })
             } else {
-                return res.status(401).json({ code: 401, "message": "data not update" })
+                return res.status(401).json({ code: 401, "message": "site without data not update" })
             }
         })
     }
@@ -232,7 +232,7 @@ app.post('/sitezone', async (req, res) => {
         if (results.affectedRows > 0) {
             return res.status(200).json({ code: 200, message: "success" })
         } else {
-            return res.status(401).json({ code: 401, "message": "data not update" })
+            return res.status(401).json({ code: 401, "message": "siteZone data not update" })
         }
     })
 })
@@ -377,7 +377,7 @@ app.put('/pointdetails', async (req, res, next) => {
                 if (results.affectedRows > 0) {
                     return res.status(200).json({ code: 200, message: "success" })
                 } else {
-                    return res.status(401).json({ code: 400, "message": "data not update" })
+                    return res.status(401).json({ code: 400, "message": "pointDetails with images data not update" })
                 }
             })
         })
@@ -391,7 +391,7 @@ app.put('/pointdetails', async (req, res, next) => {
             if (results.affectedRows > 0) {
                 return res.status(200).json({ code: 200, message: "success" })
             } else {
-                return res.status(401).json({ code: 401, "message": "data not update" })
+                return res.status(401).json({ code: 401, "message": "pointDetails without images data not update" })
             }
         })
     }
@@ -492,7 +492,7 @@ app.post('/contact', async (req, res) => {
                         
                     }
                     else {
-                        return res.status(401).json({ code: 401, "message": "data not update" })
+                        return res.status(401).json({ code: 401, "message": "contact data not inserted" })
                     }
                 });
 
@@ -544,7 +544,7 @@ app.put('/contact', async (req, res) => {
                                 return res.status(200).json({ code: 200, message: "success" })
                             }
                             else {
-                                return res.status(401).json({ code: 401, "message": "data not update" })
+                                return res.status(401).json({ code: 401, "message": "contact data not updated" })
                             }
                         });
                     }
@@ -565,7 +565,7 @@ app.put('/contact', async (req, res) => {
             }
 
         } else {
-            return res.status(401).json({ code: 401, "message": "data not update" })
+            return res.status(401).json({ code: 401, "message": "contact data not update" })
         }
     })
 })
@@ -916,7 +916,7 @@ app.put('/staff', async (req, res, next) => {
                 return res.status(200).json({ code: 200, message: "staff data updated" })
 
             } else {
-                return res.status(401).json({ code: 401, "message": "data not update" })
+                return res.status(401).json({ code: 401, "message": "staff data not update" })
             }
         })
     }
@@ -985,7 +985,7 @@ app.put('/certificatetype', async (req, res) => {
         if (results.affectedRows > 0) {
             return res.status(200).json({ code: 200, "message": "Update Successful." })
         } else {
-            return res.status(401).json({ code: 401, "message": "Data not updated." })
+            return res.status(401).json({ code: 401, "message": "certificate type Data not updated." })
         }
     })
 })
@@ -1040,7 +1040,7 @@ app.put('/certificatebody', async (req, res) => {
         if (results.affectedRows > 0) {
             return res.status(200).json({ code: 200, "message": "Update Successful." })
         } else {
-            return res.status(401).json({ code: 401, "message": "Data not updated." })
+            return res.status(401).json({ code: 401, "message": " certificatebody Data not updated." })
         }
     })
 })
@@ -1078,7 +1078,7 @@ app.get('/checkscanid', async (req, res) => {
                             })
 
                         } else {
-                            return res.status(400).json({ code: 400, "message": "data not update" })
+                            return res.status(400).json({ code: 400, "message": "checkscanid data not update" })
                         }
                     })
                     // else {
@@ -2650,7 +2650,7 @@ app.put('/updateReportPO', async (req, res) => {
                         });
                     // return res.status(200).json({ code: 200, message: "success" })
                 } else {
-                    return res.status(400).json({ code: 400, "message": "data not update" })
+                    return res.status(400).json({ code: 400, "message": "update reportPo with signature data not update" })
                 }
             })
         })
