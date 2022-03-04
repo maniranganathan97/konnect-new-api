@@ -29,8 +29,8 @@ function sendEmail(emailId, token) {
             from: "manir1389@gmail.com",
             to: emailId,
             subject: "Reset Password for PEST application",
-            // html: html,
-            html: '<p>Click <a href="http://localhost:3000/sessions/recover/' + recovery_token + '">here</a> to reset your password</p>',
+            html: html,
+            // html: '<p>Click <a href="http://localhost:3000/sessions/recover/' + recovery_token + '">here</a> to reset your password</p>',
 
             // text: `Please select this link to proceed to change the password and it will expire in 2 days\n${resetLink}`,
             priority: "high",

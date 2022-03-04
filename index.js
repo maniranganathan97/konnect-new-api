@@ -3227,6 +3227,7 @@ WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID}
                 var allDataPromise = getAllData(req);
                 var workersPromise = getWorkersData(req);
                 var servicesPromise = getServices(req);
+                var findingsPromise = getFindings(req);
                 var checkWorkTypePromise = getWorkType(req);
                 var imagesPromise = getImages(req);
                 var getServiceTypeOtherPromise = getServiceTypeOther(req);
@@ -3238,6 +3239,7 @@ WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID}
                     checkWorkTypePromise,
                     imagesPromise,
                     getServiceTypeOtherPromise,
+                    findingsPromise
                 ])
                     .then((allData) => {
                         var returnData = [];
@@ -3275,7 +3277,13 @@ WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID}
                             var singleServiceTypeOther = allData[5][k];
                             allServiceTypeOther.push(singleServiceTypeOther.ServiceTypeOther);
                         }
-                        single.serviceTypeOthers = allServiceTypeOther;
+
+                        var findings = [];
+                        for (var m = 0; m < allData[6].length; m++) {
+                            var finding = allData[6][m];
+                            findings.push(finding);
+                        }
+                        single.findings = findings;
                         // if the workTypeId =3  meaning the mosquito fogging type then sending only the first data from the result
                         if (allData[3][0].WorkTypeID == 3) {
                             single.images.afterImages = [];
@@ -3368,6 +3376,33 @@ function getImages(req) {
 
 }
 
+
+function getFindings(req) {
+    return new Promise((resolve, reject) => {
+        var allData;
+        let query = `
+        SELECT DISTINCT ReportWOFindings.FindingsID, ReportWOFindings.Value, ReportWOFindings.IsChecked,
+ReportWOFindings.UpdatedByUserID, ReportWOFindings.UpdatedDateTime
+from ReportWOFindings
+JOIN ReportWO on ReportWO.ReportWOID = ReportWOFindings.ReportWOID
+ JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
+ WHERE WorkOrder.WorkOrderID = ${req.query.WorkOrderID}
+        `
+        pool.query(query, function (err, results) {
+            if (err) reject(err)
+            console.log(results)
+            if (results.length == 0) {
+                resolve({ code: 200, message: "There is no findings  for selected values" });
+            }
+            allData = results;
+            console.log("all results are --->" + allData);
+            resolve(results);
+
+
+        })
+
+    });
+}
 
 function getServices(req) {
     return new Promise((resolve, reject) => {
