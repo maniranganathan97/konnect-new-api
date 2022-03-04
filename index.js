@@ -3598,7 +3598,80 @@ app.post('/testVerify', async(req, res) => {
 
 });
 
-app.get('/resetPassword', async(req, res) => {
+app.put("/updatePassword", async (req, res) => {
+  var contactPasswordUpdate = updateContactPasswordPromise(req);
+  var staffPasswordUpdate = updateStaffPasswordPromise(req);
+  Promise.all([contactPasswordUpdate, staffPasswordUpdate]).then((allData) => {
+    var contact = allData[0];
+    var staff = allData[1];
+    if (contact && contact.length > 0) {
+      console.log("Inside contact forgot password token verify.");
+      return res.status(200).send({
+        code: 200,
+        status: true,
+      });
+    } else if (staff && staff.length > 0) {
+      console.log("Inside staff forgot password token verify.");
+      return res.status(200).send({
+        code: 200,
+        status: true,
+      });
+    } else {
+      return res.status(200).send({
+        code: 200,
+        status: false,
+      });
+    }
+  })
+  .catch((err) => {
+    console.log("error ********* update password" + err);
+    return res.status(400).send(err);
+  });
+});
+
+function updateContactPasswordPromise(req) {
+    return new Promise((resolve, reject) => {
+        let query = `
+        UPDATE Contact
+
+set PasswordHash = '${req.body.password}'
+
+where PassToken = '${req.body.token}'
+`;
+        pool.query(query, function (err, results) {
+          if (err) throw err;
+          if (results.affectedRows > 0) {
+            resolve("new password updated for contact success")
+        } else {
+            resolve("new password updated for contact fail")
+        }
+        });
+    })
+}
+
+
+function updateStaffPasswordPromise(req) {
+    return new Promise((resolve, reject) => {
+        let query = `
+        UPDATE Staff
+
+set PasswordHash = '${req.body.password}'
+
+where PassToken = '${req.body.token}'
+        
+        `
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.affectedRows > 0) {
+                resolve("new password updated for staff success")
+            } else {
+                resolve("new password updated for staff fail")
+            }
+
+        })
+    })
+}
+app.get('/verifyToken', async(req, res) => {
 
     jwt.verify(req.query.token, "publicKey", function (err, decoded) {
       if (err) {
@@ -3736,7 +3809,7 @@ app.post('/forgotPassword', async(req, res) => {
 
 function updateContactToken(contactInfo) {
     
-    var token = jwt.sign({email_id: contactInfo.Email1, data: contactInfo}, "publicKey", {
+    var token = jwt.sign({email_id: contactInfo.Email1}, "publicKey", {
 
         expiresIn: '2d' // expires in 2 days
 
@@ -3757,7 +3830,7 @@ function updateContactToken(contactInfo) {
 
 
 function updateStaffToken(staffInfo) {
-    var token = jwt.sign({email_id: staffInfo.Email, data: staffInfo}, "publicKey", {
+    var token = jwt.sign({email_id: staffInfo.Email}, "publicKey", {
 
         expiresIn: '2d' // expires in 2 days
 
