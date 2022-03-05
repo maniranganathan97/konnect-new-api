@@ -55,6 +55,7 @@ const pool = mysql.createPool({
     password: 'Vp6f}9)U?u)r',
     database: 'PEST',
     multipleStatements: true,
+    dateStrings: true
 })
 
 const port = process.env.PORT || 3001
@@ -617,8 +618,8 @@ app.post('/staff', multer.single('file'), async (req, res, next) => {
     blobStream.on('finish', () => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-        let query = `INSERT INTO Staff(StaffID, StaffName, GenderID,SalutationID,StaffTitleID, StaffImageURL, StaffImageFileName, Email, StaffEmploymentType, StaffEmploymentStatusID,Mobile,Telephone,Address1, Address2, PostCode, Nationality, JobStartDate, JobEndDate,IDTypeID, ID, Department,Passport, NextOfKin, NextOfKinMobile, RelationshipID, DOB, MartialStatusID,HighestQualification, Religion,PasswordHash, AccessControlID,AddedByUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-        pool.query(query, ["", req.body.StaffName, req.body.GenderID, req.body.SalutationID, req.body.StaffTitleID, publicUrl, req.body.StaffImageFileName, req.body.Email, req.body.StaffEmploymentType, req.body.StaffEmploymentStatusID, req.body.Mobile, req.body.Telephone, req.body.Address1, req.body.Address2, req.body.PostCode, req.body.Nationality, req.body.JobStartDate, req.body.JobEndDate, req.body.IDTypeID, req.body.ID, req.body.Department, req.body.Passport, req.body.NextOfKin, req.body.NextOfKinMobile, req.body.RelationshipID, req.body.DOB, req.body.MartialStatusID, req.body.HighestQualification, req.body.Religion, req.body.PasswordHash, req.body.AccessControlID, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results, fields) {
+        let query = `INSERT INTO Staff(StaffID, StaffName, GenderID,SalutationID,StaffTitleID, StaffImageURL, StaffImageFileName, Email, StaffEmploymentType, StaffEmploymentStatusID,Mobile,Telephone,Address1, Address2, PostCode, Nationality, JobStartDate, JobEndDate,IDTypeID, ID, Department,Passport, NextOfKin, NextOfKinMobile, RelationshipID, DOB, MartialStatusID,HighestQualification, Religion,PasswordHash, PassToken, AccessControlID,AddedByUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        pool.query(query, ["", req.body.StaffName, req.body.GenderID, req.body.SalutationID, req.body.StaffTitleID, publicUrl, req.body.StaffImageFileName, req.body.Email, req.body.StaffEmploymentType, req.body.StaffEmploymentStatusID, req.body.Mobile, req.body.Telephone, req.body.Address1, req.body.Address2, req.body.PostCode, req.body.Nationality, req.body.JobStartDate, req.body.JobEndDate, req.body.IDTypeID, req.body.ID, req.body.Department, req.body.Passport, req.body.NextOfKin, req.body.NextOfKinMobile, req.body.RelationshipID, req.body.DOB, req.body.MartialStatusID, req.body.HighestQualification, req.body.Religion, req.body.PasswordHash,"", req.body.AccessControlID, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results, fields) {
             if (error) return res.send(error);
             if (results.affectedRows > 0) {
 
@@ -626,7 +627,7 @@ app.post('/staff', multer.single('file'), async (req, res, next) => {
                     const buffer1 = Buffer.from(certificateDetail["CertificateImageURL"], 'base64')
                     // Create a new blob in the bucket and upload the file data.
                     const id1 = uuid.v4();
-                    const blob1 = bucket.file("konnect" + id1 + "." + req.body['CertFileName'].split('.').pop());
+                    const blob1 = bucket.file("konnect" + id1 + "." + certificateDetail['CertFileName'].split('.').pop());
                     const blobStream1 = blob1.createWriteStream();
                     blobStream1.on('error', err => {
                         next(err);
@@ -3469,16 +3470,14 @@ function getAllData(req) {
               JOIN Site ON Site.SiteID = WorkOrder.SiteID
               JOIN PO ON PO.POID = WorkOrder.POID
               JOIN Contact C2 on C2.ContactID = PO.ContactID
-      WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID}
-  
-         
-          `
+              WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID}`
         pool.query(query, function (err, results) {
             if (err) reject(err)
             if (results.length == 0) {
                 reject({ code: 200, message: "There is no report data for selected values" });
             }
             allData = results;
+            console.log(allData)
             resolve(results);
 
 
