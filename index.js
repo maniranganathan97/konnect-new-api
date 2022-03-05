@@ -3477,10 +3477,7 @@ function getAllData(req) {
                 reject({ code: 200, message: "There is no report data for selected values" });
             }
             allData = results;
-            console.log(allData)
             resolve(results);
-
-
         })
 
 
