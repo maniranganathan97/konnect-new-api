@@ -23,7 +23,7 @@ function sendEmail(emailId, token) {
           reject(err);
         } else {
           var recovery_token = "tested";
-          var resetLink = "http://localhost:3001/resetPassword?token=" + token;
+          var resetLink = "http://knighttest.net/resetPassword?token=" + token;
           html = html.replace("#token#", token);
           var mailOptions = {
             from: "manir1389@gmail.com",
