@@ -3277,6 +3277,7 @@ WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID}
                             var singleServiceTypeOther = allData[5][k];
                             allServiceTypeOther.push(singleServiceTypeOther.ServiceTypeOther);
                         }
+                        single.serviceTypeOthers = allServiceTypeOther;
 
                         var findings = [];
                         for (var m = 0; m < allData[6].length; m++) {
@@ -3820,8 +3821,8 @@ app.post('/forgotPassword', async(req, res) => {
                 .send({ code: 200, message: "Mail has been delivered successfully to "+ contact[0].Email1});
               }).catch((err) => {
                 return res
-                .status(400)
-                .send({ code: 400, message: "Failed to send mail to "+ contact[0].Email1 +" "+ err});
+                .status(200)
+                .send({ code: 200, message: "Failed to send mail to "+ contact[0].Email1 +" "+ err});
               });
             })
             .catch((err) => {
@@ -3839,8 +3840,8 @@ app.post('/forgotPassword', async(req, res) => {
                 .send({ code: 200, message: "Mail has been delivered successfully to "+ staff[0].Email});
               }).catch((err) => {
                 return res
-                .status(400)
-                .send({ code: 400, message: "Failed to send mail to "+ contact[0].Email1 +" "+ err});
+                .status(200)
+                .send({ code: 200, message: "Failed to send mail to "+ contact[0].Email1 +" "+ err});
               });
             })
             .catch((err) => {
@@ -3850,15 +3851,15 @@ app.post('/forgotPassword', async(req, res) => {
         
         if(updateContactTokenPromise == undefined && updateStaffTokenPromise == undefined) {
             return res
-                .status(400)
-                .send({ code: 400, message: "Email is not registered with us "+ req.body.email});
+                .status(200)
+                .send({ code: 200, message: "Email is not registered with us "+ req.body.email});
               
         }
         
       })
       .catch((err) => {
         console.log("error ********* outside" + err);
-        return res.status(400).send(err);
+        return res.status(200).send(err);
       });
    
 });
