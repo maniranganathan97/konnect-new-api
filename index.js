@@ -3604,18 +3604,36 @@ app.put("/updatePassword", async (req, res) => {
   Promise.all([contactPasswordUpdate, staffPasswordUpdate]).then((allData) => {
     var contact = allData[0];
     var staff = allData[1];
-    if (contact && contact.length > 0) {
+    if (contact==1) {
       console.log("Inside contact forgot password token verify.");
-      return res.status(200).send({
-        code: 200,
-        status: true,
-      });
-    } else if (staff && staff.length > 0) {
+      var deleteContactToken = deleteContactTokenPromise(req);
+      deleteContactToken.then((data) => {
+        return res.status(200).send({
+            code: 200,
+            status: true,
+          });
+      }).catch(err =>{
+        return res.status(200).send({
+            code: 200,
+            status: false,
+          });
+      })
+      
+    } else if (staff==1) {
       console.log("Inside staff forgot password token verify.");
-      return res.status(200).send({
-        code: 200,
-        status: true,
-      });
+      var deleteStaffToken = deleteStaffTokenPromise(req);
+      deleteStaffToken.then((data) => {
+        return res.status(200).send({
+            code: 200,
+            status: true,
+          });
+      }).catch(err =>{
+        return res.status(200).send({
+            code: 200,
+            status: false,
+          });
+      })
+      
     } else {
       return res.status(200).send({
         code: 200,
@@ -3629,6 +3647,44 @@ app.put("/updatePassword", async (req, res) => {
   });
 });
 
+function deleteContactTokenPromise(req) {
+    var decoded = jwt.verify(req.body.token, 'publicKey');
+    return new Promise((resolve, reject) => {
+        let query = `
+        update Contact
+
+set PassToken = ''
+where Email1 = '${decoded.email_id}'
+`;
+        pool.query(query, function (err, results) {
+          if (err) throw err;
+          if (results.affectedRows > 0) {
+            resolve("new password updated for contact success")
+        } else {
+            resolve("new password updated for contact fail")
+        }
+        });
+    })
+}
+function deleteStaffTokenPromise(req) {
+    var decoded = jwt.verify(req.body.token, 'publicKey');
+    return new Promise((resolve, reject) => {
+        let query = `
+        update Staff
+set PassToken = ''
+where Email = '${decoded.email_id}'
+`;
+        pool.query(query, function (err, results) {
+          if (err) throw err;
+          if (results.affectedRows > 0) {
+            resolve("new password updated for contact success")
+        } else {
+            resolve("new password updated for contact fail")
+        }
+        });
+    })
+}
+
 function updateContactPasswordPromise(req) {
     return new Promise((resolve, reject) => {
         let query = `
@@ -3641,9 +3697,9 @@ where PassToken = '${req.body.token}'
         pool.query(query, function (err, results) {
           if (err) throw err;
           if (results.affectedRows > 0) {
-            resolve("new password updated for contact success")
+            resolve(results.affectedRows)
         } else {
-            resolve("new password updated for contact fail")
+            resolve(results.affectedRows)
         }
         });
     })
@@ -3663,9 +3719,9 @@ where PassToken = '${req.body.token}'
         pool.query(query, function (err, results) {
             if (err) throw err
             if (results.affectedRows > 0) {
-                resolve("new password updated for staff success")
+                resolve(results.affectedRows)
             } else {
-                resolve("new password updated for staff fail")
+                resolve(results.affectedRows)
             }
 
         })
