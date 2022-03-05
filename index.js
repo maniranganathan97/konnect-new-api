@@ -3277,6 +3277,7 @@ WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID}
                             var singleServiceTypeOther = allData[5][k];
                             allServiceTypeOther.push(singleServiceTypeOther.ServiceTypeOther);
                         }
+                        single.serviceTypeOthers = allServiceTypeOther;
 
                         var findings = [];
                         for (var m = 0; m < allData[6].length; m++) {
