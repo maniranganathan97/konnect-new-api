@@ -91,6 +91,67 @@ app.post('/authentication', async (req, res) => {
     })
 
 })
+app.post('/authenticationByContactOrStaff', async (req, res) => {
+
+
+    var checkInContactPromise = contactLoginCheckPromise(req);
+    var checkInStaffPromise = staffLoginCheckPromise(req);
+    Promise.all([checkInContactPromise, checkInStaffPromise])
+      .then((allData) => {
+       
+        var contact = allData[0];
+        var staff = allData[1];
+        if ((contact && contact.length > 0) || (staff && staff.length > 0)) {
+          console.log("found contact email and password");
+        //   var updateContactTokenPromise = updateContactToken(contact[0]);
+        let query = `Select WorkTypeID,WorkTypeName from WorkType`
+                pool.query(query, function (err, result) {
+                    if (err) throw err
+                    if (result.length > 0) {
+                        console.log(result)
+                        let data = contact.length > 0 ? contact[0] : staff[0];
+                        data['workType'] = result
+                        return res.status(200).json(data)
+                    }
+                })
+        
+        }        
+        
+      })
+      .catch((err) => {
+        return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+      });
+
+})
+
+function contactLoginCheckPromise(req) {
+    return new Promise((resolve, reject) => {
+        let query = `select * from Contact WHERE Contact.Email1 = '${req.body.email}' and PasswordHash = '${req.body.password}'`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.length > 0) {
+                resolve(results)
+            } else {
+                resolve(results)
+            }
+
+        })
+    })
+}
+function staffLoginCheckPromise(req) {
+    return new Promise((resolve, reject) => {
+        let query = `select * from Staff WHERE Staff.Email = '${req.body.email}' and PasswordHash = '${req.body.password}'`
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.length > 0) {
+                resolve(results)
+            } else {
+                resolve(results)
+            }
+
+        })
+    })
+}
 
 /* Site API to create ,update and inssert and delete */
 
