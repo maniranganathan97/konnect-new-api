@@ -4111,6 +4111,27 @@ app.get('/getHomeWorkOrder', async (req, res) => {
         }
     })
 })
+app.get('/getHomeWorkOrderForContact', async (req, res) => {
+    let query = `
+    Select WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus,SiteZone.Description,Contact.ContactName,Contact.ContactID from WorkOrder
+    JOIN PO ON PO.POID = WorkOrder.POID
+    JOIN Contact ON Contact.ContactID = PO.ContactID
+    JOIN Site ON Site.SiteID = WorkOrder.SiteID
+    JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
+    JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+    WHERE DATE(WorkOrder.AssignedDateTime) = DATE(${req.query.CurrentDate})
+    ORDER BY WorkOrder.WorkOrderID
+    `
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).json(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No data found for today." })
+        }
+    })
+})
 
 app.listen(port, function () {
     console.log(`${port} is running`)
