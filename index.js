@@ -4111,8 +4111,29 @@ app.get('/getHomeWorkOrder', async (req, res) => {
         }
     })
 })
-app.get('/getHomeWorkOrderForContact', async (req, res) => {
-    let query = `
+app.get('/getHomeWorkOrderForContactOrStaff', async (req, res) => {
+    if (req.body.isStaff) {
+      let query = `Select WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus,SiteZone.Description,Staff.StaffName,Staff.StaffID from WorkOrder
+    JOIN PO ON PO.POID = WorkOrder.POID
+    JOIN Staff ON Staff.StaffID = PO.StaffID
+    JOIN Site ON Site.SiteID = WorkOrder.SiteID
+    JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
+    JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+    WHERE DATE(WorkOrder.AssignedDateTime) = DATE(${req.query.CurrentDate}) and PO.StaffID = ${req.body.userId}
+    ORDER BY WorkOrder.WorkOrderID`;
+      pool.query(query, function (err, results) {
+        if (err) throw err;
+        if (results.length > 0) {
+          return res.status(200).json(results);
+        } else {
+          return res
+            .status(200)
+            .json({ code: 200, message: "No data found for today." });
+        }
+      });
+    } else {
+      let query = `
     Select WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus,SiteZone.Description,Contact.ContactName,Contact.ContactID from WorkOrder
     JOIN PO ON PO.POID = WorkOrder.POID
     JOIN Contact ON Contact.ContactID = PO.ContactID
@@ -4120,17 +4141,20 @@ app.get('/getHomeWorkOrderForContact', async (req, res) => {
     JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
     JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
-    WHERE DATE(WorkOrder.AssignedDateTime) = DATE(${req.query.CurrentDate})
+    WHERE DATE(WorkOrder.AssignedDateTime) = DATE(${req.query.CurrentDate}) and PO.ContactID = ${req.body.userId}
     ORDER BY WorkOrder.WorkOrderID
-    `
-    pool.query(query, function (err, results) {
-        if (err) throw err
+    `;
+      pool.query(query, function (err, results) {
+        if (err) throw err;
         if (results.length > 0) {
-            return res.status(200).json(results)
+          return res.status(200).json(results);
         } else {
-            return res.status(200).json({ code: 200, message: "No data found for today." })
+          return res
+            .status(200)
+            .json({ code: 200, message: "No data found for today." });
         }
-    })
+      });
+    }
 })
 
 app.listen(port, function () {
