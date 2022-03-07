@@ -4120,7 +4120,7 @@ app.get('/getHomeWorkOrderForContactOrStaff', async (req, res) => {
     JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
     JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
-    WHERE DATE(WorkOrder.AssignedDateTime) = DATE(${req.query.CurrentDate}) and PO.StaffID = ${req.body.userId}
+    WHERE DATE(WorkOrder.AssignedDateTime) = DATE('${req.query.CurrentDate}') and PO.StaffID = ${req.body.userId}
     ORDER BY WorkOrder.WorkOrderID`;
       pool.query(query, function (err, results) {
         if (err) throw err;
@@ -4141,7 +4141,7 @@ app.get('/getHomeWorkOrderForContactOrStaff', async (req, res) => {
     JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
     JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
-    WHERE DATE(WorkOrder.AssignedDateTime) = DATE(${req.query.CurrentDate}) and PO.ContactID = ${req.body.userId}
+    WHERE DATE(WorkOrder.AssignedDateTime) = DATE('${req.query.CurrentDate}') and PO.ContactID = ${req.body.userId}
     ORDER BY WorkOrder.WorkOrderID
     `;
       pool.query(query, function (err, results) {
