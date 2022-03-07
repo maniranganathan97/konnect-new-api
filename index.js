@@ -69,7 +69,7 @@ app.get('/', function (req, res) {
     res.json({ "name": "Raghul" })
 })
 
-app.post('/authentication', async (req, res) => {
+app.post('/authenticationByLoginTable', async (req, res) => {
 
 
     pool.query(`SELECT * from login where username=? AND password=?`, [req.body.username, req.body.password], function (error, results, fields) {
@@ -91,7 +91,7 @@ app.post('/authentication', async (req, res) => {
     })
 
 })
-app.post('/authenticationByContactOrStaff', async (req, res) => {
+app.post('/authentication', async (req, res) => {
 
 
     var checkInContactPromise = contactLoginCheckPromise(req);
@@ -108,14 +108,21 @@ app.post('/authenticationByContactOrStaff', async (req, res) => {
                 pool.query(query, function (err, result) {
                     if (err) throw err
                     if (result.length > 0) {
-                        console.log(result)
+                        // console.log(result)
                         let data = contact.length > 0 ? contact[0] : staff[0];
+                        var newData = {
+                            workType: result,
+                            username: contact.length > 0 ? contact[0].Email1 : staff[0].Email,
+                            isStaff: contact.length > 0 ? false : true
+                        }
                         data['workType'] = result
-                        return res.status(200).json(data)
+                        return res.status(200).json(newData)
                     }
                 })
         
-        }        
+        }  else {
+            return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+        }       
         
       })
       .catch((err) => {
