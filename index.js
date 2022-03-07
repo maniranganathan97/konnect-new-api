@@ -113,7 +113,8 @@ app.post('/authentication', async (req, res) => {
                         var newData = {
                             workType: result,
                             username: contact.length > 0 ? contact[0].Email1 : staff[0].Email,
-                            isStaff: contact.length > 0 ? false : true
+                            isStaff: contact.length > 0 ? false : true,
+                            userId: contact.length > 0 ? contact[0].ContactID : staff[0].StaffID
                         }
                         data['workType'] = result
                         return res.status(200).json(newData)
