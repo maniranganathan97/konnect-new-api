@@ -1020,8 +1020,8 @@ app.get('/certificatetype', async (req, res) => {
 })
 
 app.post('/certificatetype', async (req, res) => {
-    let query = `INSERT INTO CertificateType (CertTypeID,CertTypeName, AddedByUser, AddedDateTime) VALUES (?,?,?,?)`
-    let parameters = ["", req.body.CertTypeName, req.body.AddedByUser, req.body.AddedDateTime]
+    let query = `INSERT INTO CertificateType (CertTypeID,CertTypeName, AddedByUserID, AddedDateTime) VALUES (?,?,?,?)`
+    let parameters = ["", req.body.CertTypeName, req.body.AddedByUserID, req.body.AddedDateTime]
     pool.query(query, parameters, function (error, results, fields) {
         if (error) throw error
         if (results.affectedRows > 0) {
