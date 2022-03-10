@@ -1076,8 +1076,8 @@ app.get('/certificatebody', async (req, res) => {
 })
 
 app.post('/certificatebody', async (req, res) => {
-    let query = `INSERT INTO CertificateBody (CertBodyID,CertBodyName, AddedByUser, AddedDateTime) VALUES (?,?,?,?)`
-    let parameters = ["", req.body.CertBodyName, req.body.AddedByUser, req.body.AddedDateTime]
+    let query = `INSERT INTO CertificateBody (CertBodyID,CertBodyName, AddedByUserID, AddedDateTime) VALUES (?,?,?,?)`
+    let parameters = ["", req.body.CertBodyName, req.body.AddedByUserID, req.body.AddedDateTime]
     pool.query(query, parameters, function (error, results, fields) {
         if (error) throw error
         if (results.affectedRows > 0) {
