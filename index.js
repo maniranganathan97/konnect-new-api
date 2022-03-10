@@ -295,8 +295,8 @@ app.get('/sitezone', async (req, res) => {
 })
 
 app.post('/sitezone', async (req, res) => {
-    let query = "INSERT INTO `SiteZone`(`SiteZoneID`, `Description`) VALUES (?,?)"
-    let parameters = ["", req.body.Description]
+    let query = "INSERT INTO `SiteZone`(`SiteZoneID`, `Description`, `SiteZoneStatus`, `AddedByUserID`, `AddedDateTime`) VALUES (?,?,?,?,?)"
+    let parameters = ["", req.body.Description, req.body.SiteZoneStatus, req.body.AddedByUserID, req.body.AddedDateTime]
     pool.query(query, parameters, function (error, results) {
         if (error) throw error
         if (results.affectedRows > 0) {
