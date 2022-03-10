@@ -293,6 +293,20 @@ app.get('/sitezone', async (req, res) => {
         }
     })
 })
+app.put('/sitezone', async (req, res) => {
+    let detail = req.body;
+    let query = `Update SiteZone SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where SiteZoneID = ?"
+    const parameters = [...Object.values(detail), req.query.SiteZoneID]
+    pool.query(query, parameters, function (err, results, fields) {
+        if (err) throw err
+
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "success" })
+        } else {
+            return res.status(401).json({ code: 401, "message": "sitezone without data not update" })
+        }
+    })
+})
 
 app.post('/sitezone', async (req, res) => {
     let query = "INSERT INTO `SiteZone`(`SiteZoneID`, `Description`, `SiteZoneStatus`, `AddedByUserID`, `AddedDateTime`) VALUES (?,?,?,?,?)"
@@ -309,7 +323,7 @@ app.post('/sitezone', async (req, res) => {
 
 app.delete('/sitezone', async (req, res) => {
 
-    let query = `DELETE FROM SiteZone WHERE SiteZoneID = ${req.body.SiteZoneID} `
+    let query = `DELETE FROM SiteZone WHERE SiteZoneID = ${req.query.SiteZoneID} `
     pool.query(query, function (error, results, fields) {
         if (error) throw error
         if (results.affectedRows > 0) {
