@@ -4187,6 +4187,61 @@ app.get('/getHomeWorkOrderForContactOrStaff', async (req, res) => {
     }
 })
 
+
+
+//POInvoice to insert and delete and read 
+app.get('/poInvoice', async (req, res) => {
+    pool.query(`select * from POInvoice`, function (error, results, fields) {
+        if (error) throw error;
+        if (results.length > 0) {
+            return res.status(200).json(results)
+        } else {
+            return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+        }
+    })
+})
+app.put('/poInvoice', async (req, res) => {
+    let detail = req.body;
+    let query = `Update POInvoice SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where POInvoiceID = ?"
+    const parameters = [...Object.values(detail), req.query.POInvoiceID]
+    pool.query(query, parameters, function (err, results, fields) {
+        if (err) throw err
+
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "success" })
+        } else {
+            return res.status(401).json({ code: 401, "message": "sitezone without data not update" })
+        }
+    })
+})
+
+app.post('/poInvoice', async (req, res) => {
+    let query = "INSERT INTO `POInvoice`(`POInvoiceID`, `POID`, `Invoice`) VALUES (?,?,?)"
+    let parameters = ["", req.body.POID, req.body.Invoice]
+    pool.query(query, parameters, function (error, results) {
+        if (error) throw error
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "POInvoice inserted success" })
+        } else {
+            return res.status(401).json({ code: 401, "message": "POInvoice data not insert" })
+        }
+    })
+})
+
+app.delete('/poInvoice', async (req, res) => {
+
+    let query = `DELETE FROM POInvoice WHERE POInvoiceID = ${req.query.POInvoiceID} `
+    pool.query(query, function (error, results, fields) {
+        if (error) throw error
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "deleted successfully" })
+        } else {
+            return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+        }
+    })
+})
+
+
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
