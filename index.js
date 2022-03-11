@@ -1427,16 +1427,32 @@ app.get('/sitetype', async (req, res) => {
 })
 
 app.post('/sitetype', async (req, res) => {
-    let query = `INSERT INTO SiteType (SiteTypeID,Description) VALUES (?,?)`
-    let parameters = ["", req.body.Description]
+    let query = `INSERT INTO SiteType (SiteTypeID, Description, SiteTypeStatus, AddedByUserID, AddedDateTime) VALUES (?,?,?,?,?)`
+    let parameters = ["", req.body.Description, req.body.SiteTypeStatus, req.body.AddedByUserID, req.body.AddedDateTime]
     pool.query(query, parameters, function (error, results, fields) {
         if (error) throw error
-        if (results.length > 0) {
+        if (results.affectedRows > 0) {
             return res.status(200).json({ code: 200, message: "success" })
         } else {
             return res.status(401).json({ "code": 401, "message": "unauthorized user" })
         }
 
+    })
+});
+
+
+app.put('/sitetype', async (req, res) => {
+    let detail = req.body;
+    let query = `Update SiteType SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where SiteTypeID = ?"
+    const parameters = [...Object.values(detail), req.query.SiteTypeID]
+    pool.query(query, parameters, function (err, results, fields) {
+        if (err) throw err
+
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "success" })
+        } else {
+            return res.status(401).json({ code: 401, "message": "SiteType without data not update" })
+        }
     })
 })
 
