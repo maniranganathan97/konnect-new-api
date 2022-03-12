@@ -1706,6 +1706,16 @@ app.get('/sitecontactlist', async (req, res) => {
     })
 })
 
+app.get('/getReportByPONumber', async (req, res) => {
+    let query = `
+    select * from PO where PO.POnumber = '${req.query.poNumber}'
+    `
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        return res.status(200).json(results)
+    })
+})
+
 app.get('/po', async (req, res) => {
     var poDetails = getPODetailsPromise();
     var poInvoiceDetails = getPoInvoicePromise();
@@ -1719,13 +1729,14 @@ app.get('/po', async (req, res) => {
                 returnData.message[i].poInvoiceDetails = [];
                 continue;
             }
+            var newInvoiceData = [];
             for(var j=0; j<invoiceData.length; j++) {
                 if(returnData.message[i].POID == invoiceData[j].POID) {
-                    returnData.message[i].poInvoiceDetails = invoiceData[j]
-                } else {
-                    returnData.message[i].poInvoiceDetails = [];
+                    newInvoiceData.push(invoiceData[j])
                 }
             }
+            returnData.message[i].poInvoiceDetails = newInvoiceData;
+
         }
        
         return res.status(200).json(returnData)
@@ -1771,6 +1782,8 @@ function getPODetailsPromise() {
     });
   });
 }
+
+
 
 app.post('/po', async (req, res) => {
     const buffer = Buffer.from(req.body["POImageURL"], 'base64')
