@@ -1708,7 +1708,7 @@ app.get('/sitecontactlist', async (req, res) => {
 
 app.get('/getReportByPONumber', async (req, res) => {
     let query = `
-    select * from PO where PO.POnumber = '${req.query.poNumber}'
+    select * from PO where PO.POnumber = '${req.query.POnumber}'
     `
     pool.query(query, function (err, results) {
         if (err) throw err
