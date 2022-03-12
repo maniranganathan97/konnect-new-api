@@ -1713,7 +1713,21 @@ app.get('/po', async (req, res) => {
       .then((allData) => {
         var returnData = {};
         returnData = allData[0];
-        returnData.poInvoiceDetails = allData[1];
+        var invoiceData = allData[1];
+        for(var i=0; i<returnData.message.length; i++) {
+            if(invoiceData.length == 0) {
+                returnData.message[i].poInvoiceDetails = [];
+                continue;
+            }
+            for(var j=0; j<invoiceData.length; j++) {
+                if(returnData.message[i].POID == invoiceData[j].POID) {
+                    returnData.message[i].poInvoiceDetails = invoiceData[j]
+                } else {
+                    returnData.message[i].poInvoiceDetails = [];
+                }
+            }
+        }
+       
         return res.status(200).json(returnData)
       })
       .catch((err) => {
@@ -1726,7 +1740,7 @@ app.get('/po', async (req, res) => {
 function getPoInvoicePromise() {
     return new Promise((resolve, reject) => {
         let query = `select * from POInvoice
-        JOIN PO on PO.POID = POInvoice.POID
+    
         `;
         pool.query(query, function (err, results) {
           if (err) throw err;
