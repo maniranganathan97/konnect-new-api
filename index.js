@@ -1707,21 +1707,56 @@ app.get('/sitecontactlist', async (req, res) => {
 })
 
 app.get('/po', async (req, res) => {
+    var poDetails = getPODetailsPromise();
+    var poInvoiceDetails = getPoInvoicePromise();
+    Promise.all([poDetails, poInvoiceDetails])
+      .then((allData) => {
+        var returnData = {};
+        returnData = allData[0];
+        returnData.poInvoiceDetails = allData[1];
+        return res.status(200).json(returnData)
+      })
+      .catch((err) => {
+        console.log("error is ====" + err);
+        return res.status(200).json(err)
+      });
+
+})
+
+function getPoInvoicePromise() {
+    return new Promise((resolve, reject) => {
+        let query = `select * from POInvoice
+        JOIN PO on PO.POID = POInvoice.POID
+        `;
+        pool.query(query, function (err, results) {
+          if (err) throw err;
+          if (results.length >= 0) {
+            resolve(results);
+          } else {
+            reject({ code: 400, message: "No data found" });
+          }
+        });
+      });
+}
+
+function getPODetailsPromise() {
+  return new Promise((resolve, reject) => {
     let query = `select PO.*,Contact.ContactName,Staff.StaffName,Company.CompanyName,POStatus.POStatus from PO 
     JOIN Contact ON Contact.ContactID = PO.ContactID
     JOIN Staff ON Staff.StaffID = PO.StaffID
     JOIN Company ON PO.CompanyID = Company.CompanyID
     JOIN POStatus ON POStatus.POStatusID = PO.POStatusID
-    ORDER BY POID`
+    ORDER BY POID`;
     pool.query(query, function (err, results) {
-        if (err) throw err
-        if (results.length >= 0) {
-            return res.status(200).json(results)
-        } else {
-            return res.status(400).json({ code: 400, message: "No data found" })
-        }
-    })
-})
+      if (err) throw err;
+      if (results.length >= 0) {
+        resolve({ code: 200, message: results });
+      } else {
+        reject({ code: 400, message: "No data found" });
+      }
+    });
+  });
+}
 
 app.post('/po', async (req, res) => {
     const buffer = Buffer.from(req.body["POImageURL"], 'base64')
@@ -1737,8 +1772,8 @@ app.post('/po', async (req, res) => {
         // The public URL can be used to directly access the file via HTTP.
         const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
 
-        let query = `INSERT INTO PO(POID,POnumber,POdate,POImageURL,ContactID,StaffID,POStatusID,CompanyID,POFilename, AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?,?,?,?)`
-        pool.query(query, ["", req.body.POnumber, req.body.POdate, publicUrl, req.body.ContactID, req.body.StaffID, req.body.POStatusID, req.body.CompanyID, req.body.POFilename, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results) {
+        let query = `INSERT INTO PO(POID,POnumber,POdate,POImageURL,ContactID,StaffID,POStatusID,CompanyID,POFilename, Amount, Description, AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?,?,?,?, ?,?)`
+        pool.query(query, ["", req.body.POnumber, req.body.POdate, publicUrl, req.body.ContactID, req.body.StaffID, req.body.POStatusID, req.body.CompanyID, req.body.POFilename, req.body.Amount, req.body.Description, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results) {
             if (error) return res.send(error);
             if (results.affectedRows > 0) {
                 if (req.body.WorkOrders.length > 0) {
