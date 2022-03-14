@@ -1859,8 +1859,10 @@ app.put('/po', async (req, res) => {
     try {
         const detail = req.body
         let workOrderValues = req.body.WorkOrders
+        let poInvoiceDetails = req.body.poInvoiceDetails;
         //let contactObjects = req.body
         delete detail['WorkOrders']
+        delete detail['poInvoiceDetails']
 
         if (detail['POImageURL']) {
             const buffer = Buffer.from(detail["POImageURL"], 'base64')
@@ -1914,7 +1916,15 @@ app.put('/po', async (req, res) => {
                     }
                 })
 
-                return res.status(200).json({ code: 200, "message": "Data updated sucessfully" })
+                let updatePoInvoiceData = updatePOInvoice(poInvoiceDetails, req);
+                Promise.all([updatePoInvoiceData])
+                    .then((allData) => {
+                        return res.status(200).json({ code: 200, "message": "Data updated sucessfully" })
+                    })
+                    .catch((err) => {
+                        console.log("error while updating po invoice *********" + err);
+                        return res.status(400).send(err);
+                    });
             })
             blobStream.end(buffer);
 
@@ -1958,7 +1968,17 @@ app.put('/po', async (req, res) => {
                 }
             })
 
-            return res.status(200).json({ code: 200, "message": "Data updated sucessfully" })
+            let updatePoInvoiceData = updatePOInvoice(poInvoiceDetails, req);
+            Promise.all([updatePoInvoiceData])
+              .then((allData) => {
+                return res
+                  .status(200)
+                  .json({ code: 200, message: "Data updated sucessfully" });
+              })
+              .catch((err) => {
+                console.log("error while updating po invoice *********" + err);
+                return res.status(400).send(err);
+              });
         }
     } catch (error) {
         return res.status(500).json({ "message": error })
