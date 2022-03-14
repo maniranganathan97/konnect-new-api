@@ -1708,7 +1708,18 @@ app.get('/sitecontactlist', async (req, res) => {
 
 app.get('/getReportByPONumber', async (req, res) => {
     let query = `
-    select * from PO where PO.POnumber = '${req.query.POnumber}'
+    SELECT PO.POnumber, PO.POdate, WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,WorkStatus.WorkStatus
+
+FROM PO JOIN WorkOrder ON PO.POID = WorkOrder.POID
+    JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
+    JOIN Site ON WorkOrder.SiteID = Site.SiteID
+    JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+    
+    where PO.POnumber = '${req.query.POnumber}'
+    Order By WorkOrder.WorkOrderID
+     
+    
     `
     pool.query(query, function (err, results) {
         if (err) throw err
