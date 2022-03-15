@@ -1988,32 +1988,78 @@ app.put('/po', async (req, res) => {
 })
 
 function updatePOInvoice(poInvoiceDetails, req) {
-    for (let poInvoice of poInvoiceDetails) {
-        //console.log(woValues)
-        if (!!!poInvoice['POInvoiceID']) {
-            var sql = "INSERT INTO POInvoice(POInvoiceID, POID, Invoice) VALUES (?,?,?)";
-            let parameters = ["", req.query.POID, poInvoice['Invoice']]
-            pool.query(sql, parameters, function (err, result, fields) {
-                if (err) throw err;
-                resolve("Data updated sucessfully")
-            });
+    return new Promise((resolve, reject) => {
+        if (!poInvoiceDetails || (poInvoiceDetails && poInvoiceDetails.length == 0)) {
+            resolve("no findings to update");
+            return;
         }
-        else {
-            //console.log("in else")
-            let sql = `SELECT 1 FROM POInvoice WHERE POInvoiceID = ${poInvoice['POInvoiceID']}`
-            pool.query(sql, function (err, result, fields) {
-                if (err) throw err;
-                if (result.length > 0) {
-                    let query = `Update POInvoice SET  ` + Object.keys(poInvoice).map(key => `${key}=?`).join(",") + " where POInvoiceID = ?"
-                    const parameters = [...Object.values(poInvoice), poInvoice['POInvoiceID']]
-                    pool.query(query, parameters, function (err, results, fields) {
-                        if (err) throw err;
-                        resolve("Data updated sucessfully")
-                    })
+        let sql = `
+        Delete FROM POInvoice WHERE POID = ${req.query.POID}
+        `;
+        console.log(sql);
+        pool.query(sql, function (err, result, fields) {
+            if (err) throw err;
+            if (result) {
+
+                for (var j = 0; j < poInvoiceDetails.length; j++) {
+                    var singleData = poInvoiceDetails[j];
+
+                    var insertPoInvoicePromise = insertPoInvoiceData(singleData, req);
+
+
+                    //it will run always to delete not in the list
+                    var findingsIdList = [];
+                    for (var i = 0; i < poInvoiceDetails.length; i++) {
+                        findingsIdList.push(poInvoiceDetails[i].POInvoiceID);
+                    }
+
+                    console.log("deleting existing findings are ----->" + findingsIdList);
+                    // var deleteFindigsPromise = deleteFindingsData(
+                    //   singleData,
+                    //   findingsIdList,
+                    //   req
+                    // );
+                    Promise.all([
+                        insertPoInvoicePromise,
+                        // updateFindingsPromise,
+                        //deleteFindigsPromise,
+                    ])
+                        .then((allData) => {
+
+                            resolve({ code: 200, message: "updated successfully." });
+                        })
+                        .catch((err) => {
+                            console.log("error is ====" + err);
+                            reject(err);
+                        });
                 }
-            });
-        }
-    }
+            }
+        });
+    });
+}
+
+
+function insertPoInvoiceData(singleData, req) {
+    return new Promise((resolve, reject) => {
+        console.log("before---------> " + singleData.POID)
+
+        console.log("inside insert POInvoice");
+        var sql =
+            "INSERT INTO POInvoice(POID, Invoice) VALUES (?,?)";
+        let parameters = [
+            singleData["POID"],
+            singleData["Invoice"]
+        ];
+        pool.query(sql, parameters, function (err, result, fields) {
+            if (err) throw err;
+            if (result.affectedRows > 0) {
+                resolve("updated POInvoice");
+            } else {
+                resolve("update failed POInvoice");
+            }
+        });
+
+    });
 }
 
 app.delete('/po', async (req, res) => {
