@@ -1802,6 +1802,8 @@ app.post('/po', async (req, res) => {
     const id = uuid.v4();
     const blob = bucket.file("konnect" + id + "." + req.body['POFilename'].split('.').pop());
     const blobStream = blob.createWriteStream();
+    let poInvoiceDetails = req.body.Invoices;
+    delete req.body['Invoices']
 
     blobStream.on('error', err => {
         next(err);
@@ -1814,39 +1816,31 @@ app.post('/po', async (req, res) => {
         pool.query(query, ["", req.body.POnumber, req.body.POdate, publicUrl, req.body.ContactID, req.body.StaffID, req.body.POStatusID, req.body.CompanyID, req.body.POFilename, req.body.Amount, req.body.Description, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results) {
             if (error) return res.send(error);
             if (results.affectedRows > 0) {
-                if (req.body.WorkOrders.length > 0) {
-                    let values = [];
+          
+                    var workOrderInsertPromise = insertWorkOrderData(req);
 
-                    for (let data of req.body['WorkOrders']) {
-                        let value = []
-                        value.push(results.insertId)
-                        value.push(data.SiteID)
-                        value.push(data.WorkTypeID)
-                        value.push(data.RequestedStartDate)
-                        value.push(data.RequestedEndDate)
-                        value.push(data.WorkStatusID)
-                        value.push(data.AssignedDateTime)
-                        value.push(data.UpdatedByUserID)
-                        value.push(data.UpdatedDateTime)
-                        value.push(data.SiteZoneID)
-                        value.push(data.WorkNatureID)
-                        values.push(value)
-                    }
-
-                    var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID,WorkNatureID) VALUES ?";
-
-                    pool.query(sql, [values], function (err, result) {
-                        if (err) throw err;
-                        if (result.affectedRows > 0) {
-                            return res.status(200).send({ message: "Data uploaded successfUlly." })
-                        }
-                        else {
-                            return res.status(401).json({ code: 401, "message": "Failed to create work order." })
-                        }
-                    });
-
-
-                }
+                    let insertPoInvoicePromise = insertPOInvoice(
+                      poInvoiceDetails,
+                      req,
+                      results.insertId
+                    );
+                    Promise.all([
+                      insertPoInvoicePromise,
+                      workOrderInsertPromise,
+                    ])
+                      .then((allData) => {
+                        return res.status(200).json({
+                          code: 200,
+                          message: "Data updated sucessfully",
+                        });
+                      })
+                      .catch((err) => {
+                        console.log(
+                          "error while inserting po invoice *********" + err
+                        );
+                        return res.status(400).send(err);
+                      });
+                
              } else {
                 return res.status(400).json({ code: 400, "message": "Data is not inserted." })
             }
@@ -1854,6 +1848,69 @@ app.post('/po', async (req, res) => {
     })
     blobStream.end(buffer);
 })
+
+function insertPOInvoice(poInvoiceDetails, req, poId) {
+    return new Promise((resolve, reject) => {
+        if(poInvoiceDetails.length == 0) {
+            resolve("No po invoices data to insert");
+        }
+      for (var j = 0; j < poInvoiceDetails.length; j++) {
+        var singleData = poInvoiceDetails[j];
+
+        singleData.POID = poId;
+        var insertPoInvoicePromise = insertPoInvoiceData(singleData, req);
+
+        Promise.all([
+          insertPoInvoicePromise,
+         
+        ])
+          .then((allData) => {
+            resolve({ code: 200, message: "updated successfully." });
+          })
+          .catch((err) => {
+            console.log("error is ====" + err);
+            reject(err);
+          });
+      }
+    });
+}
+function insertWorkOrderData(req) {
+    return new Promise((resolve, reject) => {
+        if(req.body["WorkOrders"].length == 0) {
+            resolve("No work orders to insert");
+            return;
+        }
+      let values = [];
+
+      for (let data of req.body["WorkOrders"]) {
+        let value = [];
+        value.push(results.insertId);
+        value.push(data.SiteID);
+        value.push(data.WorkTypeID);
+        value.push(data.RequestedStartDate);
+        value.push(data.RequestedEndDate);
+        value.push(data.WorkStatusID);
+        value.push(data.AssignedDateTime);
+        value.push(data.UpdatedByUserID);
+        value.push(data.UpdatedDateTime);
+        value.push(data.SiteZoneID);
+        value.push(data.WorkNatureID);
+        values.push(value);
+      }
+
+      var sql =
+        "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID,RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID,WorkNatureID) VALUES ?";
+
+      pool.query(sql, [values], function (err, result) {
+        if (err) throw err;
+        if (result.affectedRows > 0) {
+          resolve(result)
+        } else {
+            resolve(result)
+        }
+      });
+    });
+}
 
 app.put('/po', async (req, res) => {
     try {
