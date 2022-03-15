@@ -1987,6 +1987,35 @@ app.put('/po', async (req, res) => {
 
 })
 
+function updatePOInvoice(poInvoiceDetails, req) {
+    for (let poInvoice of poInvoiceDetails) {
+        //console.log(woValues)
+        if (!!!poInvoice['POInvoiceID']) {
+            var sql = "INSERT INTO POInvoice(POInvoiceID, POID, Invoice) VALUES (?,?,?)";
+            let parameters = ["", req.query.POID, poInvoice['Invoice']]
+            pool.query(sql, parameters, function (err, result, fields) {
+                if (err) throw err;
+                resolve("Data updated sucessfully")
+            });
+        }
+        else {
+            //console.log("in else")
+            let sql = `SELECT 1 FROM POInvoice WHERE POInvoiceID = ${poInvoice['POInvoiceID']}`
+            pool.query(sql, function (err, result, fields) {
+                if (err) throw err;
+                if (result.length > 0) {
+                    let query = `Update POInvoice SET  ` + Object.keys(poInvoice).map(key => `${key}=?`).join(",") + " where POInvoiceID = ?"
+                    const parameters = [...Object.values(poInvoice), poInvoice['POInvoiceID']]
+                    pool.query(query, parameters, function (err, results, fields) {
+                        if (err) throw err;
+                        resolve("Data updated sucessfully")
+                    })
+                }
+            });
+        }
+    }
+}
+
 app.delete('/po', async (req, res) => {
     let query = `DELETE FROM PO WHERE POID =${req.query.POID}`
     pool.query(query, function (error, results, fields) {
