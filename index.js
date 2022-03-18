@@ -4466,6 +4466,60 @@ app.delete('/poInvoice', async (req, res) => {
     })
 })
 
+app.post('/team', async(req, res) => {
+
+    let query = "INSERT into Team(TeamID, TeamName, StaffID, UpdateByUserID, UpdatedDateTime) VALUES(?,?,?,?,?)"
+    let parameters = ["", req.body.TeamName, req.body.StaffID, req.body.UpdateByUserID, req.body.UpdatedDateTime]
+    pool.query(query, parameters, function (error, results) {
+        if (error) throw error
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "Team inserted success" })
+        } else {
+            return res.status(401).json({ code: 401, "message": "Team data not insert" })
+        }
+    })
+});
+app.get('/team', async(req, res) => {
+
+    pool.query(`select * from Team`, function (error, results) {
+        if (error) throw error;
+        if (results.length > 0) {
+            return res.status(200).json(results)
+        } else {
+            return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+        }
+    })
+});
+
+
+app.put('/team', async (req, res) => {
+    let detail = req.body;
+    let query = `Update Team SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where TeamID = ?"
+    const parameters = [...Object.values(detail), req.query.TeamID]
+    pool.query(query, parameters, function (err, results, fields) {
+        if (err) throw err
+
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "success" })
+        } else {
+            return res.status(401).json({ code: 401, "message": "TeamID  data not updated" })
+        }
+    })
+})
+
+
+app.delete('/team', async (req, res) => {
+
+    let query = `DELETE FROM Team WHERE TeamID = ${req.query.TeamID} `
+    pool.query(query, function (error, results, fields) {
+        if (error) throw error
+        if (results.affectedRows > 0) {
+            return res.status(200).json({ code: 200, message: "deleted successfully" })
+        } else {
+            return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+        }
+    })
+})
 
 app.listen(port, function () {
     console.log(`${port} is running`)
