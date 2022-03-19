@@ -4470,10 +4470,12 @@ app.post('/team', async(req, res) => {
 
     let query = "INSERT into Team(TeamID, TeamName, StaffID, UpdateByUserID, UpdatedDateTime) VALUES(?,?,?,?,?)"
     let parameters = ["", req.body.TeamName, req.body.StaffID, req.body.UpdateByUserID, req.body.UpdatedDateTime]
-    pool.query(query, parameters, function (error, results) {
+    pool.query(query, parameters, function (error, results, fields) {
         if (error) throw error
         if (results.affectedRows > 0) {
-            return res.status(200).json({ code: 200, message: "Team inserted success" })
+            var data = req.body;
+            data.TeamID = results.insertId;
+            return res.status(200).json(data)
         } else {
             return res.status(401).json({ code: 401, "message": "Team data not insert" })
         }
