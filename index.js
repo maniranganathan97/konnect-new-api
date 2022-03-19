@@ -4483,15 +4483,61 @@ app.post('/team', async(req, res) => {
 });
 app.get('/team', async(req, res) => {
 
-    pool.query(`select * from Team`, function (error, results) {
-        if (error) throw error;
-        if (results.length > 0) {
-            return res.status(200).json(results)
-        } else {
-            return res.status(401).json({ "code": 401, "message": "unauthorized user" })
-        }
-    })
+    var allTeams = getTeamsPromis();
+    var allStaffs = getStaffsPromise();
+    Promise.all([
+        allTeams,
+        allStaffs,
+      ])
+        .then((allData) => {
+          console.log(allData);
+          var returnData = allData[0];
+          for(var i=0; i< returnData.length; i++) {
+              returnData[i].staff = allData[1]
+          }
+          return res.status(200).send(returnData);
+        })
+        .catch((err) => {
+          console.log(
+            "error while get teams *********" + err
+          );
+          return res.status(400).send(err);
+        });
 });
+
+function getTeamsPromis() {
+  return new Promise((resolve, reject) => {
+      let query  =`
+      SELECT Team.TeamID, Team.TeamName, Team.UpdateByUserID, Team.UpdatedDateTime from Team
+
+      `;
+    pool.query(query, function (error, results) {
+      if (error) throw error;
+      if (results.length > 0) {
+        resolve(results);
+      } else {
+        reject({ code: 401, message: "unauthorized user" });
+      }
+    });
+  });
+}
+function getStaffsPromise() {
+  return new Promise((resolve, reject) => {
+      let query = `
+      SELECT DISTINCT Team.StaffID, Staff.StaffName from Team 
+
+        join Staff on Staff.StaffID = Team.StaffID
+      `;
+    pool.query(query, function (error, results) {
+      if (error) throw error;
+      if (results.length > 0) {
+        resolve(results);
+      } else {
+        reject({ code: 401, message: "unauthorized user" });
+      }
+    });
+  });
+}
 
 
 app.put('/team', async (req, res) => {
