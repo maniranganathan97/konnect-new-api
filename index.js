@@ -4468,19 +4468,55 @@ app.delete('/poInvoice', async (req, res) => {
 
 app.post('/team', async(req, res) => {
 
-    let query = "INSERT into Team(TeamID, TeamName, StaffID, UpdateByUserID, UpdatedDateTime) VALUES(?,?,?,?,?)"
-    let parameters = ["", req.body.TeamName, req.body.StaffID, req.body.UpdateByUserID, req.body.UpdatedDateTime]
+    let staffs = req.body.staffs;
+    delete req.body["staffs"];
+    let query = "INSERT into Team(TeamID, TeamName, UpdatedByUserID, UpdatedDateTime) VALUES(?,?,?,?)"
+    let parameters = ["", req.body.TeamName, req.body.UpdatedByUserID, req.body.UpdatedDateTime]
     pool.query(query, parameters, function (error, results, fields) {
-        if (error) throw error
-        if (results.affectedRows > 0) {
-            var data = req.body;
-            data.TeamID = results.insertId;
-            return res.status(200).json(data)
-        } else {
-            return res.status(401).json({ code: 401, "message": "Team data not insert" })
-        }
-    })
+      if (error) throw error;
+      if (results.affectedRows > 0) {
+        var staffsPromise = insertStaffDetailsForTeams(
+          results.insertId,
+          staffs
+        );
+        Promise.all([staffsPromise])
+          .then((allData) => {
+
+            return res.status(200).send({ code: 200, message: "Team data inserted" });
+          })
+          .catch((err) => {
+            console.log("error while get teams *********" + err);
+            return res.status(400).send(err);
+          });
+      } else {
+        return res
+          .status(401)
+          .json({ code: 401, message: "Team data not insert" });
+      }
+    });
 });
+
+function insertStaffDetailsForTeams(teamId, staffs) {
+  return new Promise((resolve, reject) => {
+    let staffQuery =
+      "INSERT into TeamStaff (TeamID, StaffID, UpdatedByUserID, UpdatedDateTime) VALUES ?";
+    let values = [];
+    for (var i = 0; i < staffs.length; i++) {
+      staffs[i].TeamID = teamId;
+      let value = [];
+      value.push(teamId);
+      value.push(staffs[i].StaffID);
+      value.push(staffs[i].UpdatedByUserID);
+      value.push(staffs[i].UpdatedDateTime);
+      values.push(value);
+    }
+
+    pool.query(staffQuery, [values], function (error, results) {
+      if (error) throw error;
+      resolve("staff data inserted")
+    });
+  });
+}
 app.get('/team', async(req, res) => {
 
     var allTeams = getTeamsPromis();
@@ -4490,7 +4526,7 @@ app.get('/team', async(req, res) => {
         allStaffs,
       ])
         .then((allData) => {
-          console.log(allData);
+          
           var returnData = allData[0];
           for(var i=0; i< returnData.length; i++) {
               returnData[i].staff = allData[1]
@@ -4508,7 +4544,7 @@ app.get('/team', async(req, res) => {
 function getTeamsPromis() {
   return new Promise((resolve, reject) => {
       let query  =`
-      SELECT Team.TeamID, Team.TeamName, Team.UpdateByUserID, Team.UpdatedDateTime from Team
+      SELECT * from Team
 
       `;
     pool.query(query, function (error, results) {
@@ -4524,9 +4560,8 @@ function getTeamsPromis() {
 function getStaffsPromise() {
   return new Promise((resolve, reject) => {
       let query = `
-      SELECT DISTINCT Team.StaffID, Staff.StaffName from Team 
-
-        join Staff on Staff.StaffID = Team.StaffID
+      SELECT TeamStaff.TeamStaffID, TeamStaff.TeamID, TeamStaff.StaffID, TeamStaff.UpdatedByUserID, Staff.StaffName FROM TeamStaff
+join Staff on Staff.StaffID = TeamStaff.StaffID
       `;
     pool.query(query, function (error, results) {
       if (error) throw error;
@@ -4541,6 +4576,8 @@ function getStaffsPromise() {
 
 
 app.put('/team', async (req, res) => {
+    let staffs = req.body.staffs;
+    delete req.body['staffs'];
     let detail = req.body;
     let query = `Update Team SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where TeamID = ?"
     const parameters = [...Object.values(detail), req.query.TeamID]
