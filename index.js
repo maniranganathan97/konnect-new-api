@@ -4531,7 +4531,7 @@ app.get('/team', async(req, res) => {
           for (var j = 0; j < staffsData.length; j++) {
             var singleStaff = {};
             if (staffsData[j].TeamID === teamsData[i].TeamID) {
-              singleStaff = staffsData[i];
+              singleStaff = staffsData[j];
               staffsForTeam.push(singleStaff);
             }
           }
