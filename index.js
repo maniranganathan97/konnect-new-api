@@ -4555,11 +4555,7 @@ function getTeamsPromis() {
       `;
     pool.query(query, function (error, results) {
       if (error) throw error;
-      if (results.length > 0) {
-        resolve(results);
-      } else {
-        reject({ code: 401, message: "unauthorized user" });
-      }
+      resolve(results);
     });
   });
 }
@@ -4571,11 +4567,7 @@ join Staff on Staff.StaffID = TeamStaff.StaffID
       `;
     pool.query(query, function (error, results) {
       if (error) throw error;
-      if (results.length > 0) {
-        resolve(results);
-      } else {
-        reject({ code: 401, message: "unauthorized user" });
-      }
+      resolve(results);
     });
   });
 }
