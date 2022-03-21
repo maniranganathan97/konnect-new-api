@@ -4499,7 +4499,7 @@ app.post('/team', async(req, res) => {
 function insertStaffDetailsForTeams(teamId, staffs) {
   return new Promise((resolve, reject) => {
     let staffQuery =
-      "INSERT into TeamStaff (TeamID, StaffID, UpdatedByUserID, UpdatedDateTime) VALUES ?";
+      "INSERT into TeamStaff (TeamID, StaffID, UpdatedByUserID) VALUES ?";
     let values = [];
     for (var i = 0; i < staffs.length; i++) {
       staffs[i].TeamID = teamId;
@@ -4507,7 +4507,6 @@ function insertStaffDetailsForTeams(teamId, staffs) {
       value.push(teamId);
       value.push(staffs[i].StaffID);
       value.push(staffs[i].UpdatedByUserID);
-      value.push(staffs[i].UpdatedDateTime);
       values.push(value);
     }
 
