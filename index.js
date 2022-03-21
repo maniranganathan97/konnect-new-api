@@ -4520,24 +4520,31 @@ app.get('/team', async(req, res) => {
 
     var allTeams = getTeamsPromis();
     var allStaffs = getStaffsPromise();
-    Promise.all([
-        allTeams,
-        allStaffs,
-      ])
-        .then((allData) => {
-          
-          var returnData = allData[0];
-          for(var i=0; i< returnData.length; i++) {
-              returnData[i].staff = allData[1]
+    Promise.all([allTeams, allStaffs])
+      .then((allData) => {
+        var teamsData = allData[0];
+        var staffsData = allData[1];
+        var returnData = [];
+        var singleData = {};
+        for (var i = 0; i < teamsData.length; i++) {
+          var staffsForTeam = [];
+          for (var j = 0; j < staffsData.length; j++) {
+            var singleStaff = {};
+            if (staffsData[j].TeamID === teamsData[i].TeamID) {
+              singleStaff = staffsData[i];
+              staffsForTeam.push(singleStaff);
+            }
           }
-          return res.status(200).send(returnData);
-        })
-        .catch((err) => {
-          console.log(
-            "error while get teams *********" + err
-          );
-          return res.status(400).send(err);
-        });
+          singleData = teamsData[i];
+          singleData.staffs = staffsForTeam;
+          returnData.push(singleData);
+        }
+        return res.status(200).send(teamsData);
+      })
+      .catch((err) => {
+        console.log("error while get teams *********" + err);
+        return res.status(400).send(err);
+      });
 });
 
 function getTeamsPromis() {
@@ -4574,35 +4581,76 @@ join Staff on Staff.StaffID = TeamStaff.StaffID
 }
 
 
-app.put('/team', async (req, res) => {
-    let staffs = req.body.staffs;
-    delete req.body['staffs'];
-    let detail = req.body;
-    let query = `Update Team SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where TeamID = ?"
-    const parameters = [...Object.values(detail), req.query.TeamID]
-    pool.query(query, parameters, function (err, results, fields) {
-        if (err) throw err
-
-        if (results.affectedRows > 0) {
-            return res.status(200).json({ code: 200, message: "success" })
-        } else {
-            return res.status(401).json({ code: 401, "message": "TeamID  data not updated" })
-        }
+app.put("/team", async (req, res) => {
+  let staffs = req.body.staffs;
+  delete req.body["staffs"];
+  var staffDeletePromise = deleteStaffsForTeam(req);
+  Promise.all([staffDeletePromise])
+    .then((allData) => {
+      var updateTeamPromise = updateTeamData(req);
+      var insertStaffPromise = insertStaffDetailsForTeams(req.query.TeamID, staffs);
+      Promise.all([updateTeamPromise, insertStaffPromise])
+        .then((allData) => {
+            return res.status(200).send(({ code: 200, message: "updated teams successfully" }));
+        })
+        .catch((err) => {
+          console.log("error while update teams *********" + err);
+          return res.status(400).send(err);
+        });
     })
-})
+    .catch((err) => {
+      console.log("error while update teams outside *********" + err);
+      return res.status(400).send(err);
+    });
+});
 
+function updateTeamData(req) {
+    let detail = req.body;
+    return new Promise((resolve, reject) => {
+        let query = `Update Team SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where TeamID = ?"
+        const parameters = [...Object.values(detail), req.query.TeamID]
+        pool.query(query, parameters, function (err, results, fields) {
+            if (err) throw err
+            if (results.affectedRows > 0) {
+                resolve({ code: 200, message: "success" })
+            } else {
+                reject({ code: 401, "message": "TeamID  data not updated" })
+            }
+        })
+    });
+}
+function deleteStaffsForTeam(req) {
+    return new Promise((resolve, reject) => {
+        let query = `
+        Delete From TeamStaff where TeamID=${req.query.TeamID}
+        `;
+      pool.query(query, function (error, results) {
+        if (error) throw error;
+        resolve("Deleted Staffs for current staff")
+      });
+    });
+}
 
 app.delete('/team', async (req, res) => {
 
-    let query = `DELETE FROM Team WHERE TeamID = ${req.query.TeamID} `
+    let query = `delete from TeamStaff where TeamID = ${req.query.TeamID}`
     pool.query(query, function (error, results, fields) {
-        if (error) throw error
+      if (error) throw error;
+      let query = `DELETE FROM Team WHERE TeamID = ${req.query.TeamID} `;
+      pool.query(query, function (error, results, fields) {
+        if (error) throw error;
         if (results.affectedRows > 0) {
-            return res.status(200).json({ code: 200, message: "deleted successfully" })
+          return res
+            .status(200)
+            .json({ code: 200, message: "deleted successfully" });
         } else {
-            return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+          return res
+            .status(401)
+            .json({ code: 401, message: "unauthorized user for team" });
         }
-    })
+      });
+      
+    });
 })
 
 app.listen(port, function () {
