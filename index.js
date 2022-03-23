@@ -4647,6 +4647,57 @@ app.delete('/team', async (req, res) => {
     });
 })
 
+app.post('/bulkWorkOrder', async (req, res) => {
+
+    let bulkWorkOrder = bulkInsertWorkOrderPromise(req);
+    Promise.all([bulkWorkOrder]).then(data =>{
+        return res.status(200).send(({ code: 200, message: "inserted bulk workorder successfully" }));
+    }).catch(err =>{
+        console.log("error occured in bulk work order insert=====" + err);
+        return res.status(400).send(({ code: 400, message: "inserted bulk workorder failed" }));
+    })
+
+})
+
+function bulkInsertWorkOrderPromise(req) {
+    return new Promise((resolve, reject) => {
+        if(req.body.length == 0) {
+            resolve("No work orders to insert");
+            return;
+        }
+      let values = [];
+
+      for (let data of req.body) {
+        let value = [];
+        value.push(data.POID);
+        value.push(data.SiteID);
+        value.push(data.TeamID);
+        value.push(data.WorkTypeID);
+        value.push(data.CreatedType);
+        value.push(data.RequestedStartDate);
+        value.push(data.RequestedEndDate);
+        value.push(data.WorkStatusID);
+        value.push(data.AssignedDateTime);
+        value.push(data.UpdatedByUserID);
+        value.push(data.UpdatedDateTime);
+        value.push(data.SiteZoneID);
+        value.push(data.WorkNatureID);
+        values.push(value);
+      }
+
+      var sql =
+        "INSERT INTO WorkOrder(POID, SiteID, TeamID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID,WorkNatureID) VALUES ?";
+
+      pool.query(sql, [values], function (err, result) {
+        if (err) throw err;
+        if (result.affectedRows > 0) {
+          resolve(result)
+        } else {
+            resolve(result)
+        }
+      });
+    });
+}
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
