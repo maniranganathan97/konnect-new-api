@@ -2205,71 +2205,97 @@ app.put('/workorder', async (req, res) => {
             }
             if (staffIds.length > 0) {
 
-                let sql = `DELETE FROM WorkOrderStaff WHERE WorkOrderID = ${req.query.WorkOrderID} AND StaffID NOT IN (${staffIds})`
-                pool.query(sql, function (err, result, fields) {
-                    if (err) throw err;
-                    if (result.length > 0) {
-                        console.log(results)
-                    } else {
-                        console.log(results)
-                    }
-                })
+                var deleteWorkOrderStaffPromise = deleteWorkOrderStaff(req, staffIds);
     
-                for (let woWorker of staffIds) {
-                    //console.log(woValues)
-    
-    
-                    let sql = `SELECT 1 FROM WorkOrderStaff WHERE WorkOrderID = ${req.query.WorkOrderID} AND StaffID = ${woWorker}`
-                    pool.query(sql, function (err, result, fields) {
-                        if (err) throw err;
-                        if (result.length > 0) {
-                            return res.status(200).json({ code: 200, "message": "Update workOrder Successful." })
-                        }
-                        else {
-                            var sql = "INSERT INTO WorkOrderStaff(WorkOrderID, StaffID, AddedByUserID, AddedDateTime) VALUES (?,?,?,?)";
-                            let parameters = [req.query.WorkOrderID, woWorker, req.body.UpdatedByUserID, req.body.UpdatedDateTime]
-                            pool.query(sql, parameters, function (err, result, fields) {
-                                if (err) throw err;
-                                if (result.affectedRows > 0) {
-                                                                        
-                                    return res.status(200).json({ code: 200, "message": "Update workOrder Successful." })
-                                    
-                                }
-                                else {
-                                    return res.status(401).json({ code: 401, "message": "New work order staff not updated." })
-                                }
-                            });
-                        }
-                    })
-                }
+               var insertNewStaffPromise = insertNewStaffId(req, staffIds);
+
+               Promise.all([deleteWorkOrderStaffPromise, insertNewStaffPromise]).then((allData) => {
+                   return res.status(200).json({ code: 200, "message": "Update workOrder Successful." });
+               }).catch((err) => {
+                console.log("error while updating work order is ====" + err);
+                return res.status(400).json({ code: 400, "message": "Update workOrder Successful." });
+            });
     
             }
             else {
-                let sql = `SELECT 1 FROM WorkOrderStaff WHERE WorkOrderID = ${req.query.WorkOrderID}`
-                pool.query(sql, function (err, result, fields) {
-                    if (err) throw err;
-                    if (result.length > 0) {
-                        let sql = `DELETE FROM WorkOrderStaff WHERE WorkOrderID = ${req.query.WorkOrderID}`
-                        pool.query(sql, function (err, result, fields) {
-                            if (err) throw err;
-                            if (result.length > 0) {
-                                console.log(results)
-                            } else {
-                                return res.status(200).json({ code: 200, "message": "No workers present to be removed." })
-                            }
-                        })
-                    }
-                })
+            
+                var selectWorkOrderStaffPromise = selectWorkOrderStaffData(req);
+                Promise.all([selectWorkOrderStaffPromise]).then((allData) => {
+                    return res.status(200).json({ code: 200, "message": "Update workOrder Successful." });
+                }).catch((err) => {
+                    console.log("error while updating work order is ====" + err);
+                    return res.status(400).json({ code: 400, "message": "Update workOrder Successful." });
+                });
             }
         }).catch((err) => {
             console.log("error while updating work order is ====" + err);
-            reject(err);
+            return res.status(400).json({ code: 400, "message": "Update workOrder Successful." });
         });
         
         
     });
 })
 
+function selectWorkOrderStaffData(req){
+    return new Promise((resolve, reject) => {
+        let sql = `SELECT 1 FROM WorkOrderStaff WHERE WorkOrderID = ${req.query.WorkOrderID}`
+        pool.query(sql, function (err, result, fields) {
+            if (err) throw err;
+            if (result.length > 0) {
+                let sql = `DELETE FROM WorkOrderStaff WHERE WorkOrderID = ${req.query.WorkOrderID}`
+                pool.query(sql, function (err, result, fields) {
+                    if (err) throw err;
+                    if (result.length > 0) {
+                        resolve(results)
+                    } else {
+                        resolve({ code: 200, "message": "No workers present to be removed." })
+                    }
+                })
+            }
+        })
+    })
+}
+
+function insertNewStaffId(req, staffIds) {
+    return new Promise((resolve, reject) => {
+        for (let woWorker of staffIds) {
+            //console.log(woValues)
+
+
+            let sql = `SELECT 1 FROM WorkOrderStaff WHERE WorkOrderID = ${req.query.WorkOrderID} AND StaffID = ${woWorker}`
+            pool.query(sql, function (err, result, fields) {
+                if (err) throw err;
+                if (result.length > 0) {
+                   resolve({ code: 200, "message": "Update workOrder Successful." })
+                }
+                else {
+                    var sql = "INSERT INTO WorkOrderStaff(WorkOrderID, StaffID, AddedByUserID, AddedDateTime) VALUES (?,?,?,?)";
+                    let parameters = [req.query.WorkOrderID, woWorker, req.body.UpdatedByUserID, req.body.UpdatedDateTime]
+                    pool.query(sql, parameters, function (err, result, fields) {
+                        if (err) throw err;
+                        if (result.affectedRows > 0) {
+                                                                
+                            resolve({ code: 200, "message": "Update workOrder Successful." })
+                            
+                        }
+                        else {
+                           reject({ code: 401, "message": "New work order staff not updated." })
+                        }
+                    });
+                }
+            })
+        }
+    })
+}
+function deleteWorkOrderStaff(req, staffIds) {
+    return new Promise((resolve, reject) => {
+        let sql = `DELETE FROM WorkOrderStaff WHERE WorkOrderID = ${req.query.WorkOrderID} AND StaffID NOT IN (${staffIds})`
+                pool.query(sql, function (err, result, fields) {
+                    if (err) throw err;
+                    resolve(result);
+                })
+    })
+}
 function getWorkersFromTeamPromise(teamId) {
     return new Promise((resolve, reject) => {
       let query = `select TeamStaff.StaffID from TeamStaff where TeamID =${teamId}`;
