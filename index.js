@@ -4218,7 +4218,7 @@ app.post('/forgotPassword', async(req, res) => {
               }).catch((err) => {
                 return res
                 .status(200)
-                .send({ code: 200, message: "Failed to send mail to "+ contact[0].Email1 +" "+ err});
+                .send({ code: 200, message: "Failed to send mail to "+ staff[0].Email +" "+ err});
               });
             })
             .catch((err) => {

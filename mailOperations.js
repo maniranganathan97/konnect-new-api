@@ -5,10 +5,10 @@ function sendEmail(emailId, token) {
     var transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "manir1389@gmail.com",
-        pass: "eznp beoc wngy mdaf",
+        user: "botscom2020@gmail.com",
+        pass: "xsnz eiio ojrg yptg",
       },
-      from: "manir1389@gmail.com",
+      from: "botscom2020@gmail.com",
       headers: {
         "x-priority": "1",
         "x-msmail-priority": "High",
