@@ -583,7 +583,9 @@ app.post('/contact', async (req, res) => {
                 });
 
 
-            }    
+            } else {
+                return res.status(200).json({ code: 200, message: "success" })
+            }
 
         } else {
             return res.status(400).json({ code: 400, message: "data is missing" })
@@ -1819,7 +1821,7 @@ app.post('/po', async (req, res) => {
             if (error) return res.send(error);
             if (results.affectedRows > 0) {
           
-                    var workOrderInsertPromise = insertWorkOrderData(req);
+                    var workOrderInsertPromise = insertWorkOrderData(req, results);
 
                     let insertPoInvoicePromise = insertPOInvoice(
                       poInvoiceDetails,
@@ -1876,7 +1878,7 @@ function insertPOInvoice(poInvoiceDetails, req, poId) {
       }
     });
 }
-function insertWorkOrderData(req) {
+function insertWorkOrderData(req, results) {
     return new Promise((resolve, reject) => {
         if(req.body["WorkOrders"].length == 0) {
             resolve("No work orders to insert");
@@ -1982,6 +1984,9 @@ function updatePoWithoutImageData(detail,workOrderValues, req){
             pool.query(query, parameters, function (err, poresults, fields) {
                 if (err) throw err
 
+                if(workOrderValues.length == 0) {
+                    resolve("No workorders to update");
+                }
                 for (let woValues of workOrderValues) {
                     console.log(woValues)
                     if (!!!woValues['WorkOrderID']) {
