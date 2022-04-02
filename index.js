@@ -11,6 +11,9 @@ const app = express()
 const mailOperations = require("./mailOperations")
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
+const reportADCRouter = require('./reportADCOperations.js');
+const reportDssdRouter = require("./reportDssdOperations.js");
+const reportSdpcRouter = require("./reportSdpcOperations.js")
 
 app.use(express.json({ limit: '50mb' }))
 app.use(cors());
@@ -4842,6 +4845,10 @@ function updatedWorkOrderStaffForBulkOrder(req, workOrderId){
           
     })
 }
+
+app.use('/reportADC', reportADCRouter);
+app.use('/reportDssd', reportDssdRouter);
+app.use('/reportSdpc', reportSdpcRouter);
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
