@@ -67,7 +67,7 @@ router.get('/get', async(req, res) => {
 
 function getReportDssdByReportMonth(req) {
     return new Promise((resolve, reject) => {
-        var getQuery = `Select * from ReportDSSD where Report_Month = ${req.query.Report_Month}`;
+        var getQuery = `Select * from ReportDSSD where Report_Month like '${req.query.year}-${req.query.month}%'`;
         pool.query(getQuery, function (err, result) {
           if (err) throw err;
           if (result.length > 0) {
