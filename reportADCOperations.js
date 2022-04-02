@@ -104,7 +104,9 @@ function updateReportADC(req) {
 
 function getReportAdbByReportMonth(req) {
     return new Promise((resolve, reject) => {
-        var getQuery = `Select * from ReportADC where Report_Month like '${req.query.year}-${req.query.month}%'`;
+        var getQuery = `Select ReportADC.*, Site.SiteName  from ReportADC
+        JOIN Site on Site.SiteID = ReportADC.SiteID
+        where Report_Month like '${req.query.year}-${req.query.month}%'`;
         pool.query(getQuery, function (err, result) {
           if (err) throw err;
           if (result.length > 0) {
