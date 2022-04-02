@@ -47,7 +47,7 @@ function saveReportDssd(req) {
 
 
 router.get('/get', async(req, res) => {
-    var getReportDssdByIdPromise = getReportDssdById(req);
+    var getReportDssdByIdPromise = getReportDssdByReportMonth(req);
     Promise.all([getReportDssdByIdPromise])
     .then(allData => {
         var data = allData[0][0];
@@ -65,9 +65,9 @@ router.get('/get', async(req, res) => {
     })
 });
 
-function getReportDssdById(req) {
+function getReportDssdByReportMonth(req) {
     return new Promise((resolve, reject) => {
-        var getQuery = `Select * from ReportDSSD where ReportDSSDID = ${req.query.ReportDSSDID}`;
+        var getQuery = `Select * from ReportDSSD where Report_Month = ${req.query.Report_Month}`;
         pool.query(getQuery, function (err, result) {
           if (err) throw err;
           if (result.length > 0) {

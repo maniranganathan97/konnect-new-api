@@ -60,7 +60,7 @@ function saveReportSdpc(req) {
 
 
 router.get('/get', async(req, res) => {
-    var getReportSdpcByIdPromise = getReportSdpcById(req);
+    var getReportSdpcByIdPromise = getReportSdpcByReportMonth(req);
     Promise.all([getReportSdpcByIdPromise])
     .then(allData => {
         var data = allData[0][0];
@@ -78,9 +78,9 @@ router.get('/get', async(req, res) => {
     })
 });
 
-function getReportSdpcById(req) {
+function getReportSdpcByReportMonth(req) {
     return new Promise((resolve, reject) => {
-        var getQuery = `Select * from ReportSDPC where ReportSDPCID = ${req.query.ReportSDPCID}`;
+        var getQuery = `Select * from ReportSDPC where Report_Month = ${req.query.Report_Month}`;
         pool.query(getQuery, function (err, result) {
           if (err) throw err;
           if (result.length > 0) {

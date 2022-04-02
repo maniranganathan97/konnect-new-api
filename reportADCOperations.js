@@ -29,10 +29,10 @@ router.post('/save', async(req, res) => {
 });
 
 router.get('/get', async(req, res) => {
-    var getReportAdbByIdPromise = getReportAdbById(req);
+    var getReportAdbByIdPromise = getReportAdbByReportMonth(req);
     Promise.all([getReportAdbByIdPromise])
     .then(allData => {
-        var data = allData[0][0];
+        var data = allData[0];
         return res.status(200).json({
             code: 200,
             data: data
@@ -102,9 +102,9 @@ function updateReportADC(req) {
   });
 }
 
-function getReportAdbById(req) {
+function getReportAdbByReportMonth(req) {
     return new Promise((resolve, reject) => {
-        var getQuery = `Select * from ReportADC where ReportADCID = ${req.query.ReportADCID}`;
+        var getQuery = `Select * from ReportADC where Report_Month = '${req.query.Report_Month}'`;
         pool.query(getQuery, function (err, result) {
           if (err) throw err;
           if (result.length > 0) {
