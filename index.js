@@ -183,6 +183,26 @@ app.get('/site', async (req, res) => {
     })
 })
 
+app.get('/siteByContactId', async (req, res) => {
+    pool.query(`
+    SELECT SiteName, Address1,SiteType.Description AS SiteType ,SiteZone.Description AS SiteZone,IsNFCAvailable,PostCode,Site.* FROM Site
+    JOIN SiteType ON SiteType.SiteTypeID = Site.SiteTypeID
+    JOIN SiteZone ON SiteZone.SiteZoneID = Site.SiteZoneID
+    JOIN Contact_Site on Contact_Site.SiteID=Site.SiteID
+    where Contact_Site.ContactID=${req.query.ContactID}
+    ORDER BY SiteName
+    
+    `, function (error, results, fields) {
+        if (error) throw error;
+
+        if (results.length > 0) {
+            return res.status(200).json(results)
+        } else {
+            return res.status(401).json({ "code": 401, "message": "unauthorized user" })
+        }
+    })
+})
+
 app.post('/site', multer.single('file'), async (req, res) => {
 
     const buffer = Buffer.from(req.body["SiteMapImageURL"], 'base64')
