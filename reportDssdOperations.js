@@ -50,7 +50,7 @@ router.get('/get', async(req, res) => {
     var getReportDssdByIdPromise = getReportDssdByReportMonth(req);
     Promise.all([getReportDssdByIdPromise])
     .then(allData => {
-        var data = allData[0][0];
+        var data = allData[0];
         return res.status(200).json({
             code: 200,
             data: data
