@@ -183,7 +183,7 @@ app.get('/site', async (req, res) => {
     })
 })
 
-app.get('/siteByContactId', async (req, res) => {
+app.get('/getSitesForContact', async (req, res) => {
     pool.query(`
     SELECT SiteName, Address1,SiteType.Description AS SiteType ,SiteZone.Description AS SiteZone,IsNFCAvailable,PostCode,Site.* FROM Site
     JOIN SiteType ON SiteType.SiteTypeID = Site.SiteTypeID
@@ -2585,6 +2585,26 @@ app.get('/reportsbyPO', async (req, res) => {
     JOIN Site ON WorkOrder.SiteID = Site.SiteID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
     JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+    Order By WorkOrder.WorkOrderID`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+        if (results.length >= 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(200).json({ code: 200, message: "No jobs available." })
+        }
+
+    })
+})
+
+app.get('/getReportsForContact', async (req, res) => {
+    let query = `SELECT PO.POnumber, PO.POdate, WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,WorkStatus.WorkStatus
+    FROM PO JOIN WorkOrder ON PO.POID = WorkOrder.POID
+    JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
+    JOIN Site ON WorkOrder.SiteID = Site.SiteID
+    JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+    where PO.ContactID=${req.query.ContactID}
     Order By WorkOrder.WorkOrderID`
     pool.query(query, function (err, results) {
         if (err) throw err
