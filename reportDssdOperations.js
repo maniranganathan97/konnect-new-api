@@ -11,22 +11,45 @@ const pool = mysql.createPool({
 })
 
 router.post('/save', async(req, res) => {
-    var insertReportDssdPromise = saveReportDssd(req);
-    Promise.all([insertReportDssdPromise])
-    .then(allData => {
+  var checkForDuplicatesPromise = checkForDuplicates(req);
+  var insertReportDssdPromise = saveReportDssd(req);
+    checkForDuplicatesPromise.then((result) => {
+      insertReportDssdPromise.then(allData => {
         return res.status(200).json({
-            code: 200,
-            message: "Data inserted sucessfully to the table ReportDSSD",
-          });
-    })
-    .catch(err => {
+          code: 200,
+          message: "Data inserted sucessfully to the table ReportDSSD",
+        });
+      }).catch(err => {
         console.log("Error while inserting data to the ReportDSSD -->"+ err);
         return res.status(400).json({
             code: 400,
             message: "Insertion failed to the table ReportDSSD",
           });
     })
+    }).catch(err => {
+      console.log("Error while inserting data to the ReportDSSD -->"+ err);
+      return res.status(400).json({
+          code: 400,
+          message: "Insertion failed to the table ReportDSSD  -- " + err,
+        });
+  })
 });
+
+
+function checkForDuplicates(req) {
+  var inputDate = new Date(req.body.Report_Month);
+  return new Promise((resolve, reject) => {
+    let query = `select * from ReportDSSD where Report_Month like '${inputDate.getFullYear()}-${(((inputDate.getMonth() + 1) < 10) ? '0' : '') + (inputDate.getMonth() + 1)}%'`;
+    pool.query(query, function (error, results, fields) {
+      if (error) throw error;
+      if (results.length > 0) {
+        reject("Already data available for the selected Month and Year, Please select another month or year...");
+      } else {
+        resolve("No data");
+      }
+    });
+  });
+}
 
 function saveReportDssd(req) {
     return new Promise((resolve, reject) => {
