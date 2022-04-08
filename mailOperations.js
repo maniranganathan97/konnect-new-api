@@ -3,12 +3,14 @@ var fs = require("fs");
 function sendEmail(emailId, token) {
   return new Promise((resolve, reject) => {
     var transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "mail209.livehostsupport.com",
       auth: {
-        user: "botscom2020@gmail.com",
-        pass: "xsnz eiio ojrg yptg",
+        user: "no-reply@pestpro-mailer.com",
+        pass: "*!4SNLH%$+V&A(#~+A",
       },
-      from: "botscom2020@gmail.com",
+      from: "no-reply@pestpro-mailer.com",
+      secure: true,
+      port: 465,
       headers: {
         "x-priority": "1",
         "x-msmail-priority": "High",
@@ -26,13 +28,10 @@ function sendEmail(emailId, token) {
           var resetLink = "http://knighttest.net/resetPassword?token=" + token;
           html = html.replace("#token#", token);
           var mailOptions = {
-            from: "manir1389@gmail.com",
+            from: "no-reply@pestpro-mailer.com",
             to: emailId,
             subject: "Reset Password for PEST application",
             html: html,
-            // html: '<p>Click <a href="http://knighttest.net/sessions/recover/' + recovery_token + '">here</a> to reset your password</p>',
-
-            // text: `Please select this link to proceed to change the password and it will expire in 2 days\n${resetLink}`,
             priority: "high",
           };
 
