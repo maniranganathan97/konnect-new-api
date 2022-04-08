@@ -14,6 +14,7 @@ const moment = require('moment');
 const reportADCRouter = require('./reportADCOperations.js');
 const reportDssdRouter = require("./reportDssdOperations.js");
 const reportSdpcRouter = require("./reportSdpcOperations.js")
+const companyRouter = require("./companyOperations")
 
 app.use(express.json({ limit: '50mb' }))
 app.use(cors());
@@ -621,7 +622,7 @@ app.put('/contact', async (req, res) => {
     let contactSiteValues = req.body.LinkedSites
     let contactObjects = req.body
     delete contactObjects['LinkedSites']
-    let query = `Update Contact SET  ` + Object.keys(req.body).map(key => `${key}=?`).join(",") + " where ContactID = ?"
+    let query = `Update Contact SET  ` + Object.keys(contactObjects).map(key => `${key}=?`).join(",") + " where ContactID = ?"
     const parameters = [...Object.values(contactObjects), req.body.ContactID]
     pool.query(query, parameters, function (err, results, fields) {
         if (err) throw err
@@ -2469,18 +2470,7 @@ app.get('/poJobDetails', async (req, res) => {
 
 })
 
-app.get('/company', async (req, res) => {
-    let query = `select * from Company`
-    pool.query(query, function (err, results) {
-        if (err) throw err
-        if (results.length >= 0) {
-            return res.status(200).send(results)
-        } else {
-            return res.status(200).json({ code: 200, message: "No company data available." })
-        }
 
-    })
-})
 
 app.get('/contactcompany', async (req, res) => {
     let query = `select * from Contact where companyid = ${req.query.CompanyID} order by ContactName`
@@ -4889,6 +4879,7 @@ function updatedWorkOrderStaffForBulkOrder(req, workOrderId){
 app.use('/reportADC', reportADCRouter);
 app.use('/reportDssd', reportDssdRouter);
 app.use('/reportSdpc', reportSdpcRouter);
+app.use('/company', companyRouter);
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
