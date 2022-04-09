@@ -122,6 +122,9 @@ app.post('/authentication', async (req, res) => {
                             isStaff: contact.length > 0 ? false : true,
                             userId: contact.length > 0 ? contact[0].ContactID : staff[0].StaffID
                         }
+                        if(newData.isStaff) {
+                            newData.AccessControlID = staff[0].AccessControlID;
+                        }
                         data['workType'] = result
                         return res.status(200).json(newData)
                     }
