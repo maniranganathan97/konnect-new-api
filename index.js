@@ -1639,7 +1639,7 @@ app.get('/ecsreports', async (req, res) => {
     WHERE Point_Details.SiteID =${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}`
 
     var query = '';
-    if(req.body.Staff && req.body.AddedUserID) {
+    if(req.query.Staff) {
         query = `Select Scan_Details.*,Point_Details.PointNumber from Scan_Details 
         JOIN Point_Details ON Scan_Details.PointID = Point_Details.PointID
         WHERE Scan_Details.PointID IN (
@@ -1647,7 +1647,7 @@ app.get('/ecsreports', async (req, res) => {
         SELECT Point_Details.PointID FROM Point_Details
         JOIN Site ON Point_Details.SiteID = Site.SiteID
         WHERE Point_Details.SiteID = ${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}
-        and WEEK(Point_Details.ScanDateTime) = WEEK(NOW()) - 1 and Point_Details.AddedUserID = ${req.body.AddedUserID} 
+        and WEEK(Point_Details.ScanDateTime) = WEEK(NOW()) - 1 
         )
         AND MONTH(Scan_Details.ScanDateTime) = MONTH('${req.query.ScanDateTime}') AND YEAR(Scan_Details.ScanDateTime) = YEAR('${req.query.ScanDateTime}')
         ORDER BY Scan_Details.PointID,Scan_Details.ScanDateTime ASC`
