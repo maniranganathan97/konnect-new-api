@@ -12,8 +12,9 @@ const pool = mysql.createPool({
 
 router.post('/save', async(req, res) => {
     var checkForDuplicatesPromise = checkForDuplicates(req);
-    var insertReportAdcPromise = saveReportAdc(req);
+    
     checkForDuplicatesPromise.then((result) => {
+      var insertReportAdcPromise = saveReportAdc(req);
       insertReportAdcPromise.then(allData => {
         return res.status(200).json({
           code: 200,
