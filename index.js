@@ -1647,7 +1647,7 @@ app.get('/ecsreports', async (req, res) => {
         SELECT Point_Details.PointID FROM Point_Details
         JOIN Site ON Point_Details.SiteID = Site.SiteID
         WHERE Point_Details.SiteID = ${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}
-        and WEEK(Point_Details.ScanDateTime) = WEEK(NOW()) - 1 
+        
         )
         AND MONTH(Scan_Details.ScanDateTime) = MONTH('${req.query.ScanDateTime}') AND YEAR(Scan_Details.ScanDateTime) = YEAR('${req.query.ScanDateTime}')
         ORDER BY Scan_Details.PointID,Scan_Details.ScanDateTime ASC`
@@ -1657,7 +1657,9 @@ app.get('/ecsreports', async (req, res) => {
         JOIN Point_Details ON Scan_Details.PointID = Point_Details.PointID
         WHERE Scan_Details.PointID IN (SELECT Point_Details.PointID FROM Point_Details
         JOIN Site ON Point_Details.SiteID = Site.SiteID
-        WHERE Point_Details.SiteID = ${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID})
+        WHERE Point_Details.SiteID = ${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}
+        and WEEK(Point_Details.ScanDateTime) = WEEK(NOW()) - 1 
+        )
         AND MONTH(Scan_Details.ScanDateTime) = MONTH('${req.query.ScanDateTime}') AND YEAR(Scan_Details.ScanDateTime) = YEAR('${req.query.ScanDateTime}')
         ORDER BY Scan_Details.PointID,Scan_Details.ScanDateTime ASC`
     }
@@ -1675,13 +1677,13 @@ app.get('/ecsreports', async (req, res) => {
                     obj['ecsReports'] = results
                     return res.status(200).send(obj)
                 } else {
-                    return res.status(400).json({ code: 400, message: "Invalid query" })
+                    return res.status(200).json({ code: 200, message: [] })
                 }
 
             })
 
         } else {
-            return res.status(400).json({ code: 400, message: "Invalid query" })
+            return res.status(200).json({ code: 200, message: [] })
         }
 
     })
