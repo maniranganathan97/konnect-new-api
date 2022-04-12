@@ -2159,13 +2159,13 @@ function updatePOInvoice(poInvoiceDetails, req) {
 
 function insertPoInvoiceData(singleData, req) {
     return new Promise((resolve, reject) => {
-        console.log("before---------> " + singleData.POID)
+        console.log("before---------> " + req.query.POID)
 
         console.log("inside insert POInvoice");
         var sql =
             "INSERT INTO POInvoice(POID, Invoice) VALUES (?,?)";
         let parameters = [
-            singleData["POID"],
+            req.query.POID,
             singleData["Invoice"]
         ];
         pool.query(sql, parameters, function (err, result, fields) {
