@@ -40,7 +40,7 @@ router.post('/save', async(req, res) => {
 function checkForDuplicates(req) {
   var inputDate = new Date(req.body.Report_Month);
   return new Promise((resolve, reject) => {
-    let query = `select * from ReportADC where Report_Month like '${inputDate.getFullYear()}-${(((inputDate.getMonth() + 1) < 10) ? '0' : '') + (inputDate.getMonth() + 1)}%'`;
+    let query = `select * from ReportADC where SiteID = ${req.body.SiteID} and Report_Month like '${inputDate.getFullYear()}-${(((inputDate.getMonth() + 1) < 10) ? '0' : '') + (inputDate.getMonth() + 1)}%'`;
     pool.query(query, function (error, results, fields) {
       if (error) throw error;
       if (results.length > 0) {
