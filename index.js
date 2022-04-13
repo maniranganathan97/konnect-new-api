@@ -2036,7 +2036,7 @@ function updatePoWithoutImageData(detail,workOrderValues, req){
                 for (let woValues of workOrderValues) {
                     console.log(woValues)
                     if (!!!woValues['WorkOrderID']) {
-                        var sql = "INSERT INTO WorkOrder(POID, SiteID,TeamID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID, WorkNatureID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+                        var sql = 'INSERT INTO WorkOrder(POID, SiteID,TeamID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID, WorkNatureID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)';
                         let parameters = [req.query.POID, woValues['SiteID'], woValues['TeamID'], woValues['WorkTypeID'], woValues['CreatedType'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['WorkNatureID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                         pool.query(sql, parameters, function (err, result, fields) {
                             if (err) throw err;
@@ -2120,7 +2120,6 @@ function updatePOInvoice(poInvoiceDetails, req) {
         let sql = `
         Delete FROM POInvoice WHERE POID = ${req.query.POID}
         `;
-        console.log(sql);
         pool.query(sql, function (err, result, fields) {
             if (err) throw err;
             if (result) {
