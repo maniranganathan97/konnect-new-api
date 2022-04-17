@@ -2963,7 +2963,7 @@ function getReportWOPromise(req) {
         let query = `
     select ReportWO.ReportWOID, ReportWO.WorkOrderID, ReportWO.WOstartDateTime, ReportWO.WOendDateTime,
     ReportWO.WorkNatureID, ReportWO.WorkNatureID, ReportWO.Findings, ReportWO.Location, ReportWO.ServiceMethodID, ReportWO.FogMachineNum,ReportWO.ContactAckMethodID, ReportWO.ContackAckOther, ReportWO.ContactAckSignImageURL, ReportWO.ContactAckDateTime, ReportWO.consolidateDateTime, ReportWO.UpdatedUserID, ReportWO.UpdatedDateTime, WorkOrder.WorkStatusID,
-    ReportWO.ContactAckID, Contact.ContactName, ReportWO.Notes
+    ReportWO.ContactAckID, Contact.ContactName, ReportWO.Notes, ReportWO.NotesToOffice
     from ReportWO 
     JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
     LEFT JOIN Contact on Contact.ContactID = ReportWO.ContactAckID
@@ -3999,7 +3999,7 @@ app.post('/rescheduledReportWO', multer.single('file'), async (req, res) => {
         blobStream.on('finish', () => {
             // The public URL can be used to directly access the file via HTTP.
             const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-            let query = 'INSERT INTO RescheduledReportWO(`RescheduledReportWOID`,`ReportWOID`,`WorkOrderID`,`WOstartDateTime`,`WOendDateTime`,`WorkNatureID`,`Findings`,`Location`,`ServiceMethodID`,`FogMachineNum`,`ContactAckMethodID`,`ContactAckID`,`ContackAckOther`,`ContactAckSignImageURL`,`ContactAckDateTime`,`consolidateDateTime`,`Notes`,`Reason`,`UpdatedUserID`,`UpdatedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+            let query = 'INSERT INTO RescheduledReportWO(`RescheduledReportWOID`,`ReportWOID`,`WorkOrderID`,`WOstartDateTime`,`WOendDateTime`,`WorkNatureID`,`Findings`,`Location`,`ServiceMethodID`,`FogMachineNum`,`ContactAckMethodID`,`ContactAckID`,`ContackAckOther`,`ContactAckSignImageURL`,`ContactAckDateTime`,`consolidateDateTime`,`Notes`,`Reason`,`UpdatedUserID`,`UpdatedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
             let parameters = ["", req.body.ReportWOID, req.body.WorkOrderID, req.body.WOstartDateTime, req.body.WOendDateTime, req.body.WorkNatureID, req.body.Findings, req.body.Location, req.body.ServiceMethodID, req.body.FogMachineNum, req.body.ContactAckMethodID, req.body.ContactAckID, req.body.ContackAckOther, publicUrl, req.body.ContactAckDateTime, req.body.consolidateDateTime, req.body.Notes, req.body.Reason, req.body.UpdatedUserID, req.body.UpdatedDateTime]
             pool.query(query, parameters, function (err, results, fields) {
                 if (err) throw err
