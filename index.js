@@ -212,8 +212,9 @@ app.post('/site', multer.single('file'), async (req, res) => {
     var multileFilesUploadPromise = multipleFilesUploadPromiseData(req.body["SiteMapImageURL"]);
 
     multileFilesUploadPromise.then(data => {
+        console.log(data);
         let query = 'INSERT INTO Site(`SiteID`, `SiteName`, `SiteStatus`, `Address1`, `Address2`, `IsNFCAvailable`, `PostCode`, `SiteZoneID`, `SiteTypeID`,`SiteMapImageURL`,`SiteImageFileName`,`AddedByUserID`,`AddedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)'
-        let parameters = ["", req.body.SiteName, req.body.SiteStatus, req.body.Address1, req.body.Address2, req.body.IsNFCAvailable, req.body.PostCode, req.body.SiteZoneID, req.body.SiteTypeID, JSON.stringify(data.filePathArray), JSON.stringify(data.fileNameArray), req.body.AddedByUserID, req.body.AddedDateTime]
+        let parameters = ["", req.body.SiteName, req.body.SiteStatus, req.body.Address1, req.body.Address2, req.body.IsNFCAvailable, req.body.PostCode, req.body.SiteZoneID, req.body.SiteTypeID, JSON.stringify(data), JSON.stringify(data), req.body.AddedByUserID, req.body.AddedDateTime]
         pool.query(query, parameters, function (err, results, fields) {
             if (err) throw err
             if (results.affectedRows > 0) {
@@ -236,7 +237,6 @@ function multipleFilesUploadPromiseData(siteFilesArray) {
             // Create a new blob in the bucket and upload the file data.
             const id = uuid.v4();
             const blob = bucket.file(id+siteFilesArray[i].fileName);
-            fileNameArray.push(siteFilesArray[i].fileName);
             const blobStream = blob.createWriteStream();
     
             blobStream.on('error', err => {
@@ -245,14 +245,15 @@ function multipleFilesUploadPromiseData(siteFilesArray) {
         
             blobStream.on('finish', () => {
                 const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-                filePathArray.push(publicUrl);
+                var fileDetail = {
+                    name: blob.name.replace(id, ""),
+                    data: publicUrl
+                }
+                filePathArray.push(fileDetail);
                 //if last iteration then return 
                 if(i==filePathArray.length) {
-                    var data = {
-                        filePathArray: filePathArray,
-                        fileNameArray: fileNameArray
-                    }
-                    resolve(data)
+                    
+                    resolve(filePathArray)
                 }
     
             });
@@ -1873,7 +1874,7 @@ app.post('/po', async (req, res) => {
     );
     multileFilesUploadPromise
       .then((data) => {
-        var filesPathArray = JSON.stringify(data.filePathArray);
+        var filesPathArray = JSON.stringify(data);
         console.log(filesPathArray);
         let query = `INSERT INTO PO(POID,POnumber,POdate,POImageURL,ContactID,StaffID,POStatusID,CompanyID,POFilename, Amount, Description, AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?,?,?,?, ?,?)`;
         pool.query(
