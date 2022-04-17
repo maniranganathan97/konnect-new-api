@@ -1844,7 +1844,9 @@ function getPoInvoicePromise() {
 
 function getPODetailsPromise() {
   return new Promise((resolve, reject) => {
-    let query = `select PO.*,Contact.ContactName,Staff.StaffName,Company.CompanyName,POStatus.POStatus from PO 
+    let query = `select DISTINCT PO.*,Contact.ContactName,Staff.StaffName,Company.CompanyName,POStatus.POStatus,Site.SiteName from PO 
+	JOIN WorkOrder ON WorkOrder.POID = PO.POID
+    JOIN Site ON Site.SiteID = WorkOrder.SiteID
     JOIN Contact ON Contact.ContactID = PO.ContactID
     JOIN Staff ON Staff.StaffID = PO.StaffID
     JOIN Company ON PO.CompanyID = Company.CompanyID
@@ -2268,11 +2270,69 @@ app.put('/workorder', async (req, res) => {
     const parameters = [...Object.values(detail), req.query.WorkOrderID]
     pool.query(query, parameters, function (err, results, fields) {
         if (err) throw err
-    
-        if(results.affectedRows > 0) {
-            return res.status(200).json({ code: 200, "message": "Update Successful." })
+        if (workOrderWorkers.length > 0) {
+
+            let sql = `DELETE FROM WorkOrderStaff WHERE WorkOrderID = ${req.query.WorkOrderID} AND StaffID NOT IN (${workOrderWorkers})`
+            pool.query(sql, function (err, result, fields) {
+                if (err) throw err;
+                if (result.length > 0) {
+                    console.log(results)
+                } else {
+                    console.log(results)
+                }
+            })
+
+            for (let woWorker of workOrderWorkers) {
+                //console.log(woValues)
+
+
+                let sql = `SELECT 1 FROM WorkOrderStaff WHERE WorkOrderID = ${req.query.WorkOrderID} AND StaffID = ${woWorker}`
+                pool.query(sql, function (err, result, fields) {
+                    if (err) throw err;
+                    if (result.length > 0) {
+                        console.log(results)
+                    }
+                    else {
+                        var sql = "INSERT INTO WorkOrderStaff(WorkOrderID, StaffID, AddedByUserID, AddedDateTime) VALUES (?,?,?,?)";
+                        let parameters = [req.query.WorkOrderID, woWorker, req.body.UpdatedByUserID, req.body.UpdatedDateTime]
+                        pool.query(sql, parameters, function (err, result, fields) {
+                            if (err) throw err;
+                            if (result.affectedRows > 0) {
+                                //console.log(result)
+                            }
+                            else {
+                                return res.status(401).json({ code: 401, "message": "New work order staff not updated." })
+                            }
+                        });
+                    }
+                })
+            }
+
+        }
+        else {
+            let sql = `SELECT 1 FROM WorkOrderStaff WHERE WorkOrderID = ${req.query.WorkOrderID}`
+            pool.query(sql, function (err, result, fields) {
+                if (err) throw err;
+                if (result.length > 0) {
+                    let sql = `DELETE FROM WorkOrderStaff WHERE WorkOrderID = ${req.query.WorkOrderID}`
+                    pool.query(sql, function (err, result, fields) {
+                        if (err) throw err;
+                        if (result.length > 0) {
+                            console.log(results)
+                        } else {
+                            return res.status(200).json({ code: 200, "message": "No workers present to be removed." })
+                        }
+                    })
+                }
+            })
         }
     });
+
+    //if (results.affectedRows > 0) {
+    return res.status(200).json({ code: 200, "message": "Update Successful." })
+    /*} else {
+        return res.status(401).json({ code: 401, "message": "Data not updated." })
+    }*/
 })
 
 function selectWorkOrderStaffData(req){
