@@ -209,21 +209,12 @@ app.get('/getSitesForContact', async (req, res) => {
 
 app.post('/site', multer.single('file'), async (req, res) => {
 
-    const buffer = Buffer.from(req.body["SiteMapImageURL"], 'base64')
-    // Create a new blob in the bucket and upload the file data.
-    const id = uuid.v4();
-    const blob = bucket.file("konnect" + id + ".jpg");
-    const blobStream = blob.createWriteStream();
+    var multileFilesUploadPromise = multipleFilesUploadPromiseData(req.body["SiteMapImageURL"]);
 
-    blobStream.on('error', err => {
-        next(err);
-    });
-
-    blobStream.on('finish', () => {
-        // The public URL can be used to directly access the file via HTTP.
-        const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+    multileFilesUploadPromise.then(data => {
+        console.log(data);
         let query = 'INSERT INTO Site(`SiteID`, `SiteName`, `SiteStatus`, `Address1`, `Address2`, `IsNFCAvailable`, `PostCode`, `SiteZoneID`, `SiteTypeID`,`SiteMapImageURL`,`SiteImageFileName`,`AddedByUserID`,`AddedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)'
-        let parameters = ["", req.body.SiteName, req.body.SiteStatus, req.body.Address1, req.body.Address2, req.body.IsNFCAvailable, req.body.PostCode, req.body.SiteZoneID, req.body.SiteTypeID, publicUrl, req.body.SiteImageFileName, req.body.AddedByUserID, req.body.AddedDateTime]
+        let parameters = ["", req.body.SiteName, req.body.SiteStatus, req.body.Address1, req.body.Address2, req.body.IsNFCAvailable, req.body.PostCode, req.body.SiteZoneID, req.body.SiteTypeID, JSON.stringify(data), JSON.stringify(data), req.body.AddedByUserID, req.body.AddedDateTime]
         pool.query(query, parameters, function (err, results, fields) {
             if (err) throw err
             if (results.affectedRows > 0) {
@@ -232,28 +223,56 @@ app.post('/site', multer.single('file'), async (req, res) => {
                 return res.status(401).json({ code: 401, "message": "site data not update" })
             }
         })
+    }).catch(err=> {
+        return res.status(401).json({ code: 401, "message": "site data files failed to update" })
     })
-    blobStream.end(buffer);
 })
 
+function multipleFilesUploadPromiseData(siteFilesArray) {
+    return new Promise((resolve, reject) => {
+        var filePathArray=[];
+        var fileNameArray = [];
+        for(var i=0; i<siteFilesArray.length; i++) {
+            const buffer = Buffer.from(siteFilesArray[i].data, 'base64')
+            // Create a new blob in the bucket and upload the file data.
+            const id = uuid.v4();
+            const blob = bucket.file(id+siteFilesArray[i].fileName);
+            const blobStream = blob.createWriteStream();
+    
+            blobStream.on('error', err => {
+                next(err);
+            });
+        
+            blobStream.on('finish', () => {
+                const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+                var fileDetail = {
+                    name: blob.name.replace(id, ""),
+                    data: publicUrl
+                }
+                filePathArray.push(fileDetail);
+                //if last iteration then return 
+                if(i==filePathArray.length) {
+                    
+                    resolve(filePathArray)
+                }
+    
+            });
+            blobStream.end(buffer);
+        }
+        
+    
+    })
+}
 app.put('/site', async (req, res) => {
 
     const detail = req.body
 
     if (detail['SiteMapImageURL']) {
 
-        const buffer = Buffer.from(detail["SiteMapImageURL"], 'base64')
-        // Create a new blob in the bucket and upload the file data.
-        const id = uuid.v4();
-        const blob = bucket.file("konnect" + id + ".jpg");
-        const blobStream = blob.createWriteStream();
-
-        blobStream.on('error', err => {
-            next(err);
-        });
-        blobStream.on('finish', () => {
-            const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-            detail['SiteMapImageURL'] = publicUrl
+        var multileFilesUploadPromise = multipleFilesUploadPromiseData(req.body["SiteMapImageURL"]);
+        multileFilesUploadPromise.then(data => {
+            detail['SiteMapImageURL'] = JSON.stringify(data.filePathArray)
+            detail['SiteImageFileName'] = JSON.stringify(data.fileNameArray)
 
             let query = `Update Site SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where SiteID = ?"
             const parameters = [...Object.values(detail), req.query.SiteID]
@@ -265,8 +284,7 @@ app.put('/site', async (req, res) => {
                     return res.status(401).json({ code: 401, "message": "site with images data not update" })
                 }
             })
-        })
-        blobStream.end(buffer);
+        });
 
     } else {
 
@@ -1849,56 +1867,72 @@ function getPODetailsPromise() {
 
 
 app.post('/po', async (req, res) => {
-    const buffer = Buffer.from(req.body["POImageURL"], 'base64')
-    // Create a new blob in the bucket and upload the file data.
-    const id = uuid.v4();
-    const blob = bucket.file("konnect" + id + "." + req.body['POFilename'].split('.').pop());
-    const blobStream = blob.createWriteStream();
     let poInvoiceDetails = req.body.Invoices;
-    delete req.body['Invoices']
-
-    blobStream.on('error', err => {
-        next(err);
-    });
-    blobStream.on('finish', () => {
-        // The public URL can be used to directly access the file via HTTP.
-        const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-
-        let query = `INSERT INTO PO(POID,POnumber,POdate,POImageURL,ContactID,StaffID,POStatusID,CompanyID,POFilename, Amount, Description, AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?,?,?,?, ?,?)`
-        pool.query(query, ["", req.body.POnumber, req.body.POdate, publicUrl, req.body.ContactID, req.body.StaffID, req.body.POStatusID, req.body.CompanyID, req.body.POFilename, req.body.Amount, req.body.Description, req.body.AddedByUserID, req.body.AddedDateTime], function (error, results) {
+    delete req.body["Invoices"];
+    var multileFilesUploadPromise = multipleFilesUploadPromiseData(
+      req.body["POImageURL"]
+    );
+    multileFilesUploadPromise
+      .then((data) => {
+        var filesPathArray = JSON.stringify(data);
+        console.log(filesPathArray);
+        let query = `INSERT INTO PO(POID,POnumber,POdate,POImageURL,ContactID,StaffID,POStatusID,CompanyID,POFilename, Amount, Description, AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?,?,?,?, ?,?)`;
+        pool.query(
+          query,
+          [
+            "",
+            req.body.POnumber,
+            req.body.POdate,
+            filesPathArray,
+            req.body.ContactID,
+            req.body.StaffID,
+            req.body.POStatusID,
+            req.body.CompanyID,
+            req.body.POFilename,
+            req.body.Amount,
+            req.body.Description,
+            req.body.AddedByUserID,
+            req.body.AddedDateTime,
+          ],
+          function (error, results) {
             if (error) return res.send(error);
             if (results.affectedRows > 0) {
-          
-                    var workOrderInsertPromise = insertWorkOrderData(req, results);
+              var workOrderInsertPromise = insertWorkOrderData(req, results);
 
-                    let insertPoInvoicePromise = insertPOInvoice(
-                      poInvoiceDetails,
-                      req,
-                      results.insertId
-                    );
-                    Promise.all([
-                      insertPoInvoicePromise,
-                      workOrderInsertPromise,
-                    ])
-                      .then((allData) => {
-                        return res.status(200).json({
-                          code: 200,
-                          message: "Data updated sucessfully",
-                        });
-                      })
-                      .catch((err) => {
-                        console.log(
-                          "error while inserting po invoice *********" + err
-                        );
-                        return res.status(400).send(err);
-                      });
-                
-             } else {
-                return res.status(400).json({ code: 400, "message": "Data is not inserted." })
+              let insertPoInvoicePromise = insertPOInvoice(
+                poInvoiceDetails,
+                req,
+                results.insertId
+              );
+              Promise.all([insertPoInvoicePromise, workOrderInsertPromise])
+                .then((allData) => {
+                  return res.status(200).json({
+                    code: 200,
+                    message: "Data updated sucessfully",
+                  });
+                })
+                .catch((err) => {
+                  console.log(
+                    "error while inserting po invoice *********" + err
+                  );
+                  return res.status(400).send(err);
+                });
+            } else {
+              return res
+                .status(400)
+                .json({ code: 400, message: "Data is not inserted." });
             }
-        })
-    })
-    blobStream.end(buffer);
+          }
+        );
+      })
+      .catch((err) => {
+        return res
+          .status(400)
+          .json({
+            code: 400,
+            message: "PO insert failed while uploading files.",
+          });
+      });
 })
 
 function insertPOInvoice(poInvoiceDetails, req, poId) {
@@ -1910,7 +1944,7 @@ function insertPOInvoice(poInvoiceDetails, req, poId) {
         var singleData = poInvoiceDetails[j];
 
         singleData.POID = poId;
-        var insertPoInvoicePromise = insertPoInvoiceData(singleData, req);
+        var insertPoInvoicePromise = insertPoInvoiceData(singleData, poId);
 
         Promise.all([
           insertPoInvoicePromise,
@@ -1972,34 +2006,30 @@ app.put('/po', async (req, res) => {
         let poInvoiceDetails = req.body.poInvoiceDetails;
         //let contactObjects = req.body
         delete detail['WorkOrders']
-        delete detail['poInvoiceDetails']
+        delete detail['Invoices']
 
         if (detail['POImageURL']) {
-            const buffer = Buffer.from(detail["POImageURL"], 'base64')
-            // Create a new blob in the bucket and upload the file data.
-            const id = uuid.v4();
-            const blob = bucket.file("konnect" + id + "." + req.body['POFilename'].split('.').pop());
-            const blobStream = blob.createWriteStream();
+            var multileFilesUploadPromise = multipleFilesUploadPromiseData(
+                detail["POImageURL"]
+              );
+              multileFilesUploadPromise
+                .then((data) => {
+                  var filesPathArray = JSON.stringify(data.filePathArray);
+                  console.log(filesPathArray);
+                  detail['POImageURL'] = filesPathArray;
+                  let updatePoPromise = updatePoDataWithImageData(detail, workOrderValues, req);
 
-            blobStream.on('error', err => {
-                throw (err);
-            });
-            blobStream.on('finish', () => {
-                const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-                detail['POImageURL'] = publicUrl
-                let updatePoPromise = updatePoDataWithImageData(detail, workOrderValues, req);
+                  let updatePoInvoiceData = updatePOInvoice(poInvoiceDetails, req);
+                  Promise.all([updatePoPromise,updatePoInvoiceData])
+                      .then((allData) => {
+                          return res.status(200).json({ code: 200, "message": "Data updated sucessfully" })
+                      })
+                      .catch((err) => {
+                          console.log("error while updating po invoice *********" + err);
+                          return res.status(400).send(err);
+                      });
 
-                let updatePoInvoiceData = updatePOInvoice(poInvoiceDetails, req);
-                Promise.all([updatePoPromise,updatePoInvoiceData])
-                    .then((allData) => {
-                        return res.status(200).json({ code: 200, "message": "Data updated sucessfully" })
-                    })
-                    .catch((err) => {
-                        console.log("error while updating po invoice *********" + err);
-                        return res.status(400).send(err);
-                    });
-            })
-            blobStream.end(buffer);
+                });
 
         } else {
             let updatePoWithoutImage = updatePoWithoutImageData(detail,workOrderValues, req);
@@ -2080,7 +2110,7 @@ function updatePoDataWithImageData(detail, workOrderValues, req) {
                     for (let woValues of workOrderValues) {
                         //console.log(woValues)
                         if (!!!woValues['WorkOrderID']) {
-                            var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID,WorkNatureID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?)";
+                            var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID,WorkNatureID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
                             let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['CreatedType'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['WorkNatureID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                             pool.query(sql, parameters, function (err, result, fields) {
                                 if (err) throw err;
@@ -2157,15 +2187,15 @@ function updatePOInvoice(poInvoiceDetails, req) {
 }
 
 
-function insertPoInvoiceData(singleData, req) {
+function insertPoInvoiceData(singleData, poId) {
     return new Promise((resolve, reject) => {
-        console.log("before---------> " + req.query.POID)
+        console.log("before---------> " + poId)
 
         console.log("inside insert POInvoice");
         var sql =
             "INSERT INTO POInvoice(POID, Invoice) VALUES (?,?)";
         let parameters = [
-            req.query.POID,
+            poId,
             singleData["Invoice"]
         ];
         pool.query(sql, parameters, function (err, result, fields) {
