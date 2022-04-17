@@ -231,7 +231,6 @@ app.post('/site', multer.single('file'), async (req, res) => {
 function multipleFilesUploadPromiseData(siteFilesArray) {
     return new Promise((resolve, reject) => {
         var filePathArray=[];
-        var fileNameArray = [];
         for(var i=0; i<siteFilesArray.length; i++) {
             const buffer = Buffer.from(siteFilesArray[i].data, 'base64')
             // Create a new blob in the bucket and upload the file data.
@@ -2990,6 +2989,9 @@ function getReportWoDetails(detail) {
     if (detail.hasOwnProperty("ReportWOID")) {
         reportWoDetails.ReportWOID = detail["ReportWOID"];
     }
+    if (detail.hasOwnProperty("NotesToOffice")) {
+        reportWoDetails.NotesToOffice = detail["NotesToOffice"];
+    }
 
     if (detail.hasOwnProperty("WorkOrderID")) {
         reportWoDetails.WorkOrderID = detail["WorkOrderID"];
@@ -3090,7 +3092,7 @@ app.put('/updateReportPO', async (req, res) => {
                         return res.status(200).send({ code: 200, "message": "updated ReportPO successfully." });
                     })
                     .catch((err) => {
-                        console.log("erroe *********" + err);
+                        console.log("error *********" + err);
                         return res.status(400).send(err);
                     });
                 //updateReportWOFindings(findings, req);
@@ -3997,7 +3999,7 @@ app.post('/rescheduledReportWO', multer.single('file'), async (req, res) => {
         blobStream.on('finish', () => {
             // The public URL can be used to directly access the file via HTTP.
             const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-            let query = 'INSERT INTO Site(`RescheduledReportWOID`,`ReportWOID`,`WorkOrderID`,`WOstartDateTime`,`WOendDateTime`,`WorkNatureID`,`Findings`,`Location`,`ServiceMethodID`,`FogMachineNum`,`ContactAckMethodID`,`ContactAckID`,`ContackAckOther`,`ContactAckSignImageURL`,`ContactAckDateTime`,`consolidateDateTime`,`Notes`,`Reason`,`UpdatedUserID`,`UpdatedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
+            let query = 'INSERT INTO RescheduledReportWO(`RescheduledReportWOID`,`ReportWOID`,`WorkOrderID`,`WOstartDateTime`,`WOendDateTime`,`WorkNatureID`,`Findings`,`Location`,`ServiceMethodID`,`FogMachineNum`,`ContactAckMethodID`,`ContactAckID`,`ContackAckOther`,`ContactAckSignImageURL`,`ContactAckDateTime`,`consolidateDateTime`,`Notes`,`Reason`,`UpdatedUserID`,`UpdatedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
             let parameters = ["", req.body.ReportWOID, req.body.WorkOrderID, req.body.WOstartDateTime, req.body.WOendDateTime, req.body.WorkNatureID, req.body.Findings, req.body.Location, req.body.ServiceMethodID, req.body.FogMachineNum, req.body.ContactAckMethodID, req.body.ContactAckID, req.body.ContackAckOther, publicUrl, req.body.ContactAckDateTime, req.body.consolidateDateTime, req.body.Notes, req.body.Reason, req.body.UpdatedUserID, req.body.UpdatedDateTime]
             pool.query(query, parameters, function (err, results, fields) {
                 if (err) throw err
@@ -4011,8 +4013,23 @@ app.post('/rescheduledReportWO', multer.single('file'), async (req, res) => {
         blobStream.end(buffer);
     }
     else {
-        let query = 'INSERT INTO Site(`RescheduledReportWOID`,`ReportWOID`,`WorkOrderID`,`WOstartDateTime`,`WOendDateTime`,`WorkNatureID`,`Findings`,`Location`,`ServiceMethodID`,`FogMachineNum`,`ContactAckMethodID`,`ContactAckID`,`ContackAckOther`,`ContactAckSignImageURL`,`ContactAckDateTime`,`consolidateDateTime`,`Notes`,`Reason`,`UpdatedUserID`,`UpdatedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-        let parameters = ["", req.body.ReportWOID, req.body.WorkOrderID, req.body.WOstartDateTime, req.body.WOendDateTime, req.body.WorkNatureID, req.body.Findings, req.body.Location, req.body.ServiceMethodID, req.body.FogMachineNum, req.body.ContactAckMethodID, req.body.ContactAckID, req.body.ContackAckOther, req.body.ContactAckSignImageURL, req.body.ContactAckDateTime, req.body.consolidateDateTime, req.body.Notes, req.body.Reason, req.body.UpdatedUserID, req.body.UpdatedDateTime]
+        let query = `insert into RescheduledReportWO  (
+          
+WorkOrderID
+,WorkNatureID
+,WorkStatus
+,WorkTypeName
+,WorkTypeID
+,WorkStatusID
+,WorkNature
+,SiteZoneID
+,SiteName
+,SiteID
+,Description
+,Reason) values (?,?,?,?,?,?,?,?,?,?,?,?)`
+        let parameters = [ req.body.WorkOrderID, req.body.WorkNatureID, req.body.WorkStatus, req.body.WorkTypeName, 
+        req.body.WorkTypeID, req.body.WorkStatusID, req.body.WorkNature, req.body.SiteZoneID, req.body.SiteName, 
+        req.body.SiteID, req.body.Description, req.body.Reason]
         pool.query(query, parameters, function (err, results, fields) {
             if (err) throw err
             if (results.affectedRows > 0) {
