@@ -209,21 +209,11 @@ app.get('/getSitesForContact', async (req, res) => {
 
 app.post('/site', multer.single('file'), async (req, res) => {
 
-    const buffer = Buffer.from(req.body["SiteMapImageURL"], 'base64')
-    // Create a new blob in the bucket and upload the file data.
-    const id = uuid.v4();
-    const blob = bucket.file("konnect" + id + ".jpg");
-    const blobStream = blob.createWriteStream();
+    var multileFilesUploadPromise = multipleFilesUploadPromiseData(req.body["SiteMapImageURL"]);
 
-    blobStream.on('error', err => {
-        next(err);
-    });
-
-    blobStream.on('finish', () => {
-        // The public URL can be used to directly access the file via HTTP.
-        const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+    multileFilesUploadPromise.then(data => {
         let query = 'INSERT INTO Site(`SiteID`, `SiteName`, `SiteStatus`, `Address1`, `Address2`, `IsNFCAvailable`, `PostCode`, `SiteZoneID`, `SiteTypeID`,`SiteMapImageURL`,`SiteImageFileName`,`AddedByUserID`,`AddedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)'
-        let parameters = ["", req.body.SiteName, req.body.SiteStatus, req.body.Address1, req.body.Address2, req.body.IsNFCAvailable, req.body.PostCode, req.body.SiteZoneID, req.body.SiteTypeID, publicUrl, req.body.SiteImageFileName, req.body.AddedByUserID, req.body.AddedDateTime]
+        let parameters = ["", req.body.SiteName, req.body.SiteStatus, req.body.Address1, req.body.Address2, req.body.IsNFCAvailable, req.body.PostCode, req.body.SiteZoneID, req.body.SiteTypeID, JSON.stringify(data.filePathArray), JSON.stringify(data.fileNameArray), req.body.AddedByUserID, req.body.AddedDateTime]
         pool.query(query, parameters, function (err, results, fields) {
             if (err) throw err
             if (results.affectedRows > 0) {
@@ -232,28 +222,56 @@ app.post('/site', multer.single('file'), async (req, res) => {
                 return res.status(401).json({ code: 401, "message": "site data not update" })
             }
         })
+    }).catch(err=> {
+        return res.status(401).json({ code: 401, "message": "site data files failed to update" })
     })
-    blobStream.end(buffer);
 })
 
+function multipleFilesUploadPromiseData(siteFilesArray) {
+    return new Promise((resolve, reject) => {
+        var filePathArray=[];
+        var fileNameArray = [];
+        for(var i=0; i<siteFilesArray.length; i++) {
+            const buffer = Buffer.from(siteFilesArray[i].data, 'base64')
+            // Create a new blob in the bucket and upload the file data.
+            const id = uuid.v4();
+            const blob = bucket.file(id+siteFilesArray[i].fileName);
+            fileNameArray.push(siteFilesArray[i].fileName);
+            const blobStream = blob.createWriteStream();
+    
+            blobStream.on('error', err => {
+                next(err);
+            });
+        
+            blobStream.on('finish', () => {
+                const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+                filePathArray.push(publicUrl);
+                //if last iteration then return 
+                if(i==filePathArray.length) {
+                    var data = {
+                        filePathArray: filePathArray,
+                        fileNameArray: fileNameArray
+                    }
+                    resolve(data)
+                }
+    
+            });
+            blobStream.end(buffer);
+        }
+        
+    
+    })
+}
 app.put('/site', async (req, res) => {
 
     const detail = req.body
 
     if (detail['SiteMapImageURL']) {
 
-        const buffer = Buffer.from(detail["SiteMapImageURL"], 'base64')
-        // Create a new blob in the bucket and upload the file data.
-        const id = uuid.v4();
-        const blob = bucket.file("konnect" + id + ".jpg");
-        const blobStream = blob.createWriteStream();
-
-        blobStream.on('error', err => {
-            next(err);
-        });
-        blobStream.on('finish', () => {
-            const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-            detail['SiteMapImageURL'] = publicUrl
+        var multileFilesUploadPromise = multipleFilesUploadPromiseData(req.body["SiteMapImageURL"]);
+        multileFilesUploadPromise.then(data => {
+            detail['SiteMapImageURL'] = JSON.stringify(data.filePathArray)
+            detail['SiteImageFileName'] = JSON.stringify(data.fileNameArray)
 
             let query = `Update Site SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where SiteID = ?"
             const parameters = [...Object.values(detail), req.query.SiteID]
@@ -265,8 +283,7 @@ app.put('/site', async (req, res) => {
                     return res.status(401).json({ code: 401, "message": "site with images data not update" })
                 }
             })
-        })
-        blobStream.end(buffer);
+        });
 
     } else {
 
