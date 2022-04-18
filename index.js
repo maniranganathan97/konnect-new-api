@@ -276,7 +276,7 @@ app.put('/site', async (req, res) => {
             var alreadyAvailableFiles =  JSON.parse(allData[0][0].SiteMapImageURL);
             var newFiles = [];
             for(var i=0; i< alreadyAvailableFiles.length; i++) {
-                if(!req.body.removedFileList.find(singleFile => singleFile.name ===alreadyAvailableFiles[i].name )) {
+                if(!req.body.toBeRemoved.find(singleFile => singleFile.name ===alreadyAvailableFiles[i].name )) {
                     console.log("deleted");
                     newFiles.push(alreadyAvailableFiles[i]);
                 }
@@ -289,7 +289,7 @@ app.put('/site', async (req, res) => {
                 
             }
             detail['SiteMapImageURL'] = JSON.stringify(newFiles)
-            delete detail["removedFileList"];
+            delete detail["toBeRemoved"];
 
             let query = `Update Site SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where SiteID = ?"
             const parameters = [...Object.values(detail), req.query.SiteID]
@@ -2059,7 +2059,7 @@ app.put('/po', async (req, res) => {
             var alreadyAvailableFiles =  JSON.parse(allData[0][0].POImageURL);
             var newFiles = [];
             for(var i=0; i< alreadyAvailableFiles.length; i++) {
-                if(!req.body.removedFileList.find(singleFile => singleFile.name ===alreadyAvailableFiles[i].name )) {
+                if(!req.body.toBeRemoved.find(singleFile => singleFile.name ===alreadyAvailableFiles[i].name )) {
                     console.log("deleted");
                     newFiles.push(alreadyAvailableFiles[i]);
                 }
@@ -2072,7 +2072,7 @@ app.put('/po', async (req, res) => {
                 
             }
             detail['POImageURL'] = JSON.stringify(newFiles)
-            delete detail["removedFileList"];
+            delete detail["toBeRemoved"];
             let updatePoPromise = updatePoDataWithImageData(detail, workOrderValues, req);
 
             let updatePoInvoiceData = updatePOInvoice(poInvoiceDetails, req);
