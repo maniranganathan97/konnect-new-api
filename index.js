@@ -1876,9 +1876,7 @@ function getPoInvoicePromise() {
 
 function getPODetailsPromise() {
   return new Promise((resolve, reject) => {
-    let query = `select DISTINCT PO.*,Contact.ContactName,Staff.StaffName,Company.CompanyName,POStatus.POStatus,Site.SiteName from PO 
-	JOIN WorkOrder ON WorkOrder.POID = PO.POID
-    JOIN Site ON Site.SiteID = WorkOrder.SiteID
+    let query = `select PO.*,Contact.ContactName,Staff.StaffName,Company.CompanyName,POStatus.POStatus from PO 
     JOIN Contact ON Contact.ContactID = PO.ContactID
     JOIN Staff ON Staff.StaffID = PO.StaffID
     JOIN Company ON PO.CompanyID = Company.CompanyID
@@ -4861,6 +4859,18 @@ app.delete('/team', async (req, res) => {
       });
       
     });
+})
+
+app.get('/getsiteforpo', async (req, res) => {
+    let query = `select DISTINCT PO.POID, Site.SiteName
+    FROM PO
+    JOIN WorkOrder ON WorkOrder.POID = PO.POID
+    JOIN Site ON Site.SiteID = WorkOrder.SiteID
+    ORDER BY POID`
+    pool.query(query, function (err, results) {
+        if (err) throw err
+            return res.status(200).send(results)
+    })
 })
 
 app.post('/bulkWorkOrder', async (req, res) => {
