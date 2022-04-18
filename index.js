@@ -4869,7 +4869,7 @@ app.get('/getsiteforpo', async (req, res) => {
     FROM PO
     JOIN WorkOrder ON WorkOrder.POID = PO.POID
     JOIN Site ON Site.SiteID = WorkOrder.SiteID
-    ORDER BY POID`
+    ORDER BY PO.AddedDateTime DESC`
     pool.query(query, function (err, results) {
         if (err) throw err
             return res.status(200).send(results)
