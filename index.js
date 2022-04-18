@@ -230,6 +230,9 @@ app.post('/site', multer.single('file'), async (req, res) => {
 
 function multipleFilesUploadPromiseData(siteFilesArray) {
     return new Promise((resolve, reject) => {
+        if(siteFilesArray && siteFilesArray.length == 0) {
+            resolve([])
+        }
         var filePathArray=[];
         for(var i=0; i<siteFilesArray.length; i++) {
             const buffer = Buffer.from(siteFilesArray[i].data, 'base64')
