@@ -2319,7 +2319,7 @@ app.get('/poworkorder', async (req, res) => {
 app.post('/workorder', async (req, res) => {
 
     let query = `Insert into WorkOrder values (?,?,?,?,?,?,?,?,?,?,?,?,?)`
-    let parameters = ["", req.body.SiteID,req.body.POID,req.body.SiteZoneID, req.body.WorkTypeID, req.body.CreatedType, req.body.RequestedStartDate, req.body.RequestedEndDate, req.body.AssignedDateTime, req.body.WorkStatusID, req.body.WorkNatureID,req.body.UpdatedByUserID, req.body.UpdatedDateTime]
+    let parameters = ["", req.body.POID,req.body.SiteZoneID,req.body.SiteID, req.body.WorkTypeID, req.body.CreatedType, req.body.RequestedStartDate, req.body.RequestedEndDate, req.body.AssignedDateTime, req.body.WorkStatusID, req.body.WorkNatureID,req.body.UpdatedByUserID, req.body.UpdatedDateTime]
     pool.query(query, parameters, function (err, result) {
         if (err)
             throw err;
