@@ -269,9 +269,27 @@ app.put('/site', async (req, res) => {
     if (detail['SiteMapImageURL']) {
 
         var multileFilesUploadPromise = multipleFilesUploadPromiseData(req.body["SiteMapImageURL"]);
-        multileFilesUploadPromise.then(data => {
-            detail['SiteMapImageURL'] = JSON.stringify(data.filePathArray)
-            detail['SiteImageFileName'] = JSON.stringify(data.fileNameArray)
+        var alreadyAvailableFilesPromise = alreadyAvailableFilesPromiseData(req.query.SiteID);
+
+        Promise.all([alreadyAvailableFilesPromise, multileFilesUploadPromise]).then(allData => {
+            console.log("allData =========> \n"+allData);
+            var alreadyAvailableFiles =  JSON.parse(allData[0][0].SiteMapImageURL);
+            var newFiles = [];
+            for(var i=0; i< alreadyAvailableFiles.length; i++) {
+                if(!req.body.removedFileList.find(singleFile => singleFile.name ===alreadyAvailableFiles[i].name )) {
+                    console.log("deleted");
+                    newFiles.push(alreadyAvailableFiles[i]);
+                }
+            }
+            var updatedFiles = allData[1];
+            for(var j=0; j< updatedFiles.length; j++) {
+                if(!alreadyAvailableFiles.find(singleFile => singleFile.name ===updatedFiles[j].name )) {
+                    newFiles.push(updatedFiles[j]);
+                }
+                
+            }
+            detail['SiteMapImageURL'] = JSON.stringify(newFiles)
+            delete detail["removedFileList"];
 
             let query = `Update Site SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where SiteID = ?"
             const parameters = [...Object.values(detail), req.query.SiteID]
@@ -283,7 +301,7 @@ app.put('/site', async (req, res) => {
                     return res.status(401).json({ code: 401, "message": "site with images data not update" })
                 }
             })
-        });
+        })
 
     } else {
 
@@ -300,7 +318,21 @@ app.put('/site', async (req, res) => {
         })
     }
 
-})
+});
+
+function alreadyAvailableFilesPromiseData(siteId) {
+    return new Promise((resolve, reject) => {
+        let query = `select SiteMapImageURL FROM Site WHERE SiteID =${siteId}`
+    pool.query(query, function (error, results, fields) {
+        if (error) throw error
+        if (results.length > 0) {
+            return resolve(results);
+        } else {
+            return resolve(results);
+        }
+    })
+    })
+}
 
 app.delete('/site', async (req, res) => {
     let query = `DELETE FROM Site WHERE SiteID =${req.query.SiteID}`
@@ -1998,37 +2030,64 @@ function insertWorkOrderData(req, results) {
     });
 }
 
+function alreadyAvailableFilesPromisePOData(poID) {
+    return new Promise((resolve, reject) => {
+        let query = `select POImageURL FROM PO WHERE POID =${poID}`
+    pool.query(query, function (error, results, fields) {
+        if (error) throw error
+        if (results.length > 0) {
+            return resolve(results);
+        } else {
+            return resolve(results);
+        }
+    })
+    })
+}
+
 app.put('/po', async (req, res) => {
     try {
         const detail = req.body
         let workOrderValues = req.body.WorkOrders
         let poInvoiceDetails = req.body.poInvoiceDetails;
-        //let contactObjects = req.body
         delete detail['WorkOrders']
         delete detail['Invoices']
-
         if (detail['POImageURL']) {
             var multileFilesUploadPromise = multipleFilesUploadPromiseData(
                 detail["POImageURL"]
               );
-              multileFilesUploadPromise
-                .then((data) => {
-                  var filesPathArray = JSON.stringify(data.filePathArray);
-                  console.log(filesPathArray);
-                  detail['POImageURL'] = filesPathArray;
-                  let updatePoPromise = updatePoDataWithImageData(detail, workOrderValues, req);
+        var alreadyAvailableFilesPromise = alreadyAvailableFilesPromisePOData(req.query.POID)    
+        Promise.all([alreadyAvailableFilesPromise, multileFilesUploadPromise]).then(allData => {
+            console.log("allData =========> \n"+allData);
+            var alreadyAvailableFiles =  JSON.parse(allData[0][0].POImageURL);
+            var newFiles = [];
+            for(var i=0; i< alreadyAvailableFiles.length; i++) {
+                if(!req.body.removedFileList.find(singleFile => singleFile.name ===alreadyAvailableFiles[i].name )) {
+                    console.log("deleted");
+                    newFiles.push(alreadyAvailableFiles[i]);
+                }
+            }
+            var updatedFiles = allData[1];
+            for(var j=0; j< updatedFiles.length; j++) {
+                if(!alreadyAvailableFiles.find(singleFile => singleFile.name ===updatedFiles[j].name )) {
+                    newFiles.push(updatedFiles[j]);
+                }
+                
+            }
+            detail['POImageURL'] = JSON.stringify(newFiles)
+            delete detail["removedFileList"];
+            let updatePoPromise = updatePoDataWithImageData(detail, workOrderValues, req);
 
-                  let updatePoInvoiceData = updatePOInvoice(poInvoiceDetails, req);
-                  Promise.all([updatePoPromise,updatePoInvoiceData])
-                      .then((allData) => {
-                          return res.status(200).json({ code: 200, "message": "Data updated sucessfully" })
-                      })
-                      .catch((err) => {
-                          console.log("error while updating po invoice *********" + err);
-                          return res.status(400).send(err);
-                      });
-
+            let updatePoInvoiceData = updatePOInvoice(poInvoiceDetails, req);
+            Promise.all([updatePoPromise,updatePoInvoiceData])
+                .then((allData) => {
+                    return res.status(200).json({ code: 200, "message": "Data updated sucessfully" })
+                })
+                .catch((err) => {
+                    console.log("error while updating po invoice *********" + err);
+                    return res.status(400).send(err);
                 });
+
+          });
 
         } else {
             let updatePoWithoutImage = updatePoWithoutImageData(detail,workOrderValues, req);
@@ -3984,50 +4043,21 @@ function getAllData(req) {
 }
 
 app.post('/rescheduledReportWO', multer.single('file'), async (req, res) => {
-
-    if (req.body["ContactAckSignImageURL"]) {
-        const buffer = Buffer.from(req.body["ContactAckSignImageURL"], 'base64')
-        // Create a new blob in the bucket and upload the file data.
-        const id = uuid.v4();
-        const blob = bucket.file("konnect" + id + ".jpg");
-        const blobStream = blob.createWriteStream();
-
-        blobStream.on('error', err => {
-            next(err);
-        });
-
-        blobStream.on('finish', () => {
-            // The public URL can be used to directly access the file via HTTP.
-            const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
-            let query = 'INSERT INTO RescheduledReportWO(`RescheduledReportWOID`,`ReportWOID`,`WorkOrderID`,`WOstartDateTime`,`WOendDateTime`,`WorkNatureID`,`Findings`,`Location`,`ServiceMethodID`,`FogMachineNum`,`ContactAckMethodID`,`ContactAckID`,`ContackAckOther`,`ContactAckSignImageURL`,`ContactAckDateTime`,`consolidateDateTime`,`Notes`,`Reason`,`UpdatedUserID`,`UpdatedDateTime`) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-            let parameters = ["", req.body.ReportWOID, req.body.WorkOrderID, req.body.WOstartDateTime, req.body.WOendDateTime, req.body.WorkNatureID, req.body.Findings, req.body.Location, req.body.ServiceMethodID, req.body.FogMachineNum, req.body.ContactAckMethodID, req.body.ContactAckID, req.body.ContackAckOther, publicUrl, req.body.ContactAckDateTime, req.body.consolidateDateTime, req.body.Notes, req.body.Reason, req.body.UpdatedUserID, req.body.UpdatedDateTime]
-            pool.query(query, parameters, function (err, results, fields) {
-                if (err) throw err
-                if (results.affectedRows > 0) {
-                    return res.status(200).json({ code: 200, message: "success" })
-                } else {
-                    return res.status(401).json({ code: 401, "message": "data not inserted." })
-                }
-            })
-        })
-        blobStream.end(buffer);
-    }
-    else {
         let query = `insert into RescheduledReportWO  (
-          
-WorkOrderID
-,WorkNatureID
-,WorkStatus
-,WorkTypeName
-,WorkTypeID
-,WorkStatusID
-,WorkNature
-,SiteZoneID
-,SiteName
-,SiteID
-,Description
-,Reason) values (?,?,?,?,?,?,?,?,?,?,?,?)`
-        let parameters = [ req.body.WorkOrderID, req.body.WorkNatureID, req.body.WorkStatus, req.body.WorkTypeName, 
+                    RescheduledReportWOID    
+                    ,WorkOrderID
+                    ,WorkNatureID
+                    ,WorkStatus
+                    ,WorkTypeName
+                    ,WorkTypeID
+                    ,WorkStatusID
+                    ,WorkNature
+                    ,SiteZoneID
+                    ,SiteName
+                    ,SiteID
+                    ,Description
+                    ,Reason) values (?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        let parameters = ["", req.body.WorkOrderID, req.body.WorkNatureID, req.body.WorkStatus, req.body.WorkTypeName, 
         req.body.WorkTypeID, req.body.WorkStatusID, req.body.WorkNature, req.body.SiteZoneID, req.body.SiteName, 
         req.body.SiteID, req.body.Description, req.body.Reason]
         pool.query(query, parameters, function (err, results, fields) {
@@ -4038,7 +4068,6 @@ WorkOrderID
                 return res.status(401).json({ code: 401, "message": "data not inserted." })
             }
         })
-    }
 
 })
 
