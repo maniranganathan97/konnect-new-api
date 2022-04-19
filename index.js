@@ -2077,6 +2077,8 @@ app.put('/po', async (req, res) => {
             }
             detail['POImageURL'] = JSON.stringify(newFiles)
             delete detail["toBeRemoved"];
+            delete detail["poInvoiceDetails"];
+            delete detail["Sites"];
             let updatePoPromise = updatePoDataWithImageData(detail, workOrderValues, req);
 
             let updatePoInvoiceData = updatePOInvoice(poInvoiceDetails, req);
@@ -2167,6 +2169,9 @@ function updatePoDataWithImageData(detail, workOrderValues, req) {
                 pool.query(query, parameters, function (err, poresults, fields) {
                     if (err) throw err
 
+                    if(workOrderValues && workOrderValues.length ==0 ) {
+                        resolve("No work order values")
+                    }
                     for (let woValues of workOrderValues) {
                         //console.log(woValues)
                         if (!!!woValues['WorkOrderID']) {
@@ -2197,7 +2202,7 @@ function updatePoDataWithImageData(detail, workOrderValues, req) {
                                 }
                             });
                         }
-                    }
+                    } 
                 })
     })
 }
