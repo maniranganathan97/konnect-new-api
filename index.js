@@ -5068,7 +5068,7 @@ function bulkInsertWorkOrderPromise(req) {
         if (result.affectedRows > 0) {
             var assignedWorkers = data.AssignedWorkers;
             let insertWoInvoicePromise = insertWOInvoice(
-                value,
+                data.Invoices,
                 req,
                 result.insertId
               );
