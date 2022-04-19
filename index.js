@@ -2734,7 +2734,7 @@ app.get('/workstatus', async (req, res) => {
 
 
 app.get('/poJobDetails', async (req, res) => {
-    let query = `SELECT WorkOrder.WorkOrderID, WorkOrder.SiteID,Site.SiteName, WorkType.WorkTypeID, WorkType.WorkTypeName, WorkOrder.WorkNatureID,WorkNature.WorkNature,WorkOrder.SiteZoneID,SiteZone.Description,WorkStatus.WorkStatus
+    let query = `SELECT WorkOrder.WorkOrderID, WorkOrder.SiteID,Site.SiteName, WorkType.WorkTypeID, WorkType.WorkTypeName, WorkOrder.WorkNatureID,WorkNature.WorkNature,WorkOrder.SiteZoneID,SiteZone.Description,WorkStatus.WorkStatusID,WorkStatus.WorkStatus
     FROM WorkOrder
     JOIN WorkOrderStaff ON WorkOrder.WorkOrderID = WorkOrderStaff.WorkOrderID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
