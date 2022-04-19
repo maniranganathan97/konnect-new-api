@@ -2333,14 +2333,14 @@ function workOrderWoInvoicePromise() {
 
 function workOrders() {
     return new Promise((resolve, reject) => {
-        let query = `Select WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus,SiteZone.Description,Staff.StaffName,Staff.StaffID from WorkOrder
-    JOIN PO ON PO.POID = WorkOrder.POID
-    JOIN Staff ON Staff.StaffID = PO.StaffID
-    JOIN Site ON Site.SiteID = WorkOrder.SiteID
-    JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
-    JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
-    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
-    ORDER BY WorkOrder.WorkOrderID`
+        let query = `Select DISTINCT WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus,SiteZone.Description,Staff.StaffName,Staff.StaffID from WorkOrder
+        LEFT JOIN PO ON WorkOrder.POID = PO.POID
+        LEFT JOIN Staff ON Staff.StaffID = PO.StaffID
+        JOIN Site ON Site.SiteID = WorkOrder.SiteID
+        JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
+        JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+        JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+        ORDER BY WorkOrder.WorkOrderID`
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length > 0) {
