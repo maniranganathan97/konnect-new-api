@@ -54,6 +54,7 @@ const { Console } = require('console')
 const { resolve } = require('path')
 const e = require('express')
 const req = require('express/lib/request')
+const { all } = require('express/lib/application')
 
 const pool = mysql.createPool({
     host: '184.168.117.92',
@@ -2370,6 +2371,7 @@ app.get('/poworkorder', async (req, res) => {
 app.post('/workorder', async (req, res) => {
 
     var woInvoiceDetails = req.body.Invoices;
+    var assignedWorkers = req.body.AssignedWorkers;
     let query = `Insert into WorkOrder values (?,?,?,?,?,?,?,?,?,?,?,?,?)`
     let parameters = ["", req.body.POID,req.body.SiteZoneID,req.body.SiteID, req.body.WorkTypeID, req.body.CreatedType, req.body.RequestedStartDate, req.body.RequestedEndDate, req.body.AssignedDateTime, req.body.WorkStatusID, req.body.WorkNatureID,req.body.UpdatedByUserID, req.body.UpdatedDateTime]
     pool.query(query, parameters, function (err, result) {
@@ -2381,7 +2383,8 @@ app.post('/workorder', async (req, res) => {
                 req,
                 result.insertId
               );
-              Promise.all([insertWoInvoicePromise])
+              let insertWorkOrderStaff = insertWorkOrderStaffPromise(assignedWorkers, result.insertId, req.body.UpdatedByUserID, req.body.UpdatedDateTime)
+              Promise.all([insertWoInvoicePromise, insertWorkOrderStaff])
                 .then((allData) => {
                   return res.status(200).json({
                     code: 200,
@@ -2401,6 +2404,36 @@ app.post('/workorder', async (req, res) => {
     })
 })
 
+function insertWorkOrderStaffPromise(assignedWorkers, woId, UpdatedByUserID, UpdatedDateTime) {
+    return new Promise((resolve, reject) => {
+        if(assignedWorkers.length == 0) {
+            resolve("No workers to insert");
+            return;
+        }
+      let values = [];
+
+      for (let data of assignedWorkers) {
+        let value = [];
+        value.push(woId);
+        value.push(data);
+        value.push(UpdatedByUserID);
+        value.push(UpdatedDateTime);
+        values.push(value);
+      }
+
+      var sql =
+        "INSERT INTO WorkOrderStaff(WorkOrderID, StaffID, AddedByUserID, AddedDateTime) VALUES ?";
+
+      pool.query(sql, [values], function (err, result) {
+        if (err) throw err;
+        if (result.affectedRows > 0) {
+          resolve(result)
+        } else {
+            resolve(result)
+        }
+      });
+    });
+}
 function insertWOInvoice(woInvoiceDetails, req, woId) {
     return new Promise((resolve, reject) => {
         if(woInvoiceDetails.length == 0) {
@@ -5027,21 +5060,35 @@ function bulkInsertWorkOrderPromise(req) {
         value.push(data.UpdatedDateTime);
         value.push(data.SiteZoneID);
         value.push(data.WorkNatureID);
-        values.push(value);
-      }
+        var sql =
+        "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID,WorkNatureID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
 
-      var sql =
-        "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID,WorkNatureID) VALUES ?";
-
-      pool.query(sql, [values], function (err, result) {
+      pool.query(sql, value, function (err, result) {
         if (err) throw err;
         if (result.affectedRows > 0) {
-            resolve(result)
+            var assignedWorkers = data.AssignedWorkers;
+            let insertWoInvoicePromise = insertWOInvoice(
+                value,
+                req,
+                result.insertId
+              );
+            let insertWorkOrderStaff = insertWorkOrderStaffPromise(assignedWorkers, result.insertId, data.UpdatedByUserID, data.UpdatedDateTime);
+            Promise.all([insertWoInvoicePromise, insertWorkOrderStaff])
+                .then((allData) => {
+                  resolve(allData)
+                })
+                .catch((err) => {
+                    resolve()
+                });
         
         } else {
             resolve(result)
         }
       });
+        // values.push(value);
+      }
+
+    
     });
 }
 
