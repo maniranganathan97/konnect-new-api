@@ -4214,13 +4214,33 @@ app.post('/rescheduledReportWO', multer.single('file'), async (req, res) => {
         pool.query(query, parameters, function (err, results, fields) {
             if (err) throw err
             if (results.affectedRows > 0) {
-                return res.status(200).json({ code: 200, message: "success" })
+                var deletePromise = deleteWorkOrderById(req.body.WorkOrderID);
+                deletePromise.then(data => {
+                    return res.status(200).json({ code: 200, message: "success" })
+
+                }).catch(err => {
+                    console.log(err);
+                    return res.status(401).json({ code: 401, "message": "failed to delete" })
+                })
+                
             } else {
                 return res.status(401).json({ code: 401, "message": "data not inserted." })
             }
         })
 
 })
+
+function deleteWorkOrderById(workOrderID) {
+
+    return new Promise((resolve, reject) => {
+      let query = `SET foreign_key_checks = 0;delete FROM WorkOrder where WorkOrderID=${workOrderID}`;
+      pool.query(query, function (err, results, fields) {
+        if (err) throw err;
+        resolve({ code: 200, message: "success" });
+        
+      });
+    });
+}
 
 app.get("/getRescheduledReason", async (req, res) => {
 
