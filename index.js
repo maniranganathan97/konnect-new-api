@@ -1970,7 +1970,7 @@ app.post('/po', async (req, res) => {
 
 function insertPOInvoice(poInvoiceDetails, req, poId) {
     return new Promise((resolve, reject) => {
-        if(poInvoiceDetails.length == 0) {
+        if(poInvoiceDetails == undefined || poInvoiceDetails.length == 0) {
             resolve("No po invoices data to insert");
         }
       for (var j = 0; j < poInvoiceDetails.length; j++) {
