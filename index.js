@@ -4175,7 +4175,7 @@ function getAllData(req) {
         select DISTINCT ReportWO.WorkOrderID,ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
         ReportWO.ContactAckSignImageURL,C2.ContactName AS Requestor, WorkOrder.POID ,ReportWO.ContactAckDateTime,
               ReportWO.ContackAckOther, ReportWO.ContactAckID, PO.POnumber, ReportWO.FogMachineNum, PO.PODate, Site.SiteName,
-              (CASE WHEN (C1.ContactName != "" OR C1.ContactName != 0) THEN C1.ContactName ELSE ReportWO.ContackAckOther END) AS AckContact 
+              (CASE WHEN (C1.ContactName != "" OR C1.ContactName != 0) THEN C1.ContactName ELSE ReportWO.ContackAckOther END) AS AckContact, ReportWO.NotesToOffice
               from ReportWO
               JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
               LEFT JOIN Contact C1 on C1.ContactID = ReportWO.ContactAckID
