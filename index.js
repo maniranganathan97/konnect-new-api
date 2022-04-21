@@ -2002,8 +2002,8 @@ function insertWorkOrderData(req, results) {
     let values = [];
 
     for (let woValues of req.body["WorkOrders"]) {
-      var woInvoiceDetails = woValues["Invoices"];
-      var assignedWorkers = woValues["AssignedWorkers"];
+      let woInvoiceDetails = woValues["Invoices"];
+      let assignedWorkers = woValues["AssignedWorkers"];
       var sql =
         "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID, WorkNatureID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
       let parameters = [
@@ -2150,8 +2150,8 @@ function updatePoWithoutImageData(detail,workOrderValues, req){
                     for (let woValues of workOrderValues) {
                         //console.log(woValues)
                         if (!!!woValues['WorkOrderID']) {
-                            var woInvoiceDetails = woValues["Invoices"];
-                            var assignedWorkers = woValues["AssignedWorkers"];
+                            let woInvoiceDetails = woValues["Invoices"];
+                            let assignedWorkers = woValues["AssignedWorkers"];
                             var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID,WorkNatureID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
                             let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['CreatedType'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['WorkNatureID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                             pool.query(sql, parameters, function (err, result, fields) {
@@ -2182,7 +2182,7 @@ function updatePoWithoutImageData(detail,workOrderValues, req){
                         }
                         else {
                             //console.log("in else")
-                            var woInvoiceDetails = woValues["Invoices"];
+                            let woInvoiceDetails = woValues["Invoices"];
                             delete woValues["Invoices"];
                             delete woValues["AssignedWorkers"];
                             let sql = `SELECT 1 FROM WorkOrder WHERE workorderid = ${woValues['WorkOrderID']}`
@@ -2227,8 +2227,8 @@ function updatePoDataWithImageData(detail, workOrderValues, req) {
                     for (let woValues of workOrderValues) {
                         //console.log(woValues)
                         if (!!!woValues['WorkOrderID']) {
-                            var woInvoiceDetails = woValues["Invoices"];
-                            var assignedWorkers = woValues["AssignedWorkers"];
+                            let woInvoiceDetails = woValues["Invoices"];
+                            let assignedWorkers = woValues["AssignedWorkers"];
                             var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID,WorkNatureID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
                             let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['CreatedType'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['WorkNatureID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                             pool.query(sql, parameters, function (err, result, fields) {
@@ -2434,11 +2434,11 @@ app.get('/poworkorder', async (req, res) => {
     Promise.all([poworkorderPromise]).then(workOrderData => {
         var returnData  = [];
         var index = 0;
-        for(var workOrder of workOrderData[0]) {
+        for(let workOrder of workOrderData[0]) {
 
             var assignedWorkers = assignedWorkersData(workOrder.WorkOrderID);
             var workOrderWoInvoicePromise = workOrderWoInvoicePromiseData(workOrder.WorkOrderID);
-            Promise.all([assignedWorkers, workOrderWoInvoicePromise]).then(subData => {
+            Promise.all([assignedWorkers, workOrderWoInvoicePromise]).then((subData) => {
                 var tempWorkers =[];
                 for(var workerId of subData[0]) {
                     tempWorkers.push(workerId["StaffID"]);
@@ -2582,24 +2582,44 @@ function insertWOInvoice(woInvoiceDetails, req, woId) {
         }
       for (var j = 0; j < woInvoiceDetails.length; j++) {
         var singleData = woInvoiceDetails[j];
+        if (!!!singleData['WOInvoiceID']) {
+            singleData.WOID = woId;
+            var insertWoInvoicePromise = insertWoInvoiceData(singleData, woId);
+    
+            Promise.all([
+              insertWoInvoicePromise,
+             
+            ])
+              .then((allData) => {
+                resolve({ code: 200, message: "updated successfully." });
+              })
+              .catch((err) => {
+                console.log("error is ====" + err);
+                reject(err);
+              });
 
-        singleData.WOID = woId;
-        var insertWoInvoicePromise = insertWoInvoiceData(singleData, woId);
+        } else {
+            let sql = `SELECT 1 FROM WOInvoice WHERE WOInvoiceID = ${singleData['WOInvoiceID']}`
+            pool.query(sql, function (err, result, fields) {
+                if (err) throw err;
+                if (result.length > 0) {
+                    let query = `Update WOInvoice SET  ` + Object.keys(singleData).map(key => `${key}=?`).join(",") + " where WOInvoiceID = ?"
+                    const parameters = [...Object.values(singleData), singleData['WOInvoiceID']]
+                    pool.query(query, parameters, function (err, results, fields) {
+                        if(err) throw err;
+                        resolve(results);
+                    })
 
-        Promise.all([
-          insertWoInvoicePromise,
-         
-        ])
-          .then((allData) => {
-            resolve({ code: 200, message: "updated successfully." });
-          })
-          .catch((err) => {
-            console.log("error is ====" + err);
-            reject(err);
-          });
+                } else {
+                    resolve("nothing to update")
+                }
+            });
+
+        }
       }
     });
 }
+
 
 
 function insertWoInvoiceData(singleData, woId) {
