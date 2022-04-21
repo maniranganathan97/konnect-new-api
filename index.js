@@ -2962,7 +2962,7 @@ app.get('/getContacts', async (req, res) => {
 
 app.get('/reportsbyPO', async (req, res) => {
     let query = `SELECT PO.POnumber, PO.POdate, WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,WorkStatus.WorkStatus
-    FROM PO JOIN WorkOrder ON PO.POID = WorkOrder.POID
+    FROM PO RIGHT JOIN WorkOrder ON PO.POID = WorkOrder.POID
     JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
     JOIN Site ON WorkOrder.SiteID = Site.SiteID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
@@ -4276,7 +4276,7 @@ function getAllData(req) {
         select DISTINCT ReportWO.WorkOrderID,ReportWO.WOstartDateTime, ReportWO.WOendDateTime, WorkNature.WorkNature, ReportWO.Findings, ReportWO.Location,
         ReportWO.ContactAckSignImageURL,C2.ContactName AS Requestor, WorkOrder.POID ,ReportWO.ContactAckDateTime,
               ReportWO.ContackAckOther, ReportWO.ContactAckID, PO.POnumber, ReportWO.FogMachineNum, PO.PODate, Site.SiteName,
-              (CASE WHEN (C1.ContactName != "" OR C1.ContactName != 0) THEN C1.ContactName ELSE ReportWO.ContackAckOther END) AS AckContact 
+              (CASE WHEN (C1.ContactName != "" OR C1.ContactName != 0) THEN C1.ContactName ELSE ReportWO.ContackAckOther END) AS AckContact, ReportWO.NotesToOffice
               from ReportWO
               JOIN WorkNature on WorkNature.WorkNatureID = ReportWO.WorkNatureID
               LEFT JOIN Contact C1 on C1.ContactID = ReportWO.ContactAckID
