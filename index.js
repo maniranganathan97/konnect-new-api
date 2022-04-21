@@ -1909,7 +1909,7 @@ app.post('/po', async (req, res) => {
       .then((data) => {
         var filesPathArray = JSON.stringify(data);
         console.log(filesPathArray);
-        let query = `INSERT INTO PO(POID,POnumber,POdate,POImageURL,ContactID,StaffID,POStatusID,CompanyID,POFilename, Amount, Description, AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?,?,?,?, ?,?)`;
+        let query = `INSERT INTO PO(POID,POnumber,POdate,POImageURL,ContactID,StaffID,POStatusID,CompanyID,POFilename, Amount, BalanceAmount, Description, AddedbyUserID, AddedDateTime) VALUES(?,?,?,?,?,?,?,?,?,?,?, ?,?,?)`;
         pool.query(
           query,
           [
@@ -1923,6 +1923,7 @@ app.post('/po', async (req, res) => {
             req.body.CompanyID,
             req.body.POFilename,
             req.body.Amount,
+            req.body.BalanceAmount,
             req.body.Description,
             req.body.AddedByUserID,
             req.body.AddedDateTime,
