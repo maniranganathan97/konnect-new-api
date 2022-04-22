@@ -2108,10 +2108,21 @@ app.put('/po', async (req, res) => {
           });
 
         } else {
+            var alreadyAvailableFilesPromise = alreadyAvailableFilesPromisePOData(req.query.POID)    
+        Promise.all([alreadyAvailableFilesPromise]).then(allData => {
+            console.log("allData =========> \n"+allData);
+            var alreadyAvailableFiles =  JSON.parse(allData[0][0].POImageURL);
+            var newFiles = [];
+            for(var i=0; i< alreadyAvailableFiles.length; i++) {
+                if(!req.body.toBeRemoved.find(singleFile => singleFile.name ===alreadyAvailableFiles[i].name )) {
+                    console.log("deleted");
+                    newFiles.push(alreadyAvailableFiles[i]);
+                }
+            }
+            detail['POImageURL'] = JSON.stringify(newFiles);
             delete detail["toBeRemoved"];
             delete detail["poInvoiceDetails"];
             delete detail["Sites"];
-            delete detail["POImageURL"];
             let updatePoWithoutImage = updatePoWithoutImageData(detail,workOrderValues, req);
 
            let updatePoInvoiceData = updatePOInvoice(poInvoiceDetails, req);
@@ -2126,6 +2137,7 @@ app.put('/po', async (req, res) => {
                 return res.status(400).send(err);
               });
         }
+        )};
     } catch (error) {
         return res.status(500).json({ "message": error })
     }
