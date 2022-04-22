@@ -2153,18 +2153,13 @@ function updatePoWithoutImageData(detail,workOrderValues, req){
                             let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['CreatedType'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['WorkNatureID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                             pool.query(sql, parameters, function (err, result, fields) {
                                 if (err) throw err;
-                                let insertWoInvoicePromise = insertWOInvoice(
-                                    woInvoiceDetails,
-                                    req,
-                                    result.insertId
-                                  );
                                   let insertWorkOrderStaff = insertWorkOrderStaffPromise(
                                     assignedWorkers,
                                     result.insertId,
                                     woValues["UpdatedByUserID"],
                                     woValues["UpdatedDateTime"]
                                   );
-                                  Promise.all([insertWoInvoicePromise, insertWorkOrderStaff])
+                                  Promise.all([insertWorkOrderStaff])
                                     .then((allData) => {
                                       return resolve({
                                         code: 200,
@@ -2179,28 +2174,18 @@ function updatePoWithoutImageData(detail,workOrderValues, req){
                         }
                         else {
                             //console.log("in else")
-                            let woInvoiceDetails = woValues["Invoices"];
-                            delete woValues["Invoices"];
                             delete woValues["AssignedWorkers"];
                             let sql = `SELECT 1 FROM WorkOrder WHERE workorderid = ${woValues['WorkOrderID']}`
                             pool.query(sql, function (err, result, fields) {
                                 if (err) throw err;
                                 if (result.length > 0) {
-                                    let insertWoInvoicePromise = insertWOInvoice(
-                                        woInvoiceDetails,
-                                        req,
-                                        woValues['WorkOrderID']
-                                      );
-                                      insertWoInvoicePromise.then(data => {
                                         let query = `Update WorkOrder SET  ` + Object.keys(woValues).map(key => `${key}=?`).join(",") + " where WorkOrderID = ?"
                                         const parameters = [...Object.values(woValues), woValues['WorkOrderID']]
                                         pool.query(query, parameters, function (err, results, fields) {
                                             if(err) throw err;
                                             resolve(results);
                                         })
-                                      }).catch(err =>{
-                                        reject(err);
-                                      })
+                                      
                                     
                                 }
                             });
