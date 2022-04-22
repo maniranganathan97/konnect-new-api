@@ -2352,7 +2352,7 @@ app.delete('/po', async (req, res) => {
 
 app.get('/workorder', async (req, res) => {
     var woDetails = workOrders();
-    Promise.all([woDetails, woInvoiceDetails])
+    Promise.all([woDetails])
       .then((allData) => {
         var returnData = {};
         returnData = allData[0];
