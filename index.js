@@ -2006,7 +2006,7 @@ function insertWorkOrderData(req, results) {
       let woInvoiceDetails = woValues["Invoices"];
       let assignedWorkers = woValues["AssignedWorkers"];
       var sql =
-        "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID, WorkNatureID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+        "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID, WorkNatureID, WOInvoice, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
       let parameters = [
         results.insertId,
         woValues["SiteID"],
@@ -2016,6 +2016,7 @@ function insertWorkOrderData(req, results) {
         woValues["RequestedEndDate"],
         woValues["WorkStatusID"],
         woValues["WorkNatureID"],
+        woValues["WOInvoice"],
         woValues["AssignedDateTime"],
         woValues["UpdatedByUserID"],
         woValues["UpdatedDateTime"],
@@ -2023,18 +2024,13 @@ function insertWorkOrderData(req, results) {
       ];
       pool.query(sql, parameters, function (err, result, fields) {
         if (err) throw err;
-        let insertWoInvoicePromise = insertWOInvoice(
-          woInvoiceDetails,
-          req,
-          result.insertId
-        );
         let insertWorkOrderStaff = insertWorkOrderStaffPromise(
           assignedWorkers,
           result.insertId,
           woValues["UpdatedByUserID"],
           woValues["UpdatedDateTime"]
         );
-        Promise.all([insertWoInvoicePromise, insertWorkOrderStaff])
+        Promise.all([insertWorkOrderStaff])
           .then((allData) => {
             return resolve({
               code: 200,
@@ -2230,22 +2226,17 @@ function updatePoDataWithImageData(detail, workOrderValues, req) {
                         if (!!!woValues['WorkOrderID']) {
                             let woInvoiceDetails = woValues["Invoices"];
                             let assignedWorkers = woValues["AssignedWorkers"];
-                            var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID,WorkNatureID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
-                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['CreatedType'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['WorkNatureID'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
+                            var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID,WorkNatureID, WOInvoice, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                            let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['CreatedType'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['WorkNatureID'], woValues['WOInvoice'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                             pool.query(sql, parameters, function (err, result, fields) {
                                 if (err) throw err;
-                                let insertWoInvoicePromise = insertWOInvoice(
-                                    woInvoiceDetails,
-                                    req,
-                                    result.insertId
-                                  );
                                   let insertWorkOrderStaff = insertWorkOrderStaffPromise(
                                     assignedWorkers,
                                     result.insertId,
                                     woValues["UpdatedByUserID"],
                                     woValues["UpdatedDateTime"]
                                   );
-                                  Promise.all([insertWoInvoicePromise, insertWorkOrderStaff])
+                                  Promise.all([insertWorkOrderStaff])
                                     .then((allData) => {
                                       return resolve({
                                         code: 200,
@@ -2260,7 +2251,6 @@ function updatePoDataWithImageData(detail, workOrderValues, req) {
                         }
                         else {
                             //console.log("in else")
-                            delete woValues["Invoices"];
                             delete woValues["AssignedWorkers"];
                             let sql = `SELECT 1 FROM WorkOrder WHERE workorderid = ${woValues['WorkOrderID']}`
                             pool.query(sql, function (err, result, fields) {
@@ -2514,19 +2504,14 @@ app.post('/workorder', async (req, res) => {
 
     var woInvoiceDetails = req.body.Invoices;
     var assignedWorkers = req.body.AssignedWorkers;
-    let query = `Insert into WorkOrder values (?,?,?,?,?,?,?,?,?,?,?,?,?)`
-    let parameters = ["", req.body.POID,req.body.SiteZoneID,req.body.SiteID, req.body.WorkTypeID, req.body.CreatedType, req.body.RequestedStartDate, req.body.RequestedEndDate, req.body.AssignedDateTime, req.body.WorkStatusID, req.body.WorkNatureID,req.body.UpdatedByUserID, req.body.UpdatedDateTime]
+    let query = `Insert into WorkOrder values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+    let parameters = ["", req.body.POID,req.body.SiteZoneID,req.body.SiteID, req.body.WorkTypeID, req.body.CreatedType, req.body.RequestedStartDate, req.body.RequestedEndDate, req.body.AssignedDateTime, req.body.WorkStatusID, req.body.WorkNatureID,req.body.WOInvoice,req.body.UpdatedByUserID, req.body.UpdatedDateTime]
     pool.query(query, parameters, function (err, result) {
         if (err)
             throw err;
         if (result.affectedRows > 0) {
-            let insertWoInvoicePromise = insertWOInvoice(
-                woInvoiceDetails,
-                req,
-                result.insertId
-              );
               let insertWorkOrderStaff = insertWorkOrderStaffPromise(assignedWorkers, result.insertId, req.body.UpdatedByUserID, req.body.UpdatedDateTime)
-              Promise.all([insertWoInvoicePromise, insertWorkOrderStaff])
+              Promise.all([ insertWorkOrderStaff])
                 .then((allData) => {
                   return res.status(200).json({
                     code: 200,
@@ -2648,17 +2633,14 @@ function insertWoInvoiceData(singleData, woId) {
 
 app.put('/workorder', async (req, res) => {
     const detail = req.body
-    let workOrderWorkers = req.body.AssignedWorkers
-    let woInvoiceDetails = req.body.Invoices;
-    delete detail['Invoices']
+    let workOrderWorkers = req.body.AssignedWorkers;
     delete detail['AssignedWorkers'];
     var dateTime = moment(req.body.AssignedDateTime);
     req.body.AssignedDateTime = dateTime.format('YYYY-MM-DD HH:mm:SS');
 
   
     var updateWorkOrderPromise = updateWorkOrderPromiseData(req, workOrderWorkers, detail);
-    var updateWorkOrderInvoice = updateWOInvoice(woInvoiceDetails, req);
-    Promise.all([updateWorkOrderPromise, updateWorkOrderInvoice]).then(allData => {
+    Promise.all([updateWorkOrderPromise]).then(allData => {
         return res.status(200).json({ "code": 200, message: "updated work order successfully." })
     }).catch(err => {
         return res.status(400).json({ "code": 400, message: "error while updating work order - "+ err })
@@ -2684,8 +2666,6 @@ function updateWorkOrderPromiseData(req, workOrderWorkers, detail) {
                 })
     
                 for (let woWorker of workOrderWorkers) {
-                    //console.log(woValues)
-    
     
                     let sql = `SELECT 1 FROM WorkOrderStaff WHERE WorkOrderID = ${req.query.WorkOrderID} AND StaffID = ${woWorker}`
                     pool.query(sql, function (err, result, fields) {
@@ -2699,7 +2679,6 @@ function updateWorkOrderPromiseData(req, workOrderWorkers, detail) {
                             pool.query(sql, parameters, function (err, result, fields) {
                                 if (err) throw err;
                                 if (result.affectedRows > 0) {
-                                    //console.log(result)
                                     resolve()
                                 }
                                 else {
@@ -5242,20 +5221,16 @@ function bulkInsertWorkOrderPromise(req) {
         value.push(data.UpdatedDateTime);
         value.push(data.SiteZoneID);
         value.push(data.WorkNatureID);
+        value.push(data.WOInvoice);
         var sql =
-        "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID,WorkNatureID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
+        "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID,WorkNatureID, WOInvoice) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
       pool.query(sql, value, function (err, result) {
         if (err) throw err;
         if (result.affectedRows > 0) {
             var assignedWorkers = data.AssignedWorkers;
-            let insertWoInvoicePromise = insertWOInvoice(
-                data.Invoices,
-                req,
-                result.insertId
-              );
             let insertWorkOrderStaff = insertWorkOrderStaffPromise(assignedWorkers, result.insertId, data.UpdatedByUserID, data.UpdatedDateTime);
-            Promise.all([insertWoInvoicePromise, insertWorkOrderStaff])
+            Promise.all([insertWorkOrderStaff])
                 .then((allData) => {
                   resolve(allData)
                 })
