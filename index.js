@@ -2539,6 +2539,15 @@ function insertWorkOrderStaffPromise(assignedWorkers, woId, UpdatedByUserID, Upd
         }
       let values = [];
 
+      let deleteSql = `DELETE FROM WorkOrderStaff WHERE WorkOrderID = ${woId} AND StaffID NOT IN (${assignedWorkers})`
+      pool.query(deleteSql, function (err, result, fields) {
+          if (err) throw err;
+          if (result.length > 0) {
+              resolve()
+          } else {
+              resolve()
+          }
+      })
       for (let data of assignedWorkers) {
         let value = [];
         value.push(woId);
