@@ -2428,14 +2428,13 @@ app.get('/poworkorder', async (req, res) => {
         for(let workOrder of workOrderData[0]) {
 
             var assignedWorkers = assignedWorkersData(workOrder.WorkOrderID);
-            var workOrderWoInvoicePromise = workOrderWoInvoicePromiseData(workOrder.WorkOrderID);
-            Promise.all([assignedWorkers, workOrderWoInvoicePromise]).then((subData) => {
+            
+            Promise.all([assignedWorkers]).then((subData) => {
                 var tempWorkers =[];
                 for(var workerId of subData[0]) {
                     tempWorkers.push(workerId["StaffID"]);
                 }
                 workOrder.AssignedWorkers = tempWorkers;
-                workOrder.Invoices = Object.values(subData[1]);
                 returnData.push(workOrder);
                 index++;
                 if(index == workOrderData[0].length) {
