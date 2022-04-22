@@ -2146,8 +2146,9 @@ function updatePoWithoutImageData(detail,workOrderValues, req){
                     }
                     for (let woValues of workOrderValues) {
                         //console.log(woValues)
+                        let assignedWorkers = woValues["AssignedWorkers"];
                         if (!!!woValues['WorkOrderID']) {
-                            let assignedWorkers = woValues["AssignedWorkers"];
+                            
                             var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID,WorkNatureID, WOInvoice, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
                             let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['CreatedType'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['WorkNatureID'],woValues['WOInvoice'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                             pool.query(sql, parameters, function (err, result, fields) {
@@ -2182,7 +2183,23 @@ function updatePoWithoutImageData(detail,workOrderValues, req){
                                         const parameters = [...Object.values(woValues), woValues['WorkOrderID']]
                                         pool.query(query, parameters, function (err, results, fields) {
                                             if(err) throw err;
-                                            resolve(results);
+                                            let insertWorkOrderStaff = insertWorkOrderStaffPromise(
+                                                assignedWorkers,
+                                                woValues['WorkOrderID'],
+                                                woValues["UpdatedByUserID"],
+                                                woValues["UpdatedDateTime"]
+                                              );
+                                              Promise.all([insertWorkOrderStaff])
+                                                .then((allData) => {
+                                                  return resolve({
+                                                    code: 200,
+                                                    message: "Data inserted sucessfully",
+                                                  });
+                                                })
+                                                .catch((err) => {
+                                                  console.log("error while inserting po invoice *********" + err);
+                                                  return reject(err);
+                                                });
                                         })
                                       
                                     
@@ -2244,7 +2261,23 @@ function updatePoDataWithImageData(detail, workOrderValues, req) {
                                     const parameters = [...Object.values(woValues), woValues['WorkOrderID']]
                                     pool.query(query, parameters, function (err, results, fields) {
                                         if(err) throw err;
-                                        resolve(results);
+                                        let insertWorkOrderStaff = insertWorkOrderStaffPromise(
+                                            assignedWorkers,
+                                            woValues['WorkOrderID'],
+                                            woValues["UpdatedByUserID"],
+                                            woValues["UpdatedDateTime"]
+                                          );
+                                          Promise.all([insertWorkOrderStaff])
+                                            .then((allData) => {
+                                              return resolve({
+                                                code: 200,
+                                                message: "Data inserted sucessfully",
+                                              });
+                                            })
+                                            .catch((err) => {
+                                              console.log("error while inserting po invoice *********" + err);
+                                              return reject(err);
+                                            });
                                     })
                                 }
                             });
@@ -2512,20 +2545,39 @@ function insertWorkOrderStaffPromise(assignedWorkers, woId, UpdatedByUserID, Upd
         value.push(data);
         value.push(UpdatedByUserID);
         value.push(UpdatedDateTime);
+        var sql =
+        `select * from WorkOrderStaff where StaffID = ${data} and WorkOrderID=${woId}`;
+
+      pool.query(sql, function (err, result) {
+        if (err) throw err;
+        if (result.length > 0) {
+          resolve(result)
+        } else {
+          var sql =
+            "INSERT INTO WorkOrderStaff(WorkOrderID, StaffID, AddedByUserID, AddedDateTime) VALUES (?,?,?,?)";
+          let parameters = [
+            woId,
+            data,
+            UpdatedByUserID,
+            UpdatedDateTime,
+          ];
+          pool.query(sql, parameters, function (err, result, fields) {
+            if (err) throw err;
+            if (result.affectedRows > 0) {
+              resolve();
+            } else {
+              resolve({
+                code: 401,
+                message: "New work order staff not updated.",
+              });
+            }
+          });
+        }
+      });
         values.push(value);
       }
 
-      var sql =
-        "INSERT INTO WorkOrderStaff(WorkOrderID, StaffID, AddedByUserID, AddedDateTime) VALUES ?";
-
-      pool.query(sql, [values], function (err, result) {
-        if (err) throw err;
-        if (result.affectedRows > 0) {
-          resolve(result)
-        } else {
-            resolve(result)
-        }
-      });
+     
     });
 }
 function insertWOInvoice(woInvoiceDetails, req, woId) {
