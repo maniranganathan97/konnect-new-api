@@ -2236,9 +2236,10 @@ function updatePoDataWithImageData(detail, workOrderValues, req) {
                     }
                     for (let woValues of workOrderValues) {
                         //console.log(woValues)
+                        let assignedWorkers = woValues["AssignedWorkers"];
                         if (!!!woValues['WorkOrderID']) {
                             let woInvoiceDetails = woValues["Invoices"];
-                            let assignedWorkers = woValues["AssignedWorkers"];
+                            
                             var sql = "INSERT INTO WorkOrder(POID, SiteID, WorkTypeID, CreatedType, RequestedStartDate,RequestedEndDate,WorkStatusID,WorkNatureID, WOInvoice, AssignedDateTime,UpdatedByUserID,UpdatedDateTime,SiteZoneID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)";
                             let parameters = [req.query.POID, woValues['SiteID'], woValues['WorkTypeID'], woValues['CreatedType'], woValues['RequestedStartDate'], woValues['RequestedEndDate'], woValues['WorkStatusID'], woValues['WorkNatureID'], woValues['WOInvoice'], woValues['AssignedDateTime'], woValues['UpdatedByUserID'], woValues['UpdatedDateTime'], woValues['SiteZoneID']]
                             pool.query(sql, parameters, function (err, result, fields) {
