@@ -2925,7 +2925,7 @@ app.get('/poJobDetails', async (req, res) => {
     JOIN Site ON Site.SiteID = WorkOrder.SiteID
     JOIN SiteZone ON WorkOrder.SiteZoneID = SiteZone.SiteZoneID
             WHERE WorkOrderStaff.StaffID = ${req.query.StaffID}
-            AND WorkOrder.RequestedStartDate = DATE('${req.query.RequestedStartDate}')`
+            AND WorkOrder.RequestedStartDate = DATE('${req.query.AssignedDateTime}')`
     pool.query(query, function (err, results) {
 
         if (err) throw err
