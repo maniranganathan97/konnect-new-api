@@ -2352,27 +2352,10 @@ app.delete('/po', async (req, res) => {
 
 app.get('/workorder', async (req, res) => {
     var woDetails = workOrders();
-    var woInvoiceDetails = workOrderWoInvoicePromise();
-    Promise.all([woDetails, woInvoiceDetails])
+    Promise.all([woDetails])
       .then((allData) => {
         var returnData = {};
-        returnData = allData[0];
-        var invoiceData = allData[1];
-        for(var i=0; i<returnData.message.length; i++) {
-            if(invoiceData.length == 0) {
-                returnData.message[i].woInvoiceDetails = [];
-                continue;
-            }
-            var newInvoiceData = [];
-            for(var j=0; j<invoiceData.length; j++) {
-                if(returnData.message[i].WorkOrderID == invoiceData[j].WOID) {
-                    newInvoiceData.push(invoiceData[j])
-                }
-            }
-            returnData.message[i].woInvoiceDetails = newInvoiceData;
-
-        }
-       
+        returnData = allData[0];       
         return res.status(200).json(returnData)
       })
       .catch((err) => {
