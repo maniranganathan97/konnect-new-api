@@ -2925,7 +2925,7 @@ app.get('/poJobDetails', async (req, res) => {
     JOIN Site ON Site.SiteID = WorkOrder.SiteID
     JOIN SiteZone ON WorkOrder.SiteZoneID = SiteZone.SiteZoneID
             WHERE WorkOrderStaff.StaffID = ${req.query.StaffID}
-            AND DATE(WorkOrder.AssignedDateTime) = DATE('${req.query.AssignedDateTime}')`
+            AND DATE(WorkOrder.AssignedDateTime) = DATE('${req.query.AssignedDateTime}') and WorkStatus.WorkStatusID in (2,3,4)`
     pool.query(query, function (err, results) {
 
         if (err) throw err
@@ -3602,6 +3602,7 @@ app.post('/reportWOCreate', async (req, res) => {
         if (error) throw error
         if (results.affectedRows > 0) {
             let insertCosolidatedReportQuery = `
+            update WorkOrder set workStatusId = 3 where workorderId=${req.body.WorkOrderID};
             INSERT INTO ConsolidatedReportWO ( ReportWOID, StaffID, StartedDateTime, 
                 LocationPoint, FindingsImages, ServicesProvided, 
                 ServiceImage, UpdatedByUserID, UpdatedDateTime, workOrderID) 
@@ -4396,7 +4397,7 @@ app.post('/rescheduledReportWO', multer.single('file'), async (req, res) => {
         pool.query(query, parameters, function (err, results, fields) {
             if (err) throw err
             if (results.affectedRows > 0) {
-                var deletePromise = deleteWorkOrderById(req.body.WorkOrderID);
+                var deletePromise = updateWorkOrderWorkStatus(req.body.WorkOrderID, 6);
                 deletePromise.then(data => {
                     return res.status(200).json({ code: 200, message: "success" })
 
@@ -4412,10 +4413,10 @@ app.post('/rescheduledReportWO', multer.single('file'), async (req, res) => {
 
 })
 
-function deleteWorkOrderById(workOrderID) {
+function updateWorkOrderWorkStatus(workOrderID, workStatusId) {
 
     return new Promise((resolve, reject) => {
-      let query = `SET foreign_key_checks = 0;delete FROM WorkOrder where WorkOrderID=${workOrderID}`;
+      let query = `update WorkOrder set workStatusId = ${workStatusId} where workorderId=${workOrderID}`;
       pool.query(query, function (err, results, fields) {
         if (err) throw err;
         resolve({ code: 200, message: "success" });
