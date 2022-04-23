@@ -2938,6 +2938,29 @@ app.get('/poJobDetails', async (req, res) => {
 
 })
 
+app.get('/scheduleReportWo', async (req, res) => {
+    let query = `SELECT WorkOrder.WorkOrderID, WorkOrder.SiteID,Site.SiteName, WorkType.WorkTypeID, WorkType.WorkTypeName, WorkOrder.WorkNatureID,WorkNature.WorkNature,WorkOrder.SiteZoneID,SiteZone.Description,WorkStatus.WorkStatusID,WorkStatus.WorkStatus
+    FROM WorkOrder
+    JOIN WorkOrderStaff ON WorkOrder.WorkOrderID = WorkOrderStaff.WorkOrderID
+    JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+    JOIN WorkNature ON WorkNature.WorkNatureID = WorkOrder.WorkNatureID
+    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+    JOIN Site ON Site.SiteID = WorkOrder.SiteID
+    JOIN SiteZone ON WorkOrder.SiteZoneID = SiteZone.SiteZoneID
+            WHERE WorkOrderStaff.StaffID = ${req.query.StaffID}
+            and Date(WorkOrder.AssignedDateTime) BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 7 DAY)`
+    pool.query(query, function (err, results) {
+
+        if (err) throw err
+        if (results.length > 0) {
+            return res.status(200).send(results)
+        } else {
+            return res.status(400).send({ code: 400, message: "No job available for this user" })
+        }
+    })
+
+})
+
 
 
 app.get('/contactcompany', async (req, res) => {
