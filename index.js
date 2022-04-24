@@ -3327,7 +3327,7 @@ from ReportWOFindings
 JOIN ReportWO on ReportWO.ReportWOID = ReportWOFindings.ReportWOID
  JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
  
- WHERE WorkOrder.WorkOrderID = ${req.query.WorkOrderID}
+ WHERE WorkOrder.WorkOrderID = ${req.query.WorkOrderID} and ReportWOFindings.UpdatedByUserID = ${req.query.UpdatedUserID}
     
 
     `;
@@ -3356,7 +3356,7 @@ from ReportWOService
 JOIN ReportWO on ReportWO.ReportWOID = ReportWOService.ReportWOID
  JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
  
- WHERE WorkOrder.WorkOrderID =${req.query.WorkOrderID}
+ WHERE WorkOrder.WorkOrderID =${req.query.WorkOrderID} and ReportWOService.UpdatedByUserID = ${req.query.UpdatedUserID}
     
 
     `;
