@@ -1779,8 +1779,7 @@ app.get('/ECSreportsByPointNumber', (req, res) => {
 
         if (err) throw err
         if (results.length > 0) {
-            obj['ecsReports'] = results
-            return res.status(200).json(obj)
+            return res.status(200).json(results)
 
         } else {
             return res.status(200).json({ code: 200, message: [] })
