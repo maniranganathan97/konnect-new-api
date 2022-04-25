@@ -1787,6 +1787,27 @@ app.get('/ECSreportsByPointNumber', (req, res) => {
 
     });
 })
+app.put('/updatePointDetails', (req, res) => {
+    
+    let obj = {};
+    let detail = req.body;
+    let query =
+      `Update Point_Details SET  ` +
+      Object.keys(detail)
+        .map((key) => `${key}=?`)
+        .join(",") +
+      " where PointID = ?";
+    const parameters = [...Object.values(detail), req.query.PointID];
+    pool.query(query, parameters, function (err, results, fields) {
+      if (err) throw err;
+
+      if (results.affectedRows > 0) {
+        return res.status(200).json({code:200, message: "updated point details is successfully."});
+      } else {
+        return res.status(200).json({code:200, message: "update failed for point details."});
+      }
+    });
+})
 
 selectAllElements = () => {
     return new Promise((resolve, reject) => {
