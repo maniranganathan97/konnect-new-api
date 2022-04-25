@@ -125,6 +125,7 @@ app.post('/authentication', async (req, res) => {
                         }
                         if(newData.isStaff) {
                             newData.AccessControlID = staff[0].AccessControlID;
+                            newData.isSuperUser = staff[0].AccessControlID == 1 || staff[0].AccessControlID == 3 ? true : false;
                         }
                         data['workType'] = result
                         return res.status(200).json(newData)
@@ -2916,7 +2917,9 @@ app.get('/workstatus', async (req, res) => {
 
 
 app.get('/poJobDetails', async (req, res) => {
-    let query = `SELECT WorkOrder.WorkOrderID, WorkOrder.SiteID,Site.SiteName, WorkType.WorkTypeID, WorkType.WorkTypeName, WorkOrder.WorkNatureID,WorkNature.WorkNature,WorkOrder.SiteZoneID,SiteZone.Description,WorkStatus.WorkStatusID,WorkStatus.WorkStatus
+    let query = `SELECT WorkOrder.WorkOrderID, WorkOrder.SiteID,Site.SiteName, 
+    WorkType.WorkTypeID, WorkType.WorkTypeName, WorkOrder.WorkNatureID,WorkNature.WorkNature,
+    WorkOrder.SiteZoneID,SiteZone.Description,WorkStatus.WorkStatusID,WorkStatus.WorkStatus, WorkOrder.AssignedDateTime
     FROM WorkOrder
     JOIN WorkOrderStaff ON WorkOrder.WorkOrderID = WorkOrderStaff.WorkOrderID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
