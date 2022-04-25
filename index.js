@@ -4387,8 +4387,8 @@ function getAllData(req) {
               LEFT JOIN Contact C1 on C1.ContactID = ReportWO.ContactAckID
               JOIN WorkOrder on WorkOrder.WorkOrderID = ReportWO.WorkOrderID
               JOIN Site ON Site.SiteID = WorkOrder.SiteID
-              JOIN PO ON PO.POID = WorkOrder.POID
-              JOIN Contact C2 on C2.ContactID = PO.ContactID
+              LEFT JOIN PO ON PO.POID = WorkOrder.POID
+              LEFT JOIN Contact C2 on C2.ContactID = PO.ContactID
               WHERE ReportWO.WorkOrderID = ${req.query.WorkOrderID}`
         pool.query(query, function (err, results) {
             if (err) reject(err)
