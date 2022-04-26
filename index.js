@@ -1787,19 +1787,19 @@ app.put('/updatePointDetails', (req, res) => {
     let obj = {};
     let detail = req.body;
     let query =
-      `Update Point_Details SET  ` +
+      `Update Scan_Details SET  ` +
       Object.keys(detail)
         .map((key) => `${key}=?`)
         .join(",") +
-      " where PointID = ?";
-    const parameters = [...Object.values(detail), req.query.PointID];
+      " where ScanID = ?";
+    const parameters = [...Object.values(detail), req.query.ScanID];
     pool.query(query, parameters, function (err, results, fields) {
       if (err) throw err;
 
       if (results.affectedRows > 0) {
-        return res.status(200).json({code:200, message: "updated point details is successfully."});
+        return res.status(200).json({code:200, message: "updated scan details is successfully."});
       } else {
-        return res.status(200).json({code:200, message: "update failed for point details."});
+        return res.status(200).json({code:200, message: "update failed for scan details."});
       }
     });
 })
@@ -4485,13 +4485,13 @@ app.post('/rescheduledReportWO', multer.single('file'), async (req, res) => {
         pool.query(query, parameters, function (err, results, fields) {
             if (err) throw err
             if (results.affectedRows > 0) {
-                var deletePromise = updateWorkOrderWorkStatus(req.body.WorkOrderID, 6);
+                var deletePromise = updateWorkOrderWorkStatus(req, 6);
                 deletePromise.then(data => {
                     return res.status(200).json({ code: 200, message: "success" })
 
                 }).catch(err => {
                     console.log(err);
-                    return res.status(401).json({ code: 401, "message": "failed to delete" })
+                    return res.status(401).json({ code: 401, "message": "failed to update workorder status" })
                 })
                 
             } else {
@@ -4501,10 +4501,10 @@ app.post('/rescheduledReportWO', multer.single('file'), async (req, res) => {
 
 })
 
-function updateWorkOrderWorkStatus(workOrderID, workStatusId) {
+function updateWorkOrderWorkStatus(req) {
 
     return new Promise((resolve, reject) => {
-      let query = `update WorkOrder set workStatusId = ${workStatusId} where workorderId=${workOrderID}`;
+      let query = `update WorkOrder set workStatusId = ${req.body.WorkStatusID}  and RescheduledReason = ${req.body.RescheduledReason} where workorderId=${req.query.WorkOrderID}`;
       pool.query(query, function (err, results, fields) {
         if (err) throw err;
         resolve({ code: 200, message: "success" });
