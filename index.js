@@ -1778,12 +1778,7 @@ app.get('/ECSreportsByPointNumber', (req, res) => {
     pool.query(query, function (err, results) {
 
         if (err) throw err
-        if (results.length > 0) {
-            return res.status(200).json(results)
-
-        } else {
-            return res.status(200).json({ code: 200, message: [] })
-        }
+        return res.status(200).json(results)
 
     });
 })
