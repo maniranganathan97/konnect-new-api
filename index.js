@@ -2578,8 +2578,8 @@ app.post('/workorder', async (req, res) => {
 
     var woInvoiceDetails = req.body.Invoices;
     var assignedWorkers = req.body.AssignedWorkers;
-    let query = `Insert into WorkOrder values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-    let parameters = ["", req.body.POID,req.body.SiteZoneID,req.body.SiteID, req.body.WorkTypeID, req.body.CreatedType, req.body.RequestedStartDate, req.body.RequestedEndDate, req.body.AssignedDateTime, req.body.WorkStatusID, req.body.WorkNatureID,req.body.WOInvoice,req.body.UpdatedByUserID, req.body.UpdatedDateTime]
+    let query = `Insert into WorkOrder values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+    let parameters = ["", req.body.POID,req.body.SiteZoneID,req.body.SiteID, req.body.WorkTypeID, req.body.CreatedType, req.body.RequestedStartDate, req.body.RequestedEndDate, req.body.AssignedDateTime, req.body.WorkStatusID, req.body.WorkNatureID,req.body.WOInvoice,req.body.RescheduledReason,req.body.UpdatedByUserID, req.body.UpdatedDateTime]
     pool.query(query, parameters, function (err, result) {
         if (err)
             throw err;
