@@ -1,5 +1,24 @@
 const router = require("express").Router();
 const mysql = require('mysql');
+const uuid = require('uuid');
+const Multer = require('multer');
+const path = require('path')
+const bodyParser = require('body-parser')
+const { format } = require('util')
+
+const { Storage } = require('@google-cloud/storage')
+const multer = Multer({
+    storage: Multer.memoryStorage(),
+    limits: {
+        fileSize: 10 * 1024 * 1024, // no larger than 5mb, you can change as needed.
+    },
+})
+
+const gc = new Storage({
+    keyFilename: path.join(__dirname, '../keys.json'),
+    projectId: 'nodejsapiengine'
+})
+const bucket = gc.bucket('images-pest')
 
 const pool = mysql.createPool({
     host: '184.168.117.92',
@@ -19,6 +38,12 @@ router.post('/save', async(req, res) => {
         return res.status(200).json({
             code: 200,
             message: "Data inserted sucessfully to the table ManualReport",
+          });
+    }).catch(err => {
+        console.log(err);
+        return res.status(400).json({
+            code: 400,
+            message: "Data inserted failed to the table ManualReport",
           });
     })
 });
@@ -73,6 +98,7 @@ function saveEcsReportData(req) {
         }
       });
     });
+    blobStream.end(buffer);
   });
 }
 
