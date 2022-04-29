@@ -103,11 +103,12 @@ function saveEcsReportData(req) {
 }
 
 router.get('/getAll', async (req, res) => {
-    let query = `
-    select ManualReport.*, SiteType.Description as SiteTypeName, SiteZone.Description as SiteZoneName, Site.SiteName from ManualReport
-    JOIN SiteType on SiteType.SiteTypeID = ManualReport.SiteTypeID
-    JOIN SiteZone on SiteZone.SiteZoneID = ManualReport.SiteZoneID
-    JOIN Site on Site.SiteID = ManualReport.SiteID
+    let query = `select ManualReport.*, SiteType.Description as SiteTypeName,
+     SiteZone.Description as SiteZoneName, Site.SiteName, ManualReportType.ManualReportName as ReportTypeName
+     from ManualReport JOIN SiteType on SiteType.SiteTypeID = ManualReport.SiteTypeID 
+     JOIN SiteZone on SiteZone.SiteZoneID = ManualReport.SiteZoneID 
+     JOIN Site on Site.SiteID = ManualReport.SiteID 
+     JOIN ManualReportType on ManualReportType.ManualReportTypeID = ManualReport.ReportTypeID
     
     `
     pool.query(query, function (err, results) {
