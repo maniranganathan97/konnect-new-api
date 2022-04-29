@@ -1730,9 +1730,14 @@ app.get('/ecsreports', async (req, res) => {
             pool.query(pointQuery, function (err, pointQuery) {
                 if (err) throw err
                 if (pointQuery.length > 0) {
-                    obj['pointsData'] = pointQuery
-                    obj['ecsReports'] = results
-                    return res.status(200).send(obj)
+                    var getEcsDataBasedOnConditionPromise = getEcsDataBasedOnCondition(req);
+                    getEcsDataBasedOnConditionPromise.then(ecsData => {
+                        obj['pointsData'] = pointQuery
+                        obj['ecsReports'] = results
+                        obj['ecsReportData'] = ecsData
+                        return res.status(200).send(obj)
+                    })
+                    
                 } else {
                     return res.status(200).json({ code: 200, message: [] })
                 }
@@ -1746,6 +1751,22 @@ app.get('/ecsreports', async (req, res) => {
     })
 
 })
+
+function getEcsDataBasedOnCondition(req) {
+  return new Promise((resolve, reject) => {
+    let query = `
+    SELECT * from ECSReportData
+where SiteZoneID = ${req.query.SiteZoneID}
+and SiteTypeID = ${req.query.SiteTypeID}
+AND SiteID = ${req.query.SiteID}
+AND MONTH(UpdatedDateTime) = MONTH('${req.query.ScanDateTime}') AND YEAR(UpdatedDateTime) = YEAR('${req.query.ScanDateTime}')
+    `;
+    pool.query(query, function (err, results) {
+      if (err) throw err;
+      resolve(results);
+    });
+  });
+}
 
 app.get('/ECSreportsByPointNumber', (req, res) => {
     

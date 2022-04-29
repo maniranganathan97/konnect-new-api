@@ -24,9 +24,24 @@ router.post('/save', async(req, res) => {
 });
 
 function saveEcsReportData(req) {
-    return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
+    const buffer = Buffer.from(req.body["ManualReportURL"], "base64");
+    // Create a new blob in the bucket and upload the file data.
+    const id = uuid.v4();
+    const blob = bucket.file("ManualReportURL" + id + ".pdf");
+    const blobStream = blob.createWriteStream();
 
-        var inseryQuery = `insert into ManualReport(
+    blobStream.on("error", (err) => {
+      next(err);
+    });
+
+    blobStream.on("finish", () => {
+      // The public URL can be used to directly access the file via HTTP.
+      const publicUrl = format(
+        `https://storage.googleapis.com/${bucket.name}/${blob.name}`
+      );
+
+      var inseryQuery = `insert into ManualReport(
             ManualReportID			 
             ,SiteZoneID
             ,SiteTypeID
@@ -37,22 +52,38 @@ function saveEcsReportData(req) {
             ,AddedByUserID
             ,AddedDateTime
         ) values (?,?,?,?,?,?,?,?,?)`;
-        let parameters = ["", req.body.SiteZoneID, req.body.SiteTypeID, req.body.SiteID, req.body.ReportDate, 
-        req.body.ReportTypeID, req.body.ManualReportURL,req.body.AddedByUserID, req.body.AddedDateTime]
-        
-        pool.query(inseryQuery, parameters, (err, results) => {
-            if(err) throw err;
-            if (results.affectedRows > 0) {
-                resolve(results)
-              } else {
-                reject("Insert into ManualReport failed")
-              }
-        })
+      let parameters = [
+        "",
+        req.body.SiteZoneID,
+        req.body.SiteTypeID,
+        req.body.SiteID,
+        req.body.ReportDate,
+        req.body.ReportTypeID,
+        publicUrl,
+        req.body.AddedByUserID,
+        req.body.AddedDateTime,
+      ];
+
+      pool.query(inseryQuery, parameters, (err, results) => {
+        if (err) throw err;
+        if (results.affectedRows > 0) {
+          resolve(results);
+        } else {
+          reject("Insert into ManualReport failed");
+        }
+      });
     });
+  });
 }
 
 router.get('/getAll', async (req, res) => {
-    let query = `select * from ManualReport`
+    let query = `
+    select ManualReport.*, SiteType.Description as SiteTypeName, SiteZone.Description as SiteZoneName, Site.SiteName from ManualReport
+    JOIN SiteType on SiteType.SiteTypeID = ManualReport.SiteTypeID
+    JOIN SiteZone on SiteZone.SiteZoneID = ManualReport.SiteZoneID
+    JOIN Site on Site.SiteID = ManualReport.SiteID
+    
+    `
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
