@@ -95,13 +95,46 @@ router.put('/update', async(req, res) => {
 function updateECSReportDataData(req) {
     return new Promise((resolve, reject) => {
       let detail = req.body;
-      let query =
+      if (!!!detail['ECSReportDataID']) {
+        var inseryQuery = `insert into ECSReportData (
+          ECSReportDataID
+          ,SiteZoneID
+          ,SiteTypeID
+          ,SiteID
+          ,ReportDate
+          ,NumberOfMC
+          ,NumberOfTC
+          ,NumberOfCPC
+          ,Worker1
+          ,Worker2
+          ,Worker3
+          ,UpdatedByUserID
+          ,UpdatedDateTime
+          
+
+      ) values (?,?,?,?,?,?,?,?,?,?,?,?,?)`;
+      let parameters = ["", req.body.SiteZoneID, req.body.SiteTypeID, req.body.SiteID, req.body.ReportDate, 
+      req.body.NumberOfMC, req.body.NumberOfTC,req.body.NumberOfCPC, req.body.Worker1,req.body.Worker2
+      , req.body.Worker3, req.body.UpdatedByUserID, req.body.UpdatedDateTime]
+      
+      pool.query(inseryQuery, parameters, (err, results) => {
+          if(err) throw err;
+          if (results.affectedRows > 0) {
+              resolve(results)
+            } else {
+              reject("Insert into ECSReportData failed")
+            }
+      })
+
+
+      } else {
+        let query =
         `Update ECSReportData SET  ` +
         Object.keys(detail)
           .map((key) => `${key}=?`)
           .join(",") +
         " where ECSReportDataID = ?";
-      const parameters = [...Object.values(detail), req.query.ECSReportDataID];
+      const parameters = [...Object.values(detail), req.body.ECSReportDataID];
       pool.query(query, parameters, function (err, results, fields) {
         if (err) throw err;
   
@@ -111,6 +144,8 @@ function updateECSReportDataData(req) {
           reject({ code: 401, message: "ECSReportData without data not update" });
         }
       });
+      }
+      
     });
   }
 
