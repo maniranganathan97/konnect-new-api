@@ -423,7 +423,7 @@ app.delete('/sitezone', async (req, res) => {
 
 /* Access control get*/
 app.get('/accesscontrol', async (req, res) => {
-    let query = "select * from AccessControl"
+    let query = "select * from AccessControl where AccessControlID <> 8"
     pool.query(query, function (err, results, fields) {
         if (err) throw err
         if (results.length > 0) {
