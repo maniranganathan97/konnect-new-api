@@ -1693,7 +1693,9 @@ app.get('/ecsreports', async (req, res) => {
     let obj = {}
     let pointQuery = `SELECT Point_Details.PointID,PointNumber FROM Point_Details
     JOIN Site ON Point_Details.SiteID = Site.SiteID
-    WHERE Point_Details.SiteID =${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}`
+    WHERE Point_Details.SiteID =${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}
+    ORDER BY Cast(Point_Details.PointNumber as UNSIGNED)
+    `
 
     var query = '';
     if(req.query.Staff) {
