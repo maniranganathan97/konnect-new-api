@@ -1732,9 +1732,10 @@ app.get('/ecsreports', async (req, res) => {
                 if (pointQuery.length > 0) {
                     var getEcsDataBasedOnConditionPromise = getEcsDataBasedOnCondition(req);
                     getEcsDataBasedOnConditionPromise.then(ecsData => {
+                        obj = ecsData[0];
                         obj['pointsData'] = pointQuery
                         obj['ecsReports'] = results
-                        obj['ecsReportData'] = ecsData
+                        
                         return res.status(200).send(obj)
                     })
                     
