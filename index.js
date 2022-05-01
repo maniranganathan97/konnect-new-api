@@ -3040,7 +3040,7 @@ app.get('/scheduleReportWo', async (req, res) => {
     JOIN Site ON Site.SiteID = WorkOrder.SiteID
     JOIN SiteZone ON WorkOrder.SiteZoneID = SiteZone.SiteZoneID
             WHERE WorkOrderStaff.StaffID = ${req.query.StaffID}
-            and Date(WorkOrder.AssignedDateTime) BETWEEN NOW()+1 AND DATE_ADD(NOW()+1, INTERVAL 7 DAY)`
+            and Date(WorkOrder.AssignedDateTime)  IN (CURDATE() + INTERVAL 1 DAY, CURDATE() + INTERVAL 7 DAY)`
     pool.query(query, function (err, results) {
 
         if (err) throw err
