@@ -113,7 +113,7 @@ function updateECSReportDataData(req) {
           
 
       ) values (?,?,?,?,?,?,?,?,?,?,?,?,?)`;
-      let parameters = ["", req.body.SiteZoneID, req.body.SiteTypeID, req.body.SiteID, req.body.ReportDate, 
+      let parameters = ["", req.query.SiteZoneID, req.query.SiteTypeID, req.query.SiteID, req.body.ReportDate, 
       req.body.NumberOfMC, req.body.NumberOfTC,req.body.NumberOfCPC, req.body.Worker1,req.body.Worker2
       , req.body.Worker3, req.body.UpdatedByUserID, req.body.UpdatedDateTime]
       
