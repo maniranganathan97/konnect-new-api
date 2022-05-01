@@ -1768,7 +1768,7 @@ function getEcsDataBasedOnCondition(req) {
 where SiteZoneID = ${req.query.SiteZoneID}
 and SiteTypeID = ${req.query.SiteTypeID}
 AND SiteID = ${req.query.SiteID}
-AND MONTH(UpdatedDateTime) = MONTH('${req.query.ScanDateTime}') AND YEAR(UpdatedDateTime) = YEAR('${req.query.ScanDateTime}')
+AND MONTH(ReportDate) = MONTH('${req.query.ScanDateTime}') AND YEAR(ReportDate) = YEAR('${req.query.ScanDateTime}')
     `;
     pool.query(query, function (err, results) {
       if (err) throw err;
