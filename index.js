@@ -4508,7 +4508,7 @@ app.post("/rescheduledReportWO", multer.single("file"), async (req, res) => {
 function updateWorkOrderWorkStatus(req) {
 
     return new Promise((resolve, reject) => {
-      let query = `update WorkOrder set workStatusId = 6  and RescheduledReason = ${req.body.RescheduledReason} where workorderId=${req.query.WorkOrderID}`;
+      let query = `update WorkOrder set workStatusId = 6  and RescheduledReason = '${req.body.Reason}' where workorderId=${req.body.WorkOrderID}`;
       pool.query(query, function (err, results, fields) {
         if (err) throw err;
         resolve({ code: 200, message: "success" });
