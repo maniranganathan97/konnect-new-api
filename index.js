@@ -1734,7 +1734,13 @@ app.get('/ecsreports', async (req, res) => {
                 if (pointQuery.length > 0) {
                     var getEcsDataBasedOnConditionPromise = getEcsDataBasedOnCondition(req);
                     getEcsDataBasedOnConditionPromise.then(ecsData => {
-                        obj = ecsData[0];
+                        if(ecsData.length > 0)
+                        {
+                            obj = ecsData[0];
+                        }
+                        else{
+                            obj = {};
+                        }
                         obj['pointsData'] = pointQuery
                         obj['ecsReports'] = results
                         
@@ -1783,7 +1789,7 @@ app.get('/ECSreportsByPointNumber', (req, res) => {
         SELECT Point_Details.PointID FROM Point_Details
         JOIN Site ON Point_Details.SiteID = Site.SiteID
         WHERE Point_Details.SiteID = ${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}
-        AND Point_Details.PointNumber= ${req.query.PointNumber}
+        AND Point_Details.PointID= ${req.query.PointID}
         )
         AND MONTH(Scan_Details.ScanDateTime) = MONTH('${req.query.ScanDateTime}') AND YEAR(Scan_Details.ScanDateTime) = YEAR('${req.query.ScanDateTime}')
         ORDER BY Scan_Details.PointID,Scan_Details.ScanDateTime ASC`
@@ -1795,7 +1801,7 @@ app.get('/ECSreportsByPointNumber', (req, res) => {
         JOIN Site ON Point_Details.SiteID = Site.SiteID
         WHERE Point_Details.SiteID = ${req.query.SiteID} AND Point_Details.SiteZoneID=${req.query.SiteZoneID} AND Site.SiteTypeID = ${req.query.SiteTypeID}
         and WEEK(Point_Details.ScanDateTime) = WEEK(NOW()) - 1 
-        AND Point_Details.PointNumber= ${req.query.PointNumber}
+        AND Point_Details.PointID= ${req.query.PointID}
         )
         AND MONTH(Scan_Details.ScanDateTime) = MONTH('${req.query.ScanDateTime}') AND YEAR(Scan_Details.ScanDateTime) = YEAR('${req.query.ScanDateTime}')
         ORDER BY Scan_Details.PointID,Scan_Details.ScanDateTime ASC`
@@ -5322,7 +5328,7 @@ app.get('/getsiteforpo', async (req, res) => {
 })
 
 app.get('/getPointNumber', async (req, res) => {
-    let query = `select Point_Details.PointID, Point_Details.PointNumber from Point_Details where SiteZoneId =${req.query.SiteZoneID} and siteId = ${req.query.SiteID} `
+    let query = `select Point_Details.PointID, CAST(Point_Details.PointNumber AS UNSIGNED) AS PointNumber from Point_Details where SiteZoneId =${req.query.SiteZoneID} and siteId = ${req.query.SiteID} ORDER BY CAST(Point_Details.PointNumber AS UNSIGNED)`
     pool.query(query, function (err, results) {
         if (err) throw err
             return res.status(200).send(results)
