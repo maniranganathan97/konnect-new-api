@@ -5321,6 +5321,27 @@ app.get('/getsiteforpo', async (req, res) => {
     })
 })
 
+app.get('/getPointNumber', async (req, res) => {
+    let query = `select Point_Details.PointID, Point_Details.PointNumber from Point_Details where SiteZoneId =${req.query.SiteZoneID} and siteId = ${req.query.SiteID} `
+    pool.query(query, function (err, results) {
+        if (err) throw err
+            return res.status(200).send(results)
+    })
+})
+
+app.post('/saveScanDetails', async (req, res) => {
+    let insertQuery = `insert into Scan_Details(UID, PointID, UserID, ScanDateTime) VALUES(?,?,?,?) `
+    let parameters = [req.body.UID, req.body.PointID, req.body.UserID, req.body.ScanDateTime]
+        pool.query(insertQuery, parameters, function (err, result) {
+            if (err) throw err;
+            if (result.affectedRows > 0) {
+                return res.status(200).send({ code: 200, message: "inserted Scan_Details successfully" })
+            } else {
+                return res.status(400).send({ code: 400, message: "inserted Scan_Details failed" })
+            }
+          });
+})
+
 app.post('/bulkWorkOrder', async (req, res) => {
 
     let bulkWorkOrder = bulkInsertWorkOrderPromise(req);
@@ -5383,83 +5404,6 @@ function bulkInsertWorkOrderPromise(req) {
     });
 }
 
-function updatedWorkOrderStaffForBulkOrder(req, workOrderId){
-    return new Promise((resolve, reject) => {
-        for(var singleData of req.body) {
-            var getWorkersFromTeam = getWorkersFromTeamPromise(singleData.TeamID);
-
-            Promise.all([getWorkersFromTeam]).then(data => {
-                var staffIds = [];
-                for(var m=0; m<data[0].length; m++) {
-                    staffIds.push(data[0][m].StaffID);
-                }
-                if (staffIds.length > 0) {
-    
-                    let sql = `DELETE FROM WorkOrderStaff WHERE WorkOrderID = ${workOrderId} AND StaffID NOT IN (${staffIds})`
-                    pool.query(sql, function (err, result, fields) {
-                        if (err) throw err;
-                        if (result.length > 0) {
-                            console.log(result)
-                        } else {
-                            console.log(result)
-                        }
-                    })
-        
-                    for (let woWorker of staffIds) {
-                        //console.log(woValues)
-        
-        
-                        let sql = `SELECT 1 FROM WorkOrderStaff WHERE WorkOrderID = ${workOrderId} AND StaffID = ${woWorker}`
-                        pool.query(sql, function (err, result, fields) {
-                            if (err) throw err;
-                            if (result.length > 0) {
-                               resolve({ code: 200, "message": "Update workOrder Successful." })
-                            }
-                            else {
-                                var sql = "INSERT INTO WorkOrderStaff(WorkOrderID, StaffID, AddedByUserID, AddedDateTime) VALUES (?,?,?,?)";
-                                let parameters = [workOrderId, woWorker, singleData.UpdatedByUserID, singleData.UpdatedDateTime]
-                                pool.query(sql, parameters, function (err, result, fields) {
-                                    if (err) throw err;
-                                    if (result.affectedRows > 0) {
-                                                                            
-                                        resolve({ code: 200, "message": "Update workOrder Successful." })
-                                        
-                                    }
-                                    else {
-                                        reject({ code: 401, "message": "New work order staff not updated." })
-                                    }
-                                });
-                            }
-                        })
-                    }
-        
-                }
-                else {
-                    let sql = `SELECT 1 FROM WorkOrderStaff WHERE WorkOrderID = ${workOrderId}`
-                    pool.query(sql, function (err, result, fields) {
-                        if (err) throw err;
-                        if (result.length > 0) {
-                            let sql = `DELETE FROM WorkOrderStaff WHERE WorkOrderID = ${workOrderId}`
-                            pool.query(sql, function (err, result, fields) {
-                                if (err) throw err;
-                                if (result.length > 0) {
-                                    console.log(results)
-                                } else {
-                                    reject({ code: 200, "message": "No workers present to be removed." })
-                                }
-                            })
-                        }
-                    })
-                }
-            }).catch((err) => {
-                console.log("error while updating work order is ====" + err);
-                reject(err);
-            });
-        }
-        
-          
-    })
-}
 
 app.use('/reportADC', reportADCRouter);
 app.use('/reportDssd', reportDssdRouter);
