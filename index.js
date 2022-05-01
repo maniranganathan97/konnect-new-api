@@ -1748,13 +1748,13 @@ app.get('/ecsreports', async (req, res) => {
                     })
                     
                 } else {
-                    return res.status(200).json({ code: 200, message: [] })
+                    return res.status(200).json({pointsData:[],ecsReports:[]})
                 }
 
             })
 
         } else {
-            return res.status(200).json({ code: 200, message: [] })
+            return res.status(200).json({pointsData:[],ecsReports:[]})
         }
 
     })
