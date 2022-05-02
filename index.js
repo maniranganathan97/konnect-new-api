@@ -437,18 +437,51 @@ app.get('/accesscontrol', async (req, res) => {
 /* point details api to list pointDetails and add points details  ,update and delete */
 
 app.get('/pointdetails', async (req, res) => {
-    const zoneId = parseInt(req.query.SiteZoneID)
-    const siteId = parseInt(req.query.siteId)
-    pool.query(`select * from Point_Details where SiteZoneID = ${zoneId} AND SiteID= ${siteId}`, function (error, results, fields) {
-        if (error) throw error;
-        if (results.length > 0) {
-            return res.status(200).json(results)
-        } else {
-            return res.status(401).json({ "code": 401, "message": "unauthorized user" })
-        }
+    var pointDetailsPromise = getPointDetailsPromise(req);
+    var pointDetailsLengthPromise = getPointDetailsLengthPromise(req);
+    Promise.all([pointDetailsPromise, pointDetailsLengthPromise]).then(allData => {
+
+        var returnData = {};
+        var data = allData[0];
+        var size =  allData[1][0].size;
+        returnData.data = data;
+        returnData.size = size;
+        return res.status(200).json(returnData);
+
+    }).catch(err =>{
+        return res.status(400).json({ "code": 400, "message": "error while getting point details" })
     })
 
-})
+});
+
+function getPointDetailsPromise(req) {
+   return new Promise((resolve, reject) => {
+    const zoneId = parseInt(req.query.SiteZoneID)
+    const siteId = parseInt(req.query.siteId)
+    pool.query(`select * from Point_Details where SiteZoneID = ${zoneId} AND SiteID= ${siteId} and isDeleted = 0`, function (error, results, fields) {
+        if (error) throw error;
+        if (results.length > 0) {
+            resolve(results);
+        } else {
+            reject({ "code": 401, "message": "unauthorized user" })
+        }
+    })
+   });
+}
+function getPointDetailsLengthPromise(req) {
+   return new Promise((resolve, reject) => {
+    const zoneId = parseInt(req.query.SiteZoneID)
+    const siteId = parseInt(req.query.siteId)
+    pool.query(`select count(*) as size from Point_Details where SiteZoneID = ${zoneId} AND SiteID= ${siteId} and isDeleted = 0`, function (error, results, fields) {
+        if (error) throw error;
+        if (results.length > 0) {
+            resolve(results);
+        } else {
+            reject({ "code": 401, "message": "unauthorized user" })
+        }
+    })
+   });
+}
 
 app.post('/pointdetails', async (req, res, next) => {
 
@@ -458,7 +491,7 @@ app.post('/pointdetails', async (req, res, next) => {
     pool.query(query, function (err, results) {
         if (err) throw err
 
-        if (results[0]['Count(*)'] >= 2) {
+        if (results[0]['Count(*)'] > 1) {
             return res.status(400).json({ code: 400, message: "UID already exists" })
         } else {
             const buffer = Buffer.from(req.body["PointImageURL"], 'base64')
@@ -569,11 +602,11 @@ app.put('/pointdetails', async (req, res, next) => {
 })
 
 app.delete('/pointdetails', async (req, res) => {
-    let scanDetailsquery = `DELETE FROM Scan_Details WHERE PointID = ${req.query.PointID}`
+    // let scanDetailsquery = `DELETE FROM Scan_Details WHERE PointID = ${req.query.PointID}`
 
-    pool.query(scanDetailsquery, function (error, results, fields) {
-        if (error) throw error
-        if (results.affectedRows > 0) {
+    // pool.query(scanDetailsquery, function (error, results, fields) {
+    //     if (error) throw error
+    //     if (results.affectedRows > 0) {
             let query = `UPDATE Point_Details SET isDeleted = 1 WHERE PointID =${req.query.PointID}`
             pool.query(query, function (err, results, fields) {
                 if (err) throw err
@@ -584,19 +617,19 @@ app.delete('/pointdetails', async (req, res) => {
                 }
             })
 
-        } else {
-            let query = `DELETE FROM Point_Details WHERE PointID =${req.query.PointID}`
-            pool.query(query, function (err, results, fields) {
-                if (err) throw err
-                if (results.affectedRows > 0) {
-                    return res.status(200).json({ code: 200, message: "deleted successfully" })
-                } else {
-                    return res.status(400).json({ code: 400, message: "Point_details deleted successfully" })
-                }
-            })
+        // } else {
+        //     let query = `DELETE FROM Point_Details WHERE PointID =${req.query.PointID}`
+        //     pool.query(query, function (err, results, fields) {
+        //         if (err) throw err
+        //         if (results.affectedRows > 0) {
+        //             return res.status(200).json({ code: 200, message: "deleted successfully" })
+        //         } else {
+        //             return res.status(400).json({ code: 400, message: "Point_details deleted successfully" })
+        //         }
+        //     })
             // return res.status(400).json({ "code": 400, "message": "not deleted scan details" })
-        }
-    })
+        // }
+    // })
 })
 
 /* contact API to create,update and insert*/
