@@ -472,7 +472,9 @@ function getPointDetailsLengthPromise(req) {
    return new Promise((resolve, reject) => {
     const zoneId = parseInt(req.query.SiteZoneID)
     const siteId = parseInt(req.query.siteId)
-    pool.query(`select count(*) as size from Point_Details where SiteZoneID = ${zoneId} AND SiteID= ${siteId} and isDeleted = 0`, function (error, results, fields) {
+    pool.query(`    
+    select Max(Cast(Point_Details.PointNumber as UNSIGNED)) as max from Point_Details where SiteZoneID = ${zoneId} AND SiteID= ${siteId} and isDeleted = 0
+    `, function (error, results, fields) {
         if (error) throw error;
         if (results.length > 0) {
             resolve(results);
