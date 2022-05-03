@@ -5447,7 +5447,7 @@ function bulkInsertWorkOrderPromise(req) {
 }
 
 app.get('/getDeletedPoints', async(req, res) => {
-    let query = `select * from Point_Details where SiteZoneId =1 and siteId = 1 and isDeleted = 1 ORDER BY CAST(Point_Details.PointNumber AS UNSIGNED)
+    let query = `select * from Point_Details where SiteZoneId =${req.query.SiteZoneID} and siteId = ${req.query.SiteID}  and isDeleted = 1 ORDER BY CAST(Point_Details.PointNumber AS UNSIGNED)
 
     `
     pool.query(query, function (err, results) {
