@@ -5456,7 +5456,7 @@ app.get('/getDeletedPoints', async(req, res) => {
     })
 });
 
-app.get('/updatePointDetail', async(req, res) => {
+app.put('/updatePointDetailsDelete', async(req, res) => {
     let query = `UPDATE Point_Details SET isDeleted = 0 WHERE PointID =${req.query.PointID}`
             pool.query(query, function (err, results, fields) {
                 if (err) throw err
