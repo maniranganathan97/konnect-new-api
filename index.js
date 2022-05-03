@@ -58,6 +58,7 @@ const { resolve } = require('path')
 const e = require('express')
 const req = require('express/lib/request')
 const { all } = require('express/lib/application')
+const { get } = require('express/lib/response')
 
 const pool = mysql.createPool({
     host: '184.168.117.92',
@@ -5444,6 +5445,28 @@ function bulkInsertWorkOrderPromise(req) {
     
     });
 }
+
+app.get('/getDeletedPoints', async(req, res) => {
+    let query = `select * from Point_Details where SiteZoneId =1 and siteId = 1 and isDeleted = 1 ORDER BY CAST(Point_Details.PointNumber AS UNSIGNED)
+
+    `
+    pool.query(query, function (err, results) {
+        if (err) throw err
+            return res.status(200).send(results)
+    })
+});
+
+app.get('/updatePointDetail', async(req, res) => {
+    let query = `UPDATE Point_Details SET isDeleted = 0 WHERE PointID =${req.query.PointID}`
+            pool.query(query, function (err, results, fields) {
+                if (err) throw err
+                if (results.affectedRows > 0) {
+                    return res.status(200).json({ code: 200, message: "deleted successfully" })
+                } else {
+                    return res.status(400).json({ code: 400, message: "Point_details deleted successfully" })
+                }
+            })
+});
 
 
 app.use('/reportADC', reportADCRouter);
