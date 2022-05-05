@@ -106,7 +106,7 @@ router.get('/getAll', async (req, res) => {
   let query ="";
   if (req.query.Staff == 'true')
   {
-    query = `select ManualReport.*, SiteType.Description as SiteTypeName,
+    query = `select DISTINCT ManualReport.*, SiteType.Description as SiteTypeName,
     SiteZone.Description as SiteZoneName, Site.SiteName, ManualReportType.ManualReportName as ReportTypeName
     from ManualReport JOIN SiteType on SiteType.SiteTypeID = ManualReport.SiteTypeID 
     JOIN SiteZone on SiteZone.SiteZoneID = ManualReport.SiteZoneID 
@@ -115,14 +115,14 @@ router.get('/getAll', async (req, res) => {
   }
   else
   {
-    query = `select ManualReport.*, SiteType.Description as SiteTypeName,
+    query = `select DISTINCT ManualReport.*, SiteType.Description as SiteTypeName,
     SiteZone.Description as SiteZoneName, Site.SiteName, ManualReportType.ManualReportName as ReportTypeName
     from ManualReport JOIN SiteType on SiteType.SiteTypeID = ManualReport.SiteTypeID 
     JOIN SiteZone on SiteZone.SiteZoneID = ManualReport.SiteZoneID 
     JOIN Site on Site.SiteID = ManualReport.SiteID 
     JOIN Contact_Site ON Contact_Site.SiteID = Site.SiteID
     JOIN ManualReportType on ManualReportType.ManualReportTypeID = ManualReport.ReportTypeID
-    WHERE Contact_Site.ContactID = ${req.query.ContactID}`
+    WHERE Site.SiteID IN (SELECT SiteID FROM Contact_Site WHERE ContactID = ${req.query.ContactID})`
   }    
     pool.query(query, function (err, results) {
         if (err) throw err

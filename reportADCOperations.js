@@ -139,7 +139,9 @@ function getReportAdbByReportMonth(req) {
       {
         getQuery = `Select ReportADC.*, Site.SiteName  from ReportADC
         JOIN Site on Site.SiteID = ReportADC.SiteID
-        where Report_Month like '${req.query.year}-${req.query.month}%'`;
+        where Report_Month like '${req.query.year}-${req.query.month}%'
+        and Site.SiteID IN (SELECT SiteID FROM Contact_Site WHERE ContactID = ${req.query.ContactID})
+        `;
       } 
         pool.query(getQuery, function (err, result) {
           if (err) throw err;
