@@ -3213,14 +3213,31 @@ app.get('/reportsbyPO', async (req, res) => {
 })
 
 app.get('/getReportsForContact', async (req, res) => {
-    let query = `SELECT PO.POnumber, PO.POdate, WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,WorkStatus.WorkStatus
-    FROM PO JOIN WorkOrder ON PO.POID = WorkOrder.POID
-    JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
-    JOIN Site ON WorkOrder.SiteID = Site.SiteID
-    JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
-    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
-    where PO.ContactID=${req.query.ContactID}
-    Order By WorkOrder.WorkOrderID`
+    let query =``;
+    if(req.query.Staff == 'true')
+    {
+        query = `SELECT PO.POnumber, PO.POdate, WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,WorkStatus.WorkStatus
+        FROM PO 
+        RIGHT JOIN WorkOrder ON PO.POID = WorkOrder.POID
+        JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
+        JOIN Site ON WorkOrder.SiteID = Site.SiteID
+        JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+        JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+        Order By WorkOrder.WorkOrderID`
+    }
+    else
+    {
+        query = `SELECT PO.POnumber, PO.POdate, WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,WorkStatus.WorkStatus
+        FROM PO 
+        RIGHT JOIN WorkOrder ON PO.POID = WorkOrder.POID
+        JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
+        JOIN Site ON WorkOrder.SiteID = Site.SiteID
+        JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+        JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+        WHERE Site.SiteID IN (SELECT SiteID FROM Contact_Site WHERE ContactID = ${req.query.ContactID})
+        Order By WorkOrder.WorkOrderID`
+    }
+    
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
