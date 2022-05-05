@@ -1713,7 +1713,15 @@ app.get('/staffTitle', async (req, res) => {
 })
 
 app.get('/ecssitename', async (req, res) => {
-    let query = `select * from Site where SiteTypeID=${req.query.SiteTypeID} and SiteZoneID =${req.query.SiteZoneID}`
+    let query = '';
+    if(req.query.Staff == 'true') {
+        query = `select * from Site where SiteTypeID=${req.query.SiteTypeID} and SiteZoneID =${req.query.SiteZoneID}`
+    } else {
+        query = `select * from Site where SiteTypeID=${req.query.SiteTypeID} and SiteZoneID =${req.query.SiteZoneID}
+        and Site.SiteID IN (SELECT SiteID FROM Contact_Site WHERE ContactID =${req.query.ContactID})
+        
+        `
+    }
     pool.query(query, function (err, results, fields) {
         if (err) throw err
         if (results.length > 0) {
