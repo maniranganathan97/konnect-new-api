@@ -103,14 +103,27 @@ function saveEcsReportData(req) {
 }
 
 router.get('/getAll', async (req, res) => {
-    let query = `select ManualReport.*, SiteType.Description as SiteTypeName,
-     SiteZone.Description as SiteZoneName, Site.SiteName, ManualReportType.ManualReportName as ReportTypeName
-     from ManualReport JOIN SiteType on SiteType.SiteTypeID = ManualReport.SiteTypeID 
-     JOIN SiteZone on SiteZone.SiteZoneID = ManualReport.SiteZoneID 
-     JOIN Site on Site.SiteID = ManualReport.SiteID 
-     JOIN ManualReportType on ManualReportType.ManualReportTypeID = ManualReport.ReportTypeID
-    
-    `
+  let query ="";
+  if (req.query.Staff)
+  {
+    query = `select ManualReport.*, SiteType.Description as SiteTypeName,
+    SiteZone.Description as SiteZoneName, Site.SiteName, ManualReportType.ManualReportName as ReportTypeName
+    from ManualReport JOIN SiteType on SiteType.SiteTypeID = ManualReport.SiteTypeID 
+    JOIN SiteZone on SiteZone.SiteZoneID = ManualReport.SiteZoneID 
+    JOIN Site on Site.SiteID = ManualReport.SiteID 
+    JOIN ManualReportType on ManualReportType.ManualReportTypeID = ManualReport.ReportTypeID`
+  }
+  else
+  {
+    query = `select ManualReport.*, SiteType.Description as SiteTypeName,
+    SiteZone.Description as SiteZoneName, Site.SiteName, ManualReportType.ManualReportName as ReportTypeName
+    from ManualReport JOIN SiteType on SiteType.SiteTypeID = ManualReport.SiteTypeID 
+    JOIN SiteZone on SiteZone.SiteZoneID = ManualReport.SiteZoneID 
+    JOIN Site on Site.SiteID = ManualReport.SiteID 
+    JOIN Contact_Site ON Contact_Site.SiteID = Site.SiteID
+    JOIN ManualReportType on ManualReportType.ManualReportTypeID = ManualReport.ReportTypeID
+    WHERE Contact_Site.ContactID = ${req.query.ContactID}`
+  }    
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
