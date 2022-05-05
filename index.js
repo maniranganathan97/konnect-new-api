@@ -3606,6 +3606,39 @@ function getReportWoDetails(detail) {
 
 }
 
+function updateReportWoDetails(req, reportWoDetails) {
+
+    return new Promise((resolve, reject) => {
+        let query = `
+        SET @workOrderIds =(
+ 
+            select DISTINCT WorkOrder.WorkOrderID from WorkOrder JOIN
+                ReportWO on ReportWO.WorkOrderID = WorkOrder.WorkOrderID
+                
+                where ReportWO.ReportWOID = ${req.query.ReportWOID}
+            );
+            
+            Update ReportWO
+             
+            set ReportWO.ContactAckID = ${reportWoDetails['ContactAckID']},
+            ReportWO.ContactAckSignImageURL =${reportWoDetails['ContactAckSignImageURL']},
+            ReportWO.WOendDateTime = ${reportWoDetails['WOendDateTime']}
+            
+            where ReportWO.WorkOrderID  in (
+            @workOrderIds
+            ) 
+        `
+        pool.query(query, function (err, results) {
+            if (err) throw err
+            if (results.affectedRows > 0) {
+                resolve("updated success ReportWO");
+            } else {
+                reject("update failed ReportWo");
+            }
+             
+        });
+    })
+}
 app.put('/updateReportPO', async (req, res) => {
 
     let detail = req.body;
@@ -3617,41 +3650,49 @@ app.put('/updateReportPO', async (req, res) => {
     if (detail['ContactAckDateTime'] != null &&
         (detail['ContactAckID'] != null || detail['ContackAckOther'] != null)) {
         console.log("input data has ContactAckID or  ContackAckOther ");
-        let query = `UPDATE WorkOrder 
-        JOIN ReportWO
-        on ReportWO.WorkOrderID = WorkOrder.WorkOrderID
-        
-        set WorkOrder.WorkStatusID = 4
-        
-        WHERE ReportWO.ReportWOID = ${req.query.ReportWOID}`
-        pool.query(query, function (err, results) {
-            if (err) throw err
-            if (results.affectedRows > 0) {
-                var reportPromise = updateReportWOFindings(findings, req);
-                var servicePromise = updateReportWOService(services, req);
-                var list = [];
-                if (findings && findings.length > 0) {
-                    list.push(reportPromise);
-                }
-                if (services && services.length > 0) {
-                    list.push(servicePromise);
-                }
-                Promise.all(list)
-                    .then((allData) => {
-                        return res.status(200).send({ code: 200, "message": "updated ReportPO successfully." });
-                    })
-                    .catch((err) => {
-                        console.log("error *********" + err);
-                        return res.status(400).send(err);
-                    });
-                //updateReportWOFindings(findings, req);
-                //updateReportWOService(services, req);
-                // return res.status(200).send({ code: 200, message: "update success" })
-            } else {
-                return res.status(400).json({ code: 400, message: "update failed" })
-            }
+        var updateReportWoDetailsPromise = updateReportWoDetails(req, reportWoDetails);
+        updateReportWoDetailsPromise.then(data => {
 
+                    let query = `UPDATE WorkOrder 
+                JOIN ReportWO
+                on ReportWO.WorkOrderID = WorkOrder.WorkOrderID
+                
+                set WorkOrder.WorkStatusID = 4
+                
+                WHERE ReportWO.ReportWOID = ${req.query.ReportWOID}`
+                pool.query(query, function (err, results) {
+                    if (err) throw err
+                    if (results.affectedRows > 0) {
+                        var reportPromise = updateReportWOFindings(findings, req);
+                        var servicePromise = updateReportWOService(services, req);
+                        var list = [];
+                        if (findings && findings.length > 0) {
+                            list.push(reportPromise);
+                        }
+                        if (services && services.length > 0) {
+                            list.push(servicePromise);
+                        }
+                        Promise.all(list)
+                            .then((allData) => {
+                                return res.status(200).send({ code: 200, "message": "updated ReportPO successfully." });
+                            })
+                            .catch((err) => {
+                                console.log("error *********" + err);
+                                return res.status(400).send(err);
+                            });
+                        //updateReportWOFindings(findings, req);
+                        //updateReportWOService(services, req);
+                        // return res.status(200).send({ code: 200, message: "update success" })
+                    } else {
+                        return res.status(400).json({ code: 400, message: "update failed" })
+                    }
+
+                })
+
+        }).catch(err => {
+            return res.status(400).json({ code: 400, message: "update ReportWO failed" })
         })
+        
 
     }
 
