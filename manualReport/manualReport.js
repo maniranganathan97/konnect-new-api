@@ -104,7 +104,7 @@ function saveEcsReportData(req) {
 
 router.get('/getAll', async (req, res) => {
   let query ="";
-  if (req.query.Staff)
+  if (req.query.Staff == 'true')
   {
     query = `select ManualReport.*, SiteType.Description as SiteTypeName,
     SiteZone.Description as SiteZoneName, Site.SiteName, ManualReportType.ManualReportName as ReportTypeName
