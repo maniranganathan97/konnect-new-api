@@ -89,13 +89,25 @@ function saveReportSdpc(req) {
 
 router.get('/get', async(req, res) => {
     var getReportSdpcByIdPromise = getReportSdpcByReportMonth(req);
-    Promise.all([getReportSdpcByIdPromise])
+    var authorizePromise = getAuthPromiseData(req);
+    Promise.all([getReportSdpcByIdPromise, authorizePromise])
     .then(allData => {
-        var data = allData[0];
-        return res.status(200).json({
-            code: 200,
-            data: data
-          });
+      var data = allData[0];
+      var authImageData = allData[1];
+      if(authImageData.length > 0) {
+        isAuthorized = true;
+        authImageUrl = authImageData[0].SignatureImageUrl
+      } else {
+        isAuthorized = false;
+        authImageUrl = "";
+      }
+      console.log(authImageData);
+      return res.status(200).json({
+          code: 200,
+          data,
+          isAuthorized,
+          authImageUrl
+        });
     })
     .catch(err => {
         console.log("Error while getting data to the ReportSDPC -->"+ err);
@@ -105,6 +117,19 @@ router.get('/get', async(req, res) => {
           });
     })
 });
+
+function getAuthPromiseData(req) {
+  return new Promise((resolve, reject) => {
+    let query = `
+  SELECT SignatureImageUrl from AuthorizeStatusReports where StatusReportType = 'SDPC' and AcknowledgedBy = ${req.query.ContactID} 
+  and StatusMonthAndYear = '${req.query.month}-${req.query.year}'
+  `;
+    pool.query(query, function (error, results, fields) {
+      if (error) throw error;
+      resolve(results);
+    });
+  });
+}
 
 function getReportSdpcByReportMonth(req) {
     return new Promise((resolve, reject) => {

@@ -18,6 +18,7 @@ const companyRouter = require("./companyOperations")
 const ecsReportData = require("./ecsReportData/eceReportData");
 const manualReport = require("./manualReport/manualReport");
 const manualReportType = require("./manualReportType/manualReportType");
+const authorizeStatusReports = require('./authorizeStatusReports.js');
 
 app.use(express.json({ limit: '50mb' }))
 app.use(cors());
@@ -5542,6 +5543,7 @@ app.use('/company', companyRouter);
 app.use('/ecsReportData', ecsReportData);
 app.use('/manualReport', manualReport);
 app.use('/manualReportType', manualReportType);
+app.use('/authorizeStatusReports', authorizeStatusReports);
 app.listen(port, function () {
     console.log(`${port} is running`)
 })

@@ -73,13 +73,25 @@ function saveReportDssd(req) {
 
 router.get('/get', async(req, res) => {
     var getReportDssdByIdPromise = getReportDssdByReportMonth(req);
-    Promise.all([getReportDssdByIdPromise])
+    var authorizePromise = getAuthPromiseData(req);
+    Promise.all([getReportDssdByIdPromise, authorizePromise])
     .then(allData => {
-        var data = allData[0];
-        return res.status(200).json({
-            code: 200,
-            data: data
-          });
+      var data = allData[0];
+      var authImageData = allData[1];
+      if(authImageData.length > 0) {
+        isAuthorized = true;
+        authImageUrl = authImageData[0].SignatureImageUrl
+      } else {
+        isAuthorized = false;
+        authImageUrl = "";
+      }
+      console.log(authImageData);
+      return res.status(200).json({
+          code: 200,
+          data,
+          isAuthorized,
+          authImageUrl
+        });
     })
     .catch(err => {
         console.log("Error while getting data to the ReportDSSD -->"+ err);
@@ -89,6 +101,19 @@ router.get('/get', async(req, res) => {
           });
     })
 });
+
+function getAuthPromiseData(req) {
+  return new Promise((resolve, reject) => {
+    let query = `
+  SELECT SignatureImageUrl from AuthorizeStatusReports where StatusReportType = 'DSSD' and AcknowledgedBy = ${req.query.ContactID} 
+  and StatusMonthAndYear = '${req.query.month}-${req.query.year}'
+  `;
+    pool.query(query, function (error, results, fields) {
+      if (error) throw error;
+      resolve(results);
+    });
+  });
+}
 
 function getReportDssdByReportMonth(req) {
     return new Promise((resolve, reject) => {
