@@ -62,11 +62,11 @@ router.get('/get', async(req, res) => {
         if(authImageData.length > 0) {
           isAuthorized = true;
           authImageUrl = authImageData[0].SignatureImageUrl;
-          authBy = authImageData[0].name
+          SignedBy = authImageData[0].name
         } else {
           isAuthorized = false;
           authImageUrl = "";
-          authBy = "";
+          SignedBy = "";
         }
         console.log(authImageData);
         return res.status(200).json({
@@ -74,7 +74,7 @@ router.get('/get', async(req, res) => {
             data,
             isAuthorized,
             authImageUrl,
-            authBy
+            SignedBy
           });
     })
     .catch(err => {
