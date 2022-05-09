@@ -19,6 +19,7 @@ const ecsReportData = require("./ecsReportData/eceReportData");
 const manualReport = require("./manualReport/manualReport");
 const manualReportType = require("./manualReportType/manualReportType");
 const authorizeStatusReports = require('./authorizeStatusReports.js');
+const authorizeEceReports = require('./authorizeEceReports');
 
 app.use(express.json({ limit: '50mb' }))
 app.use(cors());
@@ -62,6 +63,10 @@ const { all } = require('express/lib/application')
 const { get } = require('express/lib/response')
 
 const pool = mysql.createPool({
+    connectionLimit : 1000,
+    connectTimeout  : 60 * 60 * 1000,
+    acquireTimeout  : 60 * 60 * 1000,
+    timeout         : 60 * 60 * 1000,
     host: '184.168.117.92',
     user: 'userCreation',
     password: 'Vp6f}9)U?u)r',
@@ -1778,19 +1783,34 @@ app.get('/ecsreports', async (req, res) => {
                 if (err) throw err
                 if (pointQuery.length > 0) {
                     var getEcsDataBasedOnConditionPromise = getEcsDataBasedOnCondition(req);
-                    getEcsDataBasedOnConditionPromise.then(ecsData => {
-                        if(ecsData.length > 0)
-                        {
-                            obj = ecsData[0];
-                        }
-                        else{
-                            obj = {};
-                        }
-                        obj['pointsData'] = pointQuery
-                        obj['ecsReports'] = results
-                        
-                        return res.status(200).send(obj)
+                    var ecsAuthorizePromise = ecsAuthorizePromiseData(req);
+                    ecsAuthorizePromise.then(authData => {
+                        getEcsDataBasedOnConditionPromise.then(ecsData => {
+                            if(ecsData.length > 0)
+                            {
+                                obj = ecsData[0];
+                            }
+                            else{
+                                obj = {};
+                            }
+                            obj['pointsData'] = pointQuery
+                            obj['ecsReports'] = results;
+                            var authSignData = authData[0]
+                            if(authData && authData.length > 0) {
+                                obj['isAuthorized'] = true;
+                                console.log(authSignData);
+                                obj["SignedBy"] = authSignData.name;
+                                obj["authImageUrl"] = authSignData.SignatureURL;
+                            } else {
+                                obj['isAuthorized'] = false;
+                                obj["SignedBy"] = "";
+                                obj["authImageUrl"] = "";
+                            }
+                            
+                            return res.status(200).send(obj)
+                        })
                     })
+                    
                     
                 } else {
                     return res.status(200).json({pointsData:[],ecsReports:[]})
@@ -1805,6 +1825,25 @@ app.get('/ecsreports', async (req, res) => {
     })
 
 })
+
+function ecsAuthorizePromiseData(req) {
+    return new Promise((resolve, reject) => {
+        let query = `
+        SELECT AuthorizeEcsReport.SignatureURL, Contact.ContactName as name from AuthorizeEcsReport 
+        JOIN Contact on Contact.ContactID = AuthorizeEcsReport.AcknowledgedBy
+        WHERE AuthorizeEcsReport.SiteZoneID = ${req.query.SiteZoneID}
+        
+        and AuthorizeEcsReport.SiteTypeID =  ${req.query.SiteTypeID}
+        and AuthorizeEcsReport.SiteID = ${req.query.SiteID}
+        and AuthorizeEcsReport.StatusMonthAndYear = DATE_FORMAT('${req.query.ScanDateTime}','%m-%Y')
+       
+        `;
+        pool.query(query, function (err, results) {
+          if (err) throw err;
+          resolve(results);
+        });
+      });
+}
 
 function getEcsDataBasedOnCondition(req) {
   return new Promise((resolve, reject) => {
@@ -5546,6 +5585,7 @@ app.use('/ecsReportData', ecsReportData);
 app.use('/manualReport', manualReport);
 app.use('/manualReportType', manualReportType);
 app.use('/authorizeStatusReports', authorizeStatusReports);
+app.use('/auth', authorizeEceReports);
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
