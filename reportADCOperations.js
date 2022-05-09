@@ -61,17 +61,20 @@ router.get('/get', async(req, res) => {
         var authImageData = allData[1];
         if(authImageData.length > 0) {
           isAuthorized = true;
-          authImageUrl = authImageData[0].SignatureImageUrl
+          authImageUrl = authImageData[0].SignatureImageUrl;
+          authBy = authImageData[0].name
         } else {
           isAuthorized = false;
           authImageUrl = "";
+          authBy = "";
         }
         console.log(authImageData);
         return res.status(200).json({
             code: 200,
             data,
             isAuthorized,
-            authImageUrl
+            authImageUrl,
+            authBy
           });
     })
     .catch(err => {
@@ -86,7 +89,9 @@ router.get('/get', async(req, res) => {
 function getAuthPromiseData(req) {
   return new Promise((resolve, reject) => {
     let query = `
-  SELECT SignatureImageUrl from AuthorizeStatusReports where StatusReportType = 'ADC' and AcknowledgedBy = ${req.query.ContactID} 
+    SELECT SignatureImageUrl, Contact.ContactName as name from AuthorizeStatusReports 
+    join Contact on Contact.ContactID = AuthorizeStatusReports.AcknowledgedBy
+    where StatusReportType = 'ADC' and AcknowledgedBy = ${req.query.ContactID} 
   and StatusMonthAndYear = '${req.query.month}-${req.query.year}'
   `;
     pool.query(query, function (error, results, fields) {
