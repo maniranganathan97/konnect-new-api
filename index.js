@@ -3635,9 +3635,10 @@ function getReportWoDetails(detail) {
 function updateReportWoDetails(req, reportWoDetails) {
 
     return new Promise((resolve, reject) => {
-        let query = `
+        let query = '';
+        query = `
         SET @workOrderIds =(
- 
+    
             select DISTINCT WorkOrder.WorkOrderID from WorkOrder JOIN
                 ReportWO on ReportWO.WorkOrderID = WorkOrder.WorkOrderID
                 
@@ -3645,18 +3646,19 @@ function updateReportWoDetails(req, reportWoDetails) {
             );
             
             Update ReportWO
-             
+                
             set ReportWO.ContactAckID = ${reportWoDetails['ContactAckID']},
-            ReportWO.ContactAckSignImageURL =${reportWoDetails['ContactAckSignImageURL']},
-            ReportWO.WOendDateTime = ${reportWoDetails['WOendDateTime']}
+            ReportWO.ContactAckSignImageURL ='${reportWoDetails['ContactAckSignImageURL']}',
+            ReportWO.WOendDateTime = '${reportWoDetails['WOendDateTime']}'
             
             where ReportWO.WorkOrderID  in (
             @workOrderIds
             ) 
         `
+        
         pool.query(query, function (err, results) {
             if (err) throw err
-            if (results.affectedRows > 0) {
+            if (results.length > 0) {
                 resolve("updated success ReportWO");
             } else {
                 reject("update failed ReportWo");
@@ -3722,7 +3724,7 @@ app.put('/updateReportPO', async (req, res) => {
 
     }
 
-    if (reportWoDetails['ContactAckSignImageURL']) {
+    else if (reportWoDetails['ContactAckSignImageURL']) {
 
         const buffer = Buffer.from(detail["ContactAckSignImageURL"], 'base64')
         // Create a new blob in the bucket and upload the file data.
