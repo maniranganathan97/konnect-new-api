@@ -3675,7 +3675,8 @@ function updateReportWoDetails(req, reportWoDetails) {
 
     return new Promise((resolve, reject) => {
         let query = '';
-        query = `
+        if(reportWoDetails['ContactAckID'] && reportWoDetails['ContactAckSignImageURL'] && reportWoDetails['WOendDateTime']) {
+            query = `
         SET @workOrderIds =(
     
             select DISTINCT WorkOrder.WorkOrderID from WorkOrder JOIN
@@ -3694,6 +3695,62 @@ function updateReportWoDetails(req, reportWoDetails) {
             @workOrderIds
             ) 
         `
+        } else if (reportWoDetails['ContactAckSignImageURL']) {
+            query = `
+            SET @workOrderIds =(
+        
+                select DISTINCT WorkOrder.WorkOrderID from WorkOrder JOIN
+                    ReportWO on ReportWO.WorkOrderID = WorkOrder.WorkOrderID
+                    
+                    where ReportWO.ReportWOID = ${req.query.ReportWOID}
+                );
+                
+                Update ReportWO
+                    
+                set ReportWO.ContactAckSignImageURL ='${reportWoDetails['ContactAckSignImageURL']}'
+                
+                where ReportWO.WorkOrderID  in (
+                @workOrderIds
+                ) 
+            `
+        } else if (reportWoDetails['ContactAckID']) {
+            query = `
+            SET @workOrderIds =(
+        
+                select DISTINCT WorkOrder.WorkOrderID from WorkOrder JOIN
+                    ReportWO on ReportWO.WorkOrderID = WorkOrder.WorkOrderID
+                    
+                    where ReportWO.ReportWOID = ${req.query.ReportWOID}
+                );
+                
+                Update ReportWO
+                    
+                set ReportWO.ContactAckID = ${reportWoDetails['ContactAckID']}
+                
+                where ReportWO.WorkOrderID  in (
+                @workOrderIds
+                ) 
+            `
+        }else if (reportWoDetails['WOendDateTime']) {
+            query = `
+            SET @workOrderIds =(
+        
+                select DISTINCT WorkOrder.WorkOrderID from WorkOrder JOIN
+                    ReportWO on ReportWO.WorkOrderID = WorkOrder.WorkOrderID
+                    
+                    where ReportWO.ReportWOID = ${req.query.ReportWOID}
+                );
+                
+                Update ReportWO
+                    
+                set ReportWO.WOendDateTime = '${reportWoDetails['WOendDateTime']}
+                
+                where ReportWO.WorkOrderID  in (
+                @workOrderIds
+                ) 
+            `
+        }
+        
         
         pool.query(query, function (err, results) {
             if (err) throw err
