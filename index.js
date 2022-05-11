@@ -139,6 +139,10 @@ app.post('/authentication', async (req, res) => {
                             newData.AccessControlID = staff[0].AccessControlID;
                             newData.isSuperUser = staff[0].AccessControlID == 1 || staff[0].AccessControlID == 3 ? true : false;
                         }
+                        else
+                        {
+                            newData.AccessControlID = contact[0].AccessControlID;
+                        }
                         data['workType'] = result
                         return res.status(200).json(newData)
                     }
