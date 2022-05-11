@@ -20,6 +20,8 @@ const manualReport = require("./manualReport/manualReport");
 const manualReportType = require("./manualReportType/manualReportType");
 const authorizeStatusReports = require('./authorizeStatusReports.js');
 const authorizeEceReports = require('./authorizeEceReports');
+const generateExcel = require('./excel/generateExcel.js');
+const progressiveClaimReport = require('./progressiveClaimReport/progressiveClaimReport');
 
 app.use(express.json({ limit: '50mb' }))
 app.use(cors());
@@ -5220,8 +5222,8 @@ function getAssignedWorkOrders(req) {
 
 app.get('/getHomeWorkOrder', async (req, res) => {
     let query = `Select WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus,SiteZone.Description,Staff.StaffName,Staff.StaffID from WorkOrder
-    JOIN PO ON PO.POID = WorkOrder.POID
-    JOIN Staff ON Staff.StaffID = PO.StaffID
+    LEFT JOIN PO ON PO.POID = WorkOrder.POID
+    LEFT JOIN Staff ON Staff.StaffID = PO.StaffID
     JOIN Site ON Site.SiteID = WorkOrder.SiteID
     JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
@@ -5643,6 +5645,8 @@ app.use('/manualReport', manualReport);
 app.use('/manualReportType', manualReportType);
 app.use('/authorizeStatusReports', authorizeStatusReports);
 app.use('/auth', authorizeEceReports);
+app.use('/generateExcel', generateExcel);
+app.use('/progressiveClaimReport', progressiveClaimReport);
 app.listen(port, function () {
     console.log(`${port} is running`)
 })
