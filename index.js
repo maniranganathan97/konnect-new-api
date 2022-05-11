@@ -3733,7 +3733,7 @@ function updateReportWoDetails(req, reportWoDetails) {
                 Update ReportWO
                     
                 set ReportWO.ContactAckID = ${reportWoDetails['ContactAckID']},
-                ReportWO.ContactAckDateTime ='${reportWoDetails['ContactAckDateTime']}',
+                ReportWO.ContactAckDateTime ='${reportWoDetails['ContactAckDateTime']}'
                 
                 where ReportWO.WorkOrderID  in (
                 @workOrderIds
