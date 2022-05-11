@@ -3691,6 +3691,7 @@ function updateReportWoDetails(req, reportWoDetails) {
                 
             set ReportWO.ContactAckID = ${reportWoDetails['ContactAckID']},
             ReportWO.ContactAckSignImageURL ='${reportWoDetails['ContactAckSignImageURL']}',
+            ReportWO.ContactAckDateTime ='${reportWoDetails['ContactAckDateTime']}',
             ReportWO.WOendDateTime = '${reportWoDetails['WOendDateTime']}'
             
             where ReportWO.WorkOrderID  in (
@@ -3727,7 +3728,8 @@ function updateReportWoDetails(req, reportWoDetails) {
                 
                 Update ReportWO
                     
-                set ReportWO.ContactAckID = ${reportWoDetails['ContactAckID']}
+                set ReportWO.ContactAckID = ${reportWoDetails['ContactAckID']},
+                ReportWO.ContactAckDateTime ='${reportWoDetails['ContactAckDateTime']}',
                 
                 where ReportWO.WorkOrderID  in (
                 @workOrderIds
