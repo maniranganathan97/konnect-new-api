@@ -110,7 +110,36 @@ router.get('/get', async(req, res) => {
           });
     })
 })
+router.get('/getAll', async(req, res) => {
+    var getPromise = getProgressiveClaimReportAllData(req);
+    Promise.all([getPromise])
+    .then(allData => {
+       
+        return res.status(200).json(allData[0]);
+    })
+    .catch(err => {
+        
+        return res.status(400).json({
+            code: 400,
+            message: "Getting ProgressiveClaimReport data failed",
+          });
+    })
+})
 
+function getProgressiveClaimReportAllData(req) {
+    return new Promise((resolve, reject) => {
+        let getQuery = `select * from ProgressiveClaimReport 
+        `;
+        pool.query(getQuery, function (err, result) {
+          if (err) throw err;
+          if (result.length > 0) {
+            resolve(result);
+          } else {
+            resolve(result);
+          }
+        });
+    })
+}
 function getProgressiveClaimReportData(req) {
     return new Promise((resolve, reject) => {
         let getQuery = `select * from ProgressiveClaimReport where ProgressiveClaimReportID=  ${req.query.ProgressiveClaimReportID}
