@@ -425,7 +425,7 @@ router.get("/download", async (req, res) => {
 function CreateWorkbook(pointsData, res,req) 
 {
   let workbook = new excel.Workbook();
-  let worksheet = workbook.addWorksheet("Tutorials");
+  let worksheet = workbook.addWorksheet("EcsReport_" + req.body.referenceMonth + req.body.referenceYear);
   let headerData = populateData(pointsData[0]);
   var cell = worksheet.getCell('A1');
   cell.value = 'Contract No: '
@@ -522,7 +522,7 @@ function CreateWorkbook(pointsData, res,req)
     );
     res.setHeader(
       "Content-Disposition",
-      "attachment; filename=" + "tutorials.xlsx"
+      "attachment; filename=" + "EcsReport.xlsx"
     );
     return workbook.xlsx.write(res).then(function () {
       res.status(200).end();
