@@ -252,8 +252,8 @@ const checkCounts = (finalData, siteTypeName, siteName) => {
   if(finalData && finalData[0]) {
     finalData[0]["validPoints"] = total;
     finalData[0]["emptyPoints"] = total - validCount;
-    finalData[0]["siteName"] = siteTypeName;
-    finalData[0]["siteTypeName"] = siteName;
+    finalData[0]["siteName"] = siteName;
+    finalData[0]["siteTypeName"] = siteTypeName;
   }
 }
 
@@ -324,7 +324,6 @@ AND MONTH(ReportDate) = MONTH('2022-04-03') AND YEAR(ReportDate) = YEAR('2022-04
                 obj['ecsReports'] = results;
                 obj['siteName'] = siteName[0].SiteName;
                 obj['siteTypeName'] = siteType[0].Description;
-                updatePoints(results, obj);
               
                 resolve(obj);
               })
@@ -336,21 +335,6 @@ AND MONTH(ReportDate) = MONTH('2022-04-03') AND YEAR(ReportDate) = YEAR('2022-04
    })
  }
 
- function updatePoints(ecsResults, obj) {
-
-  var validPoints = 0 ;
-  var emptyPoints = 0;
-  for(var i=0; i< ecsResults.length; i++) {
-    var singleObject = ecsResults[i];
-    if(singleObject.ScanDateTime!=undefined || singleObject.ScanDateTime !='') {
-      validPoints++;
-    } else {
-      emptyPoints++;
-    }
-  }
-  obj['validPoints'] = validPoints;
-  obj['emptyPoints'] = emptyPoints;
- }
 
 
  function getSiteZoneData() {
