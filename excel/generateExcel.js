@@ -189,25 +189,7 @@ const populateData = (xxx) => {
         return '5th'
     }
   }
-  const countCheck = (data) => {
-    var validCount =0;
-    var invalidCount = 0;
-    Object.keys(data).map(key => {
-      Object.keys(data[key]).map(innerKey => {
-        if(data[key][innerKey] == '' || data[key][innerKey] == undefined) {
-          invalidCount++;
-        } else {
-          validCount++;
-        }
-      })
-    })
-    //console.log("count------->" + count);
-    return {validCount: validCount, invalidCount: invalidCount};
-  }
-var validPoints = 0;
-var invalidPoints = 0;
   Object.keys(pointsJsonTwo).map((key, index) => {
-    var countObj =  countCheck(pointsJsonTwo[key])
     if (checkIfBExists(pointsJsonTwo[key])) {
       let tempOne = {}
       let tempTwo = {}
@@ -227,13 +209,6 @@ var invalidPoints = 0;
       Object.keys(pointsJsonTwo[key]).map(point => {
         tempTwo[`Point ${point}`] = pointsJsonTwo[key][point][1];
       })
-      
-      if(tempTwo["Week"].indexOf("1st") != -1) {
-        tempTwo["siteName"] = xxx.siteName;
-        tempTwo["siteTypeName"] = xxx.siteTypeName;
-        // tempTwo["emptyPoints"] = xxx.emptyPoints;
-        // tempTwo["validPoints"] = xxx.validPoints;
-      }
       finalData.push(tempTwo)
     }
     else {
@@ -245,35 +220,42 @@ var invalidPoints = 0;
       Object.keys(pointsJsonTwo[key]).map(point => {
         temp[`Point ${point}`] = pointsJsonTwo[key][point][0];
       })
-      if(temp["Week"].indexOf("1st") != -1) {
-        temp["siteName"] = xxx.siteName;
-        temp["siteTypeName"] = xxx.siteTypeName;
-        // temp["emptyPoints"] = xxx.emptyPoints;
-        // temp["validPoints"] = xxx.validPoints;
-      }
       finalData.push(temp)
     }
-    validPoints = countObj.validCount + validPoints;
-    invalidPoints = countObj.invalidCount + invalidPoints;
 
   })
-
-  // console.log(finalData)
 
   let modifiedHeader = headers.map(header => `Point ${header}`)
   modifiedHeader.unshift("Date Of Visit")
   modifiedHeader.unshift("Week")
-  if(finalData && finalData[0]) {
-    finalData[0]["validPoints"] = validPoints;
-    finalData[0]["emptyPoints"] = invalidPoints;
-  }
+  checkCounts(finalData, xxx.siteTypeName, xxx.siteName);
   return {
     header: modifiedHeader,
     data: finalData
   }
 
 }
-
+const checkCounts = (finalData, siteTypeName, siteName) => {
+  var total = 0;
+  var validCount = 0;
+  for(var i=0; i< finalData.length; i++) {
+    var singleData = finalData[i];
+    Object.keys(singleData).map(key => {
+      if(key.indexOf("Point ")> -1) {
+        if(singleData[key] != undefined) {
+          validCount++;
+        }
+        total++;
+      }
+    })
+  }
+  if(finalData && finalData[0]) {
+    finalData[0]["validPoints"] = validCount;
+    finalData[0]["emptyPoints"] = total - validCount;
+    finalData[0]["siteName"] = siteTypeName;
+    finalData[0]["siteTypeName"] = siteName;
+  }
+}
 
 function getEcsDataBasedOnCondition(req) {
   return new Promise((resolve, reject) => {
@@ -504,10 +486,10 @@ function CreateWorkbook(pointsData, res,req)
     key: "siteName",
     width: 10,
 });
-  for (var i = 0; i < headerData.header.length; i++) {
+  for (var i = 0; i <= 18; i++) {
       excelColumns.push({
-          header: headerData.header[i],
-          key: headerData.header[i],
+          header: "Point " + i,
+          key: "Point " + i,
           width: 10,
       });
   }
