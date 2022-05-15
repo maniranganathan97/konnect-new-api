@@ -250,7 +250,7 @@ const checkCounts = (finalData, siteTypeName, siteName) => {
     })
   }
   if(finalData && finalData[0]) {
-    finalData[0]["validPoints"] = validCount;
+    finalData[0]["validPoints"] = total;
     finalData[0]["emptyPoints"] = total - validCount;
     finalData[0]["siteName"] = siteTypeName;
     finalData[0]["siteTypeName"] = siteName;
@@ -476,17 +476,27 @@ function CreateWorkbook(pointsData, res,req)
   cell = worksheet.getCell('W5');
   cell.value = req.query.referenceMonth + "-" + req.query.referenceYear ;
   var excelColumns = [];
-  excelColumns.push({
-    header: "Site Type Name",
-    key: "siteTypeName",
-    width: 10,
-});
+//   excelColumns.push({
+//     header: "Site Type Name",
+//     key: "siteTypeName",
+//     width: 10,
+// });
   excelColumns.push({
     header: "Site Name",
     key: "siteName",
     width: 10,
 });
-  for (var i = 0; i <= 18; i++) {
+  excelColumns.push({
+    header: "Week",
+    key: "Week",
+    width: 10,
+});
+  excelColumns.push({
+    header: "Date Of Visit",
+    key: "Date Of Visit",
+    width: 10,
+});
+  for (var i = 1; i <= 18; i++) {
       excelColumns.push({
           header: "Point " + i,
           key: "Point " + i,
