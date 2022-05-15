@@ -189,8 +189,25 @@ const populateData = (xxx) => {
         return '5th'
     }
   }
-
+  const countCheck = (data) => {
+    var validCount =0;
+    var invalidCount = 0;
+    Object.keys(data).map(key => {
+      Object.keys(data[key]).map(innerKey => {
+        if(data[key][innerKey] == '' || data[key][innerKey] == undefined) {
+          invalidCount++;
+        } else {
+          validCount++;
+        }
+      })
+    })
+    //console.log("count------->" + count);
+    return {validCount: validCount, invalidCount: invalidCount};
+  }
+var validPoints = 0;
+var invalidPoints = 0;
   Object.keys(pointsJsonTwo).map((key, index) => {
+    var countObj =  countCheck(pointsJsonTwo[key])
     if (checkIfBExists(pointsJsonTwo[key])) {
       let tempOne = {}
       let tempTwo = {}
@@ -214,6 +231,8 @@ const populateData = (xxx) => {
       if(tempTwo["Week"].indexOf("1st") != -1) {
         tempTwo["siteName"] = xxx.siteName;
         tempTwo["siteTypeName"] = xxx.siteTypeName;
+        // tempTwo["emptyPoints"] = xxx.emptyPoints;
+        // tempTwo["validPoints"] = xxx.validPoints;
       }
       finalData.push(tempTwo)
     }
@@ -229,9 +248,13 @@ const populateData = (xxx) => {
       if(temp["Week"].indexOf("1st") != -1) {
         temp["siteName"] = xxx.siteName;
         temp["siteTypeName"] = xxx.siteTypeName;
+        // temp["emptyPoints"] = xxx.emptyPoints;
+        // temp["validPoints"] = xxx.validPoints;
       }
       finalData.push(temp)
     }
+    validPoints = countObj.validCount + validPoints;
+    invalidPoints = countObj.invalidCount + invalidPoints;
 
   })
 
@@ -240,7 +263,10 @@ const populateData = (xxx) => {
   let modifiedHeader = headers.map(header => `Point ${header}`)
   modifiedHeader.unshift("Date Of Visit")
   modifiedHeader.unshift("Week")
-
+  if(finalData && finalData[0]) {
+    finalData[0]["validPoints"] = validPoints;
+    finalData[0]["emptyPoints"] = invalidPoints;
+  }
   return {
     header: modifiedHeader,
     data: finalData
@@ -285,7 +311,7 @@ AND MONTH(ReportDate) = MONTH('2022-04-03') AND YEAR(ReportDate) = YEAR('2022-04
       WHERE Point_Details.SiteID = ${req.SiteID} AND Site.SiteTypeID = ${req.SiteTypeID}
       
       )
-      AND MONTH(Scan_Details.ScanDateTime) = '${req.body.referenceMonth}' AND YEAR(Scan_Details.ScanDateTime) = '${req.body.referenceYear}'
+      AND MONTH(Scan_Details.ScanDateTime) = '${req.query.referenceMonth}' AND YEAR(Scan_Details.ScanDateTime) = '${req.query.referenceYear}'
       ORDER BY Scan_Details.PointID,Scan_Details.ScanDateTime ASC`
 
     } else {
@@ -316,6 +342,7 @@ AND MONTH(ReportDate) = MONTH('2022-04-03') AND YEAR(ReportDate) = YEAR('2022-04
                 obj['ecsReports'] = results;
                 obj['siteName'] = siteName[0].SiteName;
                 obj['siteTypeName'] = siteType[0].Description;
+                updatePoints(results, obj);
               
                 resolve(obj);
               })
@@ -325,6 +352,22 @@ AND MONTH(ReportDate) = MONTH('2022-04-03') AND YEAR(ReportDate) = YEAR('2022-04
 
     })
    })
+ }
+
+ function updatePoints(ecsResults, obj) {
+
+  var validPoints = 0 ;
+  var emptyPoints = 0;
+  for(var i=0; i< ecsResults.length; i++) {
+    var singleObject = ecsResults[i];
+    if(singleObject.ScanDateTime!=undefined || singleObject.ScanDateTime !='') {
+      validPoints++;
+    } else {
+      emptyPoints++;
+    }
+  }
+  obj['validPoints'] = validPoints;
+  obj['emptyPoints'] = emptyPoints;
  }
 
 
@@ -377,7 +420,7 @@ router.get("/download", async (req, res) => {
   let getSiteType = getSiteTypeData();
 
   let workbook = new excel.Workbook();
-  let worksheet = workbook.addWorksheet("Tutorials");
+  // let worksheet = workbook.addWorksheet("Tutorials");
   let totalRows = [];
   var siteNamePromiseArray =[]
   
@@ -425,31 +468,31 @@ router.get("/download", async (req, res) => {
 function CreateWorkbook(pointsData, res,req) 
 {
   let workbook = new excel.Workbook();
-  let worksheet = workbook.addWorksheet("EcsReport_" + req.body.referenceMonth + req.body.referenceYear);
+  let worksheet = workbook.addWorksheet("EcsReport_" + req.query.referenceMonth + req.query.referenceYear);
   let headerData = populateData(pointsData[0]);
   var cell = worksheet.getCell('A1');
   cell.value = 'Contract No: '
   cell = worksheet.getCell('D1');
-  cell.value = req.body.contractNumber
+  cell.value = ""
   cell = worksheet.getCell('A2');
   cell.value = 'Contract Title: '
   cell = worksheet.getCell('D2');
-  cell.value = req.body.contractTitle
+  cell.value = ""
   cell = worksheet.getCell('A3');
   cell.value = "CLOCKING RECORD "
   cell = worksheet.getCell('A4');
   cell.value = "Progress Claim No : "
   cell = worksheet.getCell('D4');
-  cell.value = req.body.progressClaimNo;
+  cell.value = "";
   cell = worksheet.getCell('P4');
   cell.value = "Progress Claim Date :	  ";
   cell = worksheet.getCell('W4');
-  cell.value = req.body.progressClaimDate;
+  cell.value = "";
   cell = worksheet.getCell('A5');
   cell.value = "For the value of work carried out under the Contract up to the end of the reference month of :  ";
 
   cell = worksheet.getCell('W5');
-  cell.value = req.body.referenceMonth + req.body.referenceYear ;
+  cell.value = req.query.referenceMonth + "-" + req.query.referenceYear ;
   var excelColumns = [];
   excelColumns.push({
     header: "Site Type Name",
@@ -468,7 +511,17 @@ function CreateWorkbook(pointsData, res,req)
           width: 10,
       });
   }
-  console.log("excelColumns---->" + excelColumns);
+  excelColumns.push({
+    header: "No. of Points",
+    key: "validPoints",
+    width: 10,
+});
+  excelColumns.push({
+    header: "No. of Missing Points",
+    key: "emptyPoints",
+    width: 10,
+});
+  console.log("excelColumns---->" + JSON.stringify(excelColumns));
   var headerValues = excelColumns.map(key => key.header)
   worksheet.getRow(6).values = headerValues;
   var columnValues = []
@@ -495,7 +548,10 @@ function CreateWorkbook(pointsData, res,req)
             // console.log("key ---------> " + key1);
             // console.log("value ---------> " + allData.data[key][key1]);
 
-            if (key1.indexOf("Point") != -1) {
+            if(key1.indexOf("emptyPoints") > -1 || key1.indexOf("validPoints") > -1) {
+              singleObject[key1] = allData.data[key][key1];
+            }
+            else if (key1.indexOf("Point ") > -1) {
                 var timeFromScanDate =
                     allData.data[key][key1] != undefined
                       ? new Date(allData.data[key][key1]).toLocaleString(
