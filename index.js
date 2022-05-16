@@ -3113,7 +3113,6 @@ app.get('/poJobDetails', async (req, res) => {
             WHERE WorkOrderStaff.StaffID = ${req.query.StaffID}
             AND DATE(WorkOrder.AssignedDateTime) = DATE('${req.query.AssignedDateTime}') and WorkStatus.WorkStatusID in (2,3,4)
             Order WorkOrderStaff.StaffID, DATE(WorkOrder.AssignedDateTime)
-            Order by WorkOrderStaff.StaffID, DATE(WorkOrder.AssignedDateTime)
             `
     pool.query(query, function (err, results) {
 
