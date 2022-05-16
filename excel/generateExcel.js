@@ -502,7 +502,7 @@ function CreateWorkbook(pointsData, res,req)
   worksheet.getRow(6).values = headerValues;
   var columnValues = []
   for (let index = 0; index < excelColumns.length; index++) {
-    const element = excelColumns[index];
+    let element = excelColumns[index];
     var obj = {
       "key": element.key
     }
@@ -537,7 +537,12 @@ function CreateWorkbook(pointsData, res,req)
                 })
                       : "";
                 singleObject[key1] = timeFromScanDate;
-            } else {
+            } 
+            else if(key1.indexOf("Date Of Visit") > -1) {
+
+              singleObject[key1] = moment(allData.data[key]["Point 1"]).format("DD/MM/YYYY")
+            }
+            else {
                 singleObject[key1] = allData.data[key][key1];
             }
         });
