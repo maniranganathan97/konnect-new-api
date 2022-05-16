@@ -5247,7 +5247,7 @@ app.get('/getHomeWorkOrder', async (req, res) => {
         JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
         JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
         WHERE DATE(WorkOrder.AssignedDateTime) = DATE(${req.query.CurrentDate})
-        and PO.StaffID = ${req.query.ContactID}
+        and Site.SiteID IN (SELECT SiteID FROM Contact_Site WHERE ContactID = ${req.query.ContactID})
         ORDER BY WorkOrder.WorkOrderID`
     }
     
