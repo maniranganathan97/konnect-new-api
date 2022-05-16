@@ -3112,7 +3112,7 @@ app.get('/poJobDetails', async (req, res) => {
     JOIN SiteZone ON WorkOrder.SiteZoneID = SiteZone.SiteZoneID
             WHERE WorkOrderStaff.StaffID = ${req.query.StaffID}
             AND DATE(WorkOrder.AssignedDateTime) = DATE('${req.query.AssignedDateTime}') and WorkStatus.WorkStatusID in (2,3,4)
-            Order by DATE(WorkOrder.AssignedDateTime) WorkOrderStaff.StaffID
+            Order by DATE(WorkOrder.AssignedDateTime), WorkOrderStaff.StaffID
             `
     pool.query(query, function (err, results) {
 
