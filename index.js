@@ -5227,15 +5227,30 @@ function getAssignedWorkOrders(req) {
 };
 
 app.get('/getHomeWorkOrder', async (req, res) => {
-    let query = `Select WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus,SiteZone.Description,Staff.StaffName,Staff.StaffID from WorkOrder
-    LEFT JOIN PO ON PO.POID = WorkOrder.POID
-    LEFT JOIN Staff ON Staff.StaffID = PO.StaffID
-    JOIN Site ON Site.SiteID = WorkOrder.SiteID
-    JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
-    JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
-    JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
-    WHERE DATE(WorkOrder.AssignedDateTime) = DATE(${req.query.CurrentDate})
-    ORDER BY WorkOrder.WorkOrderID`
+    let query = ''
+    if(req.query.Staff == 'true') {
+        query = `Select WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus,SiteZone.Description,Staff.StaffName,Staff.StaffID from WorkOrder
+        LEFT JOIN PO ON PO.POID = WorkOrder.POID
+        LEFT JOIN Staff ON Staff.StaffID = PO.StaffID
+        JOIN Site ON Site.SiteID = WorkOrder.SiteID
+        JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
+        JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+        JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+        WHERE DATE(WorkOrder.AssignedDateTime) = DATE(${req.query.CurrentDate})
+        ORDER BY WorkOrder.WorkOrderID`
+    } else {
+        query = `Select WorkOrder.*,Site.SiteName,WorkType.WorkTypeName,WorkStatus.WorkStatus,SiteZone.Description,Staff.StaffName,Staff.StaffID from WorkOrder
+        LEFT JOIN PO ON PO.POID = WorkOrder.POID
+        LEFT JOIN Staff ON Staff.StaffID = PO.StaffID
+        JOIN Site ON Site.SiteID = WorkOrder.SiteID
+        JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
+        JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
+        JOIN WorkStatus ON WorkStatus.WorkStatusID = WorkOrder.WorkStatusID
+        WHERE DATE(WorkOrder.AssignedDateTime) = DATE(${req.query.CurrentDate})
+        and PO.StaffID = ${req.query.ContactID}
+        ORDER BY WorkOrder.WorkOrderID`
+    }
+    
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length > 0) {
