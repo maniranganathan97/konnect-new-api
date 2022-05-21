@@ -24,6 +24,10 @@ const gc = new Storage({
 const bucket = gc.bucket('images-pest')
 
 const pool = mysql.createPool({
+  connectionLimit : 1000,
+  connectTimeout  : 60 * 60 * 1000,
+  acquireTimeout  : 60 * 60 * 1000,
+  timeout         : 60 * 60 * 1000,
     host: '184.168.117.92',
     user: 'userCreation',
     password: 'Vp6f}9)U?u)r',
@@ -52,22 +56,11 @@ router.post('/save', async(req, res) => {
 
 function saveProgressiveClaimReportData(req) {
   return new Promise((resolve, reject) => {
-    const buffer = Buffer.from(req.body["ProgressiveReportFile"], "base64");
-    // Create a new blob in the bucket and upload the file data.
-    const id = uuid.v4();
-    const blob = bucket.file("ProgressiveReportFile" + id + ".pdf");
-    const blobStream = blob.createWriteStream();
 
-    blobStream.on("error", (err) => {
-      next(err);
-    });
+    var multipleFilesUploadPromise = multipleFilesUploadPromiseData(req.body["ProgressiveReportFile"]);
+    Promise.all([multipleFilesUploadPromise]).then(data => {
 
-    blobStream.on("finish", () => {
-      // The public URL can be used to directly access the file via HTTP.
-      const publicUrl = format(
-        `https://storage.googleapis.com/${bucket.name}/${blob.name}`
-      );
-
+      console.log(data);
       var inseryQuery = `insert into ProgressiveClaimReport(
         ProgressiveClaimReportID			 
             ,ReportedDate
@@ -79,7 +72,7 @@ function saveProgressiveClaimReportData(req) {
         "",
         req.body.ReportedDate,
         req.body.CreatedBy,
-        publicUrl
+        JSON.stringify(data)
       ];
 
       pool.query(inseryQuery, parameters, (err, results) => {
@@ -90,8 +83,9 @@ function saveProgressiveClaimReportData(req) {
           reject("Insert into ProgressiveClaimReport failed");
         }
       });
+
     });
-    blobStream.end(buffer);
+    
   });
 }
 
@@ -126,6 +120,45 @@ router.get('/getAll', async(req, res) => {
     })
 })
 
+
+function multipleFilesUploadPromiseData(siteFilesArray) {
+  return new Promise((resolve, reject) => {
+      if(siteFilesArray && siteFilesArray.length == 0) {
+          resolve([])
+      }
+      var filePathArray=[];
+      for(var i=0; i<siteFilesArray.length; i++) {
+          const buffer = Buffer.from(siteFilesArray[i].data, 'base64')
+          // Create a new blob in the bucket and upload the file data.
+          const id = uuid.v4();
+          const blob = bucket.file(id+siteFilesArray[i].fileName);
+          const blobStream = blob.createWriteStream();
+  
+          blobStream.on('error', err => {
+              next(err);
+          });
+      
+          blobStream.on('finish', () => {
+              const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+              var fileDetail = {
+                  name: blob.name.replace(id, ""),
+                  data: publicUrl
+              }
+              filePathArray.push(fileDetail);
+              //if last iteration then return 
+              if(i==filePathArray.length) {
+                  
+                  resolve(filePathArray)
+              }
+  
+          });
+          blobStream.end(buffer);
+      }
+      
+  
+  })
+}
+
 function getProgressiveClaimReportAllData(req) {
     return new Promise((resolve, reject) => {
         let getQuery = `select * from ProgressiveClaimReport 
@@ -133,6 +166,10 @@ function getProgressiveClaimReportAllData(req) {
         pool.query(getQuery, function (err, result) {
           if (err) throw err;
           if (result.length > 0) {
+            for(var i=0;i<result.length; i++) {
+              result[i].FileURL = JSON.parse(result[i].FileURL)
+            }
+            
             resolve(result);
           } else {
             resolve(result);
