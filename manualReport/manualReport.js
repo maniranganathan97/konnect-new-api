@@ -221,26 +221,75 @@ router.put('/update', async(req, res) => {
     })
 })
 
+function alreadyAvailableFilesPromiseData(ManualReportID) {
+  return new Promise((resolve, reject) => {
+      let query = `select ManualReportURL FROM ManualReport WHERE ManualReportID =${ManualReportID}`
+  pool.query(query, function (error, results, fields) {
+      if (error) throw error
+      if (results.length > 0) {
+          return resolve(results);
+      } else {
+          return resolve(results);
+      }
+  })
+  })
+}
 
 function updateManualReportData(req) {
     return new Promise((resolve, reject) => {
-      let detail = req.body;
-      let query =
-        `Update ManualReport SET  ` +
-        Object.keys(detail)
-          .map((key) => `${key}=?`)
-          .join(",") +
-        " where ManualReportID = ?";
-      const parameters = [...Object.values(detail), req.query.ManualReportID];
-      pool.query(query, parameters, function (err, results, fields) {
-        if (err) throw err;
-  
-        if (results.affectedRows > 0) {
-          resolve({ code: 200, message: "success" });
-        } else {
-          reject({ code: 401, message: "ManualReport without data not update" });
-        }
-      });
+      const detail = req.body
+
+      if (detail['ManualReportURL']) {
+    
+          var multileFilesUploadPromise = multipleFilesUploadPromiseData(req.body["ManualReportURL"]);
+          var alreadyAvailableFilesPromise = alreadyAvailableFilesPromiseData(req.query.ManualReportID);
+    
+          Promise.all([alreadyAvailableFilesPromise, multileFilesUploadPromise]).then(allData => {
+              console.log("allData =========> \n"+allData);
+              var alreadyAvailableFiles =  JSON.parse(allData[0][0].ManualReportURL);
+              var newFiles = [];
+              for(var i=0; i< alreadyAvailableFiles.length; i++) {
+                  if(!req.body.toBeRemoved.find(singleFile => singleFile.name ===alreadyAvailableFiles[i].name )) {
+                      console.log("deleted");
+                      newFiles.push(alreadyAvailableFiles[i]);
+                  }
+              }
+              var updatedFiles = allData[1];
+              for(var j=0; j< updatedFiles.length; j++) {
+                  if(!alreadyAvailableFiles.find(singleFile => singleFile.name ===updatedFiles[j].name )) {
+                      newFiles.push(updatedFiles[j]);
+                  }
+                  
+              }
+              detail['ManualReportURL'] = JSON.stringify(newFiles)
+              delete detail["toBeRemoved"];
+    
+              let query = `Update ManualReport SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where ManualReportID = ?"
+              const parameters = [...Object.values(detail), req.query.ManualReportID]
+              pool.query(query, parameters, function (err, results, fields) {
+                  if (err) throw err
+                  if (results.affectedRows > 0) {
+                      resolve({ code: 200, message: "success" })
+                  } else {
+                      reject({ code: 401, "message": "ManualReport with files data not update" })
+                  }
+              })
+          })
+    
+      } else {
+    
+          let query = `Update ManualReport SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where ManualReportID = ?"
+          const parameters = [...Object.values(detail), req.query.ManualReportID]
+          pool.query(query, parameters, function (err, results, fields) {
+              if (err) throw err
+    
+              if (results.affectedRows > 0) {
+                  resolve({ code: 200, message: "success" })
+              } else {
+                  reject({ code: 401, "message": "ManualReport without data not update" })
+              }
+          })
+      }
     });
   }
 

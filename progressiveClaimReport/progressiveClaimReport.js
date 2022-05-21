@@ -193,24 +193,93 @@ function getProgressiveClaimReportData(req) {
 }
 
 
+function alreadyAvailableFilesPromiseData(ProgressiveClaimReportID) {
+  return new Promise((resolve, reject) => {
+      let query = `select FileURL FROM ProgressiveClaimReport WHERE ProgressiveClaimReportID =${ProgressiveClaimReportID}`
+  pool.query(query, function (error, results, fields) {
+      if (error) throw error
+      if (results.length > 0) {
+          return resolve(results);
+      } else {
+          return resolve(results);
+      }
+  })
+  })
+}
+
 router.put('/update', async(req, res) => {
 
-    var updatePromise = updateProgressiveClaimReportData(req);
-    Promise.all([updatePromise])
-    .then(allData => {
+  const detail = req.body
+
+  if (detail['ProgressiveReportFile']) {
+
+      var multileFilesUploadPromise = multipleFilesUploadPromiseData(req.body["ProgressiveReportFile"]);
+      var alreadyAvailableFilesPromise = alreadyAvailableFilesPromiseData(req.query.ProgressiveClaimReportID);
+
+      Promise.all([alreadyAvailableFilesPromise, multileFilesUploadPromise]).then(allData => {
+          console.log("allData =========> \n"+allData);
+          var alreadyAvailableFiles =  JSON.parse(allData[0][0].FileURL);
+          var newFiles = [];
+          for(var i=0; i< alreadyAvailableFiles.length; i++) {
+              if(!req.body.toBeRemoved.find(singleFile => singleFile.name ===alreadyAvailableFiles[i].name )) {
+                  console.log("deleted");
+                  newFiles.push(alreadyAvailableFiles[i]);
+              }
+          }
+          var updatedFiles = allData[1];
+          for(var j=0; j< updatedFiles.length; j++) {
+              if(!alreadyAvailableFiles.find(singleFile => singleFile.name ===updatedFiles[j].name )) {
+                  newFiles.push(updatedFiles[j]);
+              }
+              
+          }
+          detail['FileURL'] = JSON.stringify(newFiles)
+          delete detail["toBeRemoved"];
+          delete detail["ProgressiveReportFile"];
+
+          let query = `Update ProgressiveClaimReport SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where ProgressiveClaimReportID = ?"
+          const parameters = [...Object.values(detail), req.query.ProgressiveClaimReportID]
+          pool.query(query, parameters, function (err, results, fields) {
+              if (err) throw err
+              if (results.affectedRows > 0) {
+                  return res.status(200).json({ code: 200, message: "success" })
+              } else {
+                  return res.status(401).json({ code: 401, "message": "ProgressiveClaimReport with files data not update" })
+              }
+          })
+      })
+
+  } else {
+
+      let query = `Update ProgressiveClaimReport SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where ProgressiveClaimReportID = ?"
+      const parameters = [...Object.values(detail), req.query.ProgressiveClaimReportID]
+      pool.query(query, parameters, function (err, results, fields) {
+          if (err) throw err
+
+          if (results.affectedRows > 0) {
+              return res.status(200).json({ code: 200, message: "success" })
+          } else {
+              return res.status(401).json({ code: 401, "message": "ProgressiveClaimReport without data not update" })
+          }
+      })
+  }
+
+    // var updatePromise = updateProgressiveClaimReportData(req);
+    // Promise.all([updatePromise])
+    // .then(allData => {
        
-        return res.status(200).json({
-            code: 200,
-            data: "ProgressiveClaimReport updated successfully."
-          });
-    })
-    .catch(err => {
-        console.log("Error while updating data to the ProgressiveClaimReport -->"+ err);
-        return res.status(400).json({
-            code: 400,
-            message: "updating data for table ProgressiveClaimReport failed",
-          });
-    })
+    //     return res.status(200).json({
+    //         code: 200,
+    //         data: "ProgressiveClaimReport updated successfully."
+    //       });
+    // })
+    // .catch(err => {
+    //     console.log("Error while updating data to the ProgressiveClaimReport -->"+ err);
+    //     return res.status(400).json({
+    //         code: 400,
+    //         message: "updating data for table ProgressiveClaimReport failed",
+    //       });
+    // })
 })
 
 
