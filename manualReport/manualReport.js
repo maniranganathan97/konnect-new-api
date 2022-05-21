@@ -99,7 +99,7 @@ function saveEcsReportData(req) {
     var multipleFilesUploadPromise = multipleFilesUploadPromiseData(req.body["ManualReportURL"]);
     Promise.all([multipleFilesUploadPromise]).then(data => {
 
-      console.log(data);
+      console.log(data[0]);
       var inseryQuery = `insert into ManualReport(
         ManualReportID			 
         ,SiteZoneID
@@ -118,7 +118,7 @@ function saveEcsReportData(req) {
     req.body.SiteID,
     req.body.ReportDate,
     req.body.ReportTypeID,
-    JSON.stringify(data),
+    JSON.stringify(data[0]),
     req.body.AddedByUserID,
     req.body.AddedDateTime,
   ];

@@ -60,7 +60,7 @@ function saveProgressiveClaimReportData(req) {
     var multipleFilesUploadPromise = multipleFilesUploadPromiseData(req.body["ProgressiveReportFile"]);
     Promise.all([multipleFilesUploadPromise]).then(data => {
 
-      console.log(data);
+      console.log(data[0]);
       var inseryQuery = `insert into ProgressiveClaimReport(
         ProgressiveClaimReportID			 
             ,ReportedDate
@@ -72,7 +72,7 @@ function saveProgressiveClaimReportData(req) {
         "",
         req.body.ReportedDate,
         req.body.CreatedBy,
-        JSON.stringify(data)
+        JSON.stringify(data[0])
       ];
 
       pool.query(inseryQuery, parameters, (err, results) => {
