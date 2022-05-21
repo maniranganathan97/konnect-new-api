@@ -21,6 +21,10 @@ const gc = new Storage({
 const bucket = gc.bucket('images-pest')
 
 const pool = mysql.createPool({
+  connectionLimit : 1000,
+  connectTimeout  : 60 * 60 * 1000,
+  acquireTimeout  : 60 * 60 * 1000,
+  timeout         : 60 * 60 * 1000,
     host: '184.168.117.92',
     user: 'userCreation',
     password: 'Vp6f}9)U?u)r',
@@ -48,57 +52,114 @@ router.post('/save', async(req, res) => {
     })
 });
 
+
+
+function multipleFilesUploadPromiseData(siteFilesArray) {
+  return new Promise((resolve, reject) => {
+      if(siteFilesArray && siteFilesArray.length == 0) {
+          resolve([])
+      }
+      var filePathArray=[];
+      for(var i=0; i<siteFilesArray.length; i++) {
+          const buffer = Buffer.from(siteFilesArray[i].data, 'base64')
+          // Create a new blob in the bucket and upload the file data.
+          const id = uuid.v4();
+          const blob = bucket.file(id+siteFilesArray[i].fileName);
+          const blobStream = blob.createWriteStream();
+  
+          blobStream.on('error', err => {
+              next(err);
+          });
+      
+          blobStream.on('finish', () => {
+              const publicUrl = format(`https://storage.googleapis.com/${bucket.name}/${blob.name}`);
+              var fileDetail = {
+                  name: blob.name.replace(id, ""),
+                  data: publicUrl
+              }
+              filePathArray.push(fileDetail);
+              //if last iteration then return 
+              if(i==filePathArray.length) {
+                  
+                  resolve(filePathArray)
+              }
+  
+          });
+          blobStream.end(buffer);
+      }
+      
+  
+  })
+}
+
 function saveEcsReportData(req) {
   return new Promise((resolve, reject) => {
-    const buffer = Buffer.from(req.body["ManualReportURL"], "base64");
-    // Create a new blob in the bucket and upload the file data.
-    const id = uuid.v4();
-    const blob = bucket.file("ManualReportURL" + id + ".pdf");
-    const blobStream = blob.createWriteStream();
 
-    blobStream.on("error", (err) => {
-      next(err);
-    });
+    
+    var multipleFilesUploadPromise = multipleFilesUploadPromiseData(req.body["ManualReportURL"]);
+    Promise.all([multipleFilesUploadPromise]).then(data => {
 
-    blobStream.on("finish", () => {
-      // The public URL can be used to directly access the file via HTTP.
-      const publicUrl = format(
-        `https://storage.googleapis.com/${bucket.name}/${blob.name}`
-      );
-
+      console.log(data);
       var inseryQuery = `insert into ManualReport(
-            ManualReportID			 
-            ,SiteZoneID
-            ,SiteTypeID
-            ,SiteID
-            ,ReportDate
-            ,ReportTypeID
-            ,ManualReportURL
-            ,AddedByUserID
-            ,AddedDateTime
-        ) values (?,?,?,?,?,?,?,?,?)`;
-      let parameters = [
-        "",
-        req.body.SiteZoneID,
-        req.body.SiteTypeID,
-        req.body.SiteID,
-        req.body.ReportDate,
-        req.body.ReportTypeID,
-        publicUrl,
-        req.body.AddedByUserID,
-        req.body.AddedDateTime,
-      ];
+        ManualReportID			 
+        ,SiteZoneID
+        ,SiteTypeID
+        ,SiteID
+        ,ReportDate
+        ,ReportTypeID
+        ,ManualReportURL
+        ,AddedByUserID
+        ,AddedDateTime
+    ) values (?,?,?,?,?,?,?,?,?)`;
+  let parameters = [
+    "",
+    req.body.SiteZoneID,
+    req.body.SiteTypeID,
+    req.body.SiteID,
+    req.body.ReportDate,
+    req.body.ReportTypeID,
+    JSON.stringify(data),
+    req.body.AddedByUserID,
+    req.body.AddedDateTime,
+  ];
 
       pool.query(inseryQuery, parameters, (err, results) => {
         if (err) throw err;
         if (results.affectedRows > 0) {
           resolve(results);
         } else {
-          reject("Insert into ManualReport failed");
+          reject("Insert into ProgressiveClaimReport failed");
         }
       });
     });
-    blobStream.end(buffer);
+  //   const buffer = Buffer.from(req.body["ManualReportURL"], "base64");
+  //   // Create a new blob in the bucket and upload the file data.
+  //   const id = uuid.v4();
+  //   const blob = bucket.file("ManualReportURL" + id + ".pdf");
+  //   const blobStream = blob.createWriteStream();
+
+  //   blobStream.on("error", (err) => {
+  //     next(err);
+  //   });
+
+  //   blobStream.on("finish", () => {
+  //     // The public URL can be used to directly access the file via HTTP.
+  //     const publicUrl = format(
+  //       `https://storage.googleapis.com/${bucket.name}/${blob.name}`
+  //     );
+
+      
+
+  //     pool.query(inseryQuery, parameters, (err, results) => {
+  //       if (err) throw err;
+  //       if (results.affectedRows > 0) {
+  //         resolve(results);
+  //       } else {
+  //         reject("Insert into ManualReport failed");
+  //       }
+  //     });
+  //   });
+  //   blobStream.end(buffer);
   });
 }
 
@@ -127,6 +188,9 @@ router.get('/getAll', async (req, res) => {
     pool.query(query, function (err, results) {
         if (err) throw err
         if (results.length >= 0) {
+          for(var i=0;i<results.length; i++) {
+            results[i].ManualReportURL = JSON.parse(results[i].ManualReportURL)
+          }
             return res.status(200).send(results)
         } else {
             return res.status(200).json({ code: 200, message: "No ManualReport data available." })
