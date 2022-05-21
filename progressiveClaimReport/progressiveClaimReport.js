@@ -211,9 +211,9 @@ router.put('/update', async(req, res) => {
 
   const detail = req.body
 
-  if (detail['ProgressiveReportFile']) {
+  if (detail['ProgressiveClaimURL']) {
 
-      var multileFilesUploadPromise = multipleFilesUploadPromiseData(req.body["ProgressiveReportFile"]);
+      var multileFilesUploadPromise = multipleFilesUploadPromiseData(req.body["ProgressiveClaimURL"]);
       var alreadyAvailableFilesPromise = alreadyAvailableFilesPromiseData(req.query.ProgressiveClaimReportID);
 
       Promise.all([alreadyAvailableFilesPromise, multileFilesUploadPromise]).then(allData => {
@@ -236,6 +236,10 @@ router.put('/update', async(req, res) => {
           detail['FileURL'] = JSON.stringify(newFiles)
           delete detail["toBeRemoved"];
           delete detail["ProgressiveReportFile"];
+          delete detail["ProgressiveClaimURL"];
+          delete detail["ProgressiveClaimReportID"];
+          delete detail["AddedByUserID"];
+          delete detail["AddedDateTime"];
 
           let query = `Update ProgressiveClaimReport SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where ProgressiveClaimReportID = ?"
           const parameters = [...Object.values(detail), req.query.ProgressiveClaimReportID]

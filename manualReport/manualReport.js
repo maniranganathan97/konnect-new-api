@@ -237,11 +237,21 @@ function alreadyAvailableFilesPromiseData(ManualReportID) {
 
 function updateManualReportData(req) {
     return new Promise((resolve, reject) => {
-      const detail = req.body
+      const detail = {
+        SiteZoneID:req.body.SiteZoneID,
+        SiteTypeID: req.body.SiteTypeID,
+        SiteID: req.body.SiteID,
+        ReportDate: req.body.ReportDate,
+        ReportTypeID: req.body.ReportTypeID,
+        AddedByUserID: req.body.AddedByUserID,
+        AddedDateTime: req.body.AddedDateTime,
+        toBeAdded: req.body.toBeAdded,
+        toBeRemoved: req.body.toBeRemoved
 
-      if (detail['ManualReportURL']) {
+      }
+      if (detail['toBeAdded']) {
     
-          var multileFilesUploadPromise = multipleFilesUploadPromiseData(req.body["ManualReportURL"]);
+          var multileFilesUploadPromise = multipleFilesUploadPromiseData(req.body["toBeAdded"]);
           var alreadyAvailableFilesPromise = alreadyAvailableFilesPromiseData(req.query.ManualReportID);
     
           Promise.all([alreadyAvailableFilesPromise, multileFilesUploadPromise]).then(allData => {
@@ -263,6 +273,7 @@ function updateManualReportData(req) {
               }
               detail['ManualReportURL'] = JSON.stringify(newFiles)
               delete detail["toBeRemoved"];
+              delete detail["toBeAdded"];
     
               let query = `Update ManualReport SET  ` + Object.keys(detail).map(key => `${key}=?`).join(",") + " where ManualReportID = ?"
               const parameters = [...Object.values(detail), req.query.ManualReportID]
