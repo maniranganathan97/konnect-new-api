@@ -131,7 +131,7 @@ function multipleFilesUploadPromiseData(siteFilesArray) {
           const buffer = Buffer.from(siteFilesArray[i].data, 'base64')
           // Create a new blob in the bucket and upload the file data.
           const id = uuid.v4();
-          const blob = bucket.file(id+siteFilesArray[i].fileName);
+          const blob = bucket.file(id+"_ProgressiveClaimReport_"+siteFilesArray[i].fileName);
           const blobStream = blob.createWriteStream();
   
           blobStream.on('error', err => {
