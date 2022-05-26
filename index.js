@@ -374,6 +374,9 @@ app.get('/sitename', async (req, res) => {
     pool.query(`select * from Site where SiteZoneID = ${id}`, function (error, results, fields) {
         if (error) throw error;
         if (results.length > 0) {
+            for(var i=0; i<results.length; i++) {
+                results[i].SiteMapImageURL = JSON.parse(results[i].SiteMapImageURL)
+            }
             return res.status(200).json(results)
         } else {
             return res.status(401).json({ "code": 401, "message": "unauthorized user" })
@@ -3102,7 +3105,7 @@ app.get('/workstatus', async (req, res) => {
 app.get('/poJobDetails', async (req, res) => {
     let query = `SELECT WorkOrder.WorkOrderID, WorkOrder.SiteID,Site.SiteName, 
     WorkType.WorkTypeID, WorkType.WorkTypeName, WorkOrder.WorkNatureID,WorkNature.WorkNature,
-    WorkOrder.SiteZoneID,SiteZone.Description,WorkStatus.WorkStatusID,WorkStatus.WorkStatus
+    WorkOrder.SiteZoneID,SiteZone.Description,WorkStatus.WorkStatusID,WorkStatus.WorkStatus,  Site.SiteMapImageURL
     FROM WorkOrder
     JOIN WorkOrderStaff ON WorkOrder.WorkOrderID = WorkOrderStaff.WorkOrderID
     JOIN WorkType ON WorkType.WorkTypeID = WorkOrder.WorkTypeID
@@ -3118,6 +3121,11 @@ app.get('/poJobDetails', async (req, res) => {
 
         if (err) throw err
         if (results.length > 0) {
+            
+            for(var i=0; i<results.length; i++) {
+                console.log(results[i]);
+                results[i].SiteMapImageURL = JSON.parse(results[i].SiteMapImageURL);
+            }
             return res.status(200).send(results)
         } else {
             return res.status(400).send({ code: 400, message: "No job available for this user" })
@@ -3725,7 +3733,31 @@ function updateReportWoDetails(req, reportWoDetails) {
                 ) 
             `
         } else if (reportWoDetails['ContactAckID']>-1) {
-            query = `
+            if(reportWoDetails['ContactAckID']==0) {
+
+                query = `
+            SET @workOrderIds =(
+        
+                select DISTINCT WorkOrder.WorkOrderID from WorkOrder JOIN
+                    ReportWO on ReportWO.WorkOrderID = WorkOrder.WorkOrderID
+                    
+                    where ReportWO.ReportWOID = ${req.query.ReportWOID}
+                );
+                
+                Update ReportWO
+                    
+                set ReportWO.ContactAckID = ${reportWoDetails['ContactAckID']},
+                ReportWO.ContactAckDateTime ='${reportWoDetails['ContactAckDateTime']}',
+                ReportWO.ContackAckOther ='${reportWoDetails['ContackAckOther']}'
+                
+                where ReportWO.WorkOrderID  in (
+                @workOrderIds
+                ) 
+            `
+
+            } else {
+
+                query = `
             SET @workOrderIds =(
         
                 select DISTINCT WorkOrder.WorkOrderID from WorkOrder JOIN
@@ -3743,6 +3775,9 @@ function updateReportWoDetails(req, reportWoDetails) {
                 @workOrderIds
                 ) 
             `
+
+            }
+            
         }else if (reportWoDetails['WOendDateTime']) {
             query = `
             SET @workOrderIds =(
