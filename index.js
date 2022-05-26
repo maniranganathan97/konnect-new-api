@@ -3724,7 +3724,7 @@ function updateReportWoDetails(req, reportWoDetails) {
                 @workOrderIds
                 ) 
             `
-        } else if (reportWoDetails['ContactAckID']) {
+        } else if (reportWoDetails['ContactAckID']>-1) {
             query = `
             SET @workOrderIds =(
         
