@@ -3293,7 +3293,7 @@ app.get('/getReportsForContact', async (req, res) => {
     }
     else
     {
-        query = `SELECT PO.POnumber, PO.POdate, WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime,WorkStatus.WorkStatus
+        query = `SELECT PO.POnumber, PO.POdate, WorkOrderID, SiteZone.Description,Site.SiteName,WorkType.WorkTypeName,WorkOrder.AssignedDateTime
         FROM PO 
         RIGHT JOIN WorkOrder ON PO.POID = WorkOrder.POID
         JOIN SiteZone ON SiteZone.SiteZoneID = WorkOrder.SiteZoneID
