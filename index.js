@@ -2754,7 +2754,10 @@ function insertWorkOrderStaffPromise(assignedWorkers, woId, UpdatedByUserID, Upd
         value.push(data);
         value.push(UpdatedByUserID);
         value.push(UpdatedDateTime);
-        var sql =
+        values.push(value);
+      }
+
+      var sql =
         `select * from WorkOrderStaff where StaffID = ${data} and WorkOrderID=${woId}`;
 
       pool.query(sql, function (err, result) {
@@ -2763,14 +2766,9 @@ function insertWorkOrderStaffPromise(assignedWorkers, woId, UpdatedByUserID, Upd
           resolve(result)
         } else {
           var sql =
-            "INSERT INTO WorkOrderStaff(WorkOrderID, StaffID, AddedByUserID, AddedDateTime) VALUES (?,?,?,?)";
-          let parameters = [
-            woId,
-            data,
-            UpdatedByUserID,
-            UpdatedDateTime,
-          ];
-          pool.query(sql, parameters, function (err, result, fields) {
+            "INSERT INTO WorkOrderStaff(WorkOrderID, StaffID, AddedByUserID, AddedDateTime) VALUES ?";
+          
+          pool.query(sql, [values], function (err, result, fields) {
             if (err) throw err;
             if (result.affectedRows > 0) {
               resolve();
@@ -2783,8 +2781,6 @@ function insertWorkOrderStaffPromise(assignedWorkers, woId, UpdatedByUserID, Upd
           });
         }
       });
-        values.push(value);
-      }
 
      
     });
