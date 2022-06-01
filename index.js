@@ -2758,7 +2758,7 @@ function insertWorkOrderStaffPromise(assignedWorkers, woId, UpdatedByUserID, Upd
       }
 
       var sql =
-        `select * from WorkOrderStaff where StaffID = ${data} and WorkOrderID=${woId}`;
+        `select * from WorkOrderStaff where StaffID in(${assignedWorkers}) and WorkOrderID=${woId}`;
 
       pool.query(sql, function (err, result) {
         if (err) throw err;
