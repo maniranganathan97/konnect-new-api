@@ -189,7 +189,12 @@ router.get('/getAll', async (req, res) => {
         if (err) throw err
         if (results.length >= 0) {
           for(var i=0;i<results.length; i++) {
-            results[i].ManualReportURL = JSON.parse(results[i].ManualReportURL)
+            try{
+              results[i].ManualReportURL = JSON.parse(results[i].ManualReportURL)
+            } catch(exception) {
+              continue;
+            }
+            
           }
             return res.status(200).send(results)
         } else {
