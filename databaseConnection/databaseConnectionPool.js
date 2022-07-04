@@ -27,10 +27,6 @@ var configPath = './config.json';
 var databaseConfig = JSON.parse(fs.readFileSync(configPath, 'UTF-8'));
 
 const pool = mysql.createPool({
-  connectionLimit : 1000,
-  connectTimeout  : 60 * 60 * 1000,
-  acquireTimeout  : 60 * 60 * 1000,
-  timeout         : 60 * 60 * 1000,
   host: databaseConfig.databaseHostUrl,
   user: databaseConfig.databaseUsername,
   password: databaseConfig.databasePassword,
