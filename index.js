@@ -11,6 +11,9 @@ const app = express()
 const mailOperations = require("./mailOperations")
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
+var fs = require('fs'),
+configPath = './config.json';
+var databaseConfig = JSON.parse(fs.readFileSync(configPath, 'UTF-8'));
 const reportADCRouter = require('./reportADCOperations.js');
 const reportDssdRouter = require("./reportDssdOperations.js");
 const reportSdpcRouter = require("./reportSdpcOperations.js")
@@ -63,23 +66,14 @@ const e = require('express')
 const req = require('express/lib/request')
 const { all } = require('express/lib/application')
 const { get } = require('express/lib/response')
+var databaseConnectionPool = require('./databaseConnection/databaseConnectionPool');
+const pool =databaseConnectionPool;
 
-const pool = mysql.createPool({
-    connectionLimit : 1000,
-    connectTimeout  : 60 * 60 * 1000,
-    acquireTimeout  : 60 * 60 * 1000,
-    timeout         : 60 * 60 * 1000,
-    host: '184.168.117.92',
-    user: 'userCreation',
-    password: 'Vp6f}9)U?u)r',
-    database: 'PEST',
-    multipleStatements: true,
-    dateStrings: true
-})
 
 const port = process.env.PORT || 3001
 
 pool.query(`SELECT 1 + 1 AS solution`, function (error, results, fields) {
+    console.log(databaseConfig);
     if (error) throw error;
 });
 

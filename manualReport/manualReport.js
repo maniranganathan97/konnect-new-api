@@ -20,19 +20,8 @@ const gc = new Storage({
 })
 const bucket = gc.bucket('images-pest')
 
-const pool = mysql.createPool({
-  connectionLimit : 1000,
-  connectTimeout  : 60 * 60 * 1000,
-  acquireTimeout  : 60 * 60 * 1000,
-  timeout         : 60 * 60 * 1000,
-    host: '184.168.117.92',
-    user: 'userCreation',
-    password: 'Vp6f}9)U?u)r',
-    database: 'PEST',
-    multipleStatements: true,
-    dateStrings: true
-});
-
+var databaseConnectionPool = require('../databaseConnection/databaseConnectionPool');
+const pool =databaseConnectionPool;
 
 
 router.post('/save', async(req, res) => {

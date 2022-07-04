@@ -3,12 +3,8 @@ var mysql = require('mysql');
 var fs = require("fs");
 var formidable = require("formidable")
 
-const pool = mysql.createPool({
-    host: "184.168.117.92",
-    user: 'userCreation',
-    password: 'Vp6f}9)U?u)r',
-    database: 'PEST',
-})
+var databaseConnectionPool = require('./databaseConnection/databaseConnectionPool');
+const pool =databaseConnectionPool;
 
 const app = express()
 

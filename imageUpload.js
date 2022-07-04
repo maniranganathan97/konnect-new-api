@@ -17,12 +17,9 @@ app.use('/uploads', express.static('uploads'))
 
 
 const mysql = require('mysql');
-const pool = mysql.createPool({
-    host: "184.168.117.92",
-    user: 'userCreation',
-    password: 'Vp6f}9)U?u)r',
-    database: 'PEST',
-})
+
+var databaseConnectionPool = require('./databaseConnection/databaseConnectionPool');
+const pool =databaseConnectionPool;
 
 pool.query(`SELECT 1 + 1 AS solution`, function (error, results, fields) {
     if (error) throw error;

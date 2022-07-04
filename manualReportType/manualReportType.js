@@ -1,14 +1,8 @@
 const router = require("express").Router();
 const mysql = require('mysql');
 
-const pool = mysql.createPool({
-    host: '184.168.117.92',
-    user: 'userCreation',
-    password: 'Vp6f}9)U?u)r',
-    database: 'PEST',
-    multipleStatements: true,
-    dateStrings: true
-});
+var databaseConnectionPool = require('../databaseConnection/databaseConnectionPool');
+const pool =databaseConnectionPool;
 
 router.get('/getAll', async (req, res) => {
     let query = `select * from ManualReportType`
