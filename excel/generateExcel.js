@@ -175,6 +175,16 @@ const populateData = (xxx) => {
     return res
   }
 
+  const checkIfCExists = (data) => {
+    let res = false
+    Object.keys(data).map(key => {
+      if (data[key].length > 2) {
+        res = true
+      }
+    })
+    return res
+  }
+
   const getWeekData = (d) => {
     switch (d) {
       case 1:
@@ -210,6 +220,16 @@ const populateData = (xxx) => {
         tempTwo[`Point ${point}`] = pointsJsonTwo[key][point][1];
       })
       finalData.push(tempTwo)
+      if (checkIfCExists(pointsJsonTwo[key])) {
+        tempThree["Week"] = getWeekData(index + 1);
+        tempThree["Date Of Visit"] = key;
+        headers.map(header => tempThree[`Point ${header}`] = "")
+
+        Object.keys(pointsJsonTwo[key]).map(point => {
+          tempThree[`Point ${point}`] = pointsJsonTwo[key][point][2];
+        })
+        finalData.push(tempThree)
+      }
     }
     else {
       let temp = {}
