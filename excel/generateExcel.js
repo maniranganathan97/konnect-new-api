@@ -197,6 +197,7 @@ const populateData = (xxx) => {
     if (checkIfBExists(pointsJsonTwo[key])) {
       let tempOne = {}
       let tempTwo = {}
+      let tempThree = {}
       tempOne["Week"] = getWeekData(index + 1);
       tempOne["Date Of Visit"] = key;
       headers.map(header => tempOne[`Point ${header}`] = "")
