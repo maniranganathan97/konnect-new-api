@@ -1,5 +1,9 @@
 var nodemailer = require("nodemailer");
 var fs = require("fs");
+
+var configPath = './config.json';
+var configData = JSON.parse(fs.readFileSync(configPath, 'UTF-8'));
+
 function sendEmail(emailId, token) {
   return new Promise((resolve, reject) => {
     var transporter = nodemailer.createTransport({
@@ -21,12 +25,14 @@ function sendEmail(emailId, token) {
       "password-reset.html",
       { encoding: "utf-8" },
       function (err, html) {
+        console.log("configData.clientUrl-------->" + configData.clientUrl);
         if (err) {
           reject(err);
         } else {
           var recovery_token = "tested";
           var resetLink = "http://knighttest.net/resetPassword?token=" + token;
           html = html.replace("#token#", token);
+          html = html.replace("#url#", configData.clientUrl);
           var mailOptions = {
             from: "no-reply@pestpro-mailer.com",
             to: emailId,
