@@ -7,12 +7,12 @@ var configData = JSON.parse(fs.readFileSync(configPath, 'UTF-8'));
 function sendEmail(emailId, token) {
   return new Promise((resolve, reject) => {
     var transporter = nodemailer.createTransport({
-      host: "mail209.livehostsupport.com",
+      host: "smtpout.secureserver.net",
       auth: {
-        user: "no-reply@pestpro-mailer.com",
-        pass: "*!4SNLH%$+V&A(#~+A",
+        user: "michael@ckktest.net",
+        pass: "ml1234",
       },
-      from: "no-reply@pestpro-mailer.com",
+      from: "michael@ckktest.net",
       secure: true,
       port: 465,
       headers: {
@@ -34,7 +34,7 @@ function sendEmail(emailId, token) {
           html = html.replace("#token#", token);
           html = html.replace("#url#", configData.clientUrl);
           var mailOptions = {
-            from: "no-reply@pestpro-mailer.com",
+            from: "michael@ckktest.net",
             to: emailId,
             subject: "Reset Password for PEST application",
             html: html,
